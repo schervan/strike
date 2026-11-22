@@ -195,7 +195,7 @@ Same conventions as M1: pure logic is `nonisolated struct/enum`, `Sendable`, and
 Accessibility ids (new): `hud.interactButton`, `hud.minimap`, `hud.keyChips`, `levelComplete.view`, `levelComplete.continue`, `debug.solveAll`, `debug.gotoExit`.
 
 ### Tasks
-- [ ] **M2-1 game-designer — 64 pt room sizes, rules.json, M2 strings**
+- [x] **M2-1 game-designer — 64 pt room sizes, rules.json, M2 strings**
   - Inputs: `docs/GDD.md` §11–§14, `docs/levels/L1–L5.md`, `Strike/Resources/Data/levels.json`, `enemies.json`, this task list
   - Outputs: `levels.json` (generator numbers), new `Strike/Resources/Data/rules.json`, `enemies.json` (`knockbackSec` per enemy), `Localizable.xcstrings`, `docs/GDD.md` (§14.2 table, new §16.8 `rules.json` schema, §11 notes, change log), `docs/levels/L*.md` where numbers change
   - **Re-check §14.2 for 64 pt tiles** (open item from M1-1). The view is now about 18.7 × 13 tiles instead of 25 × 17. Check room min/max size, grid size, corridor width (2 tiles = 128 pt; the hero is 36 pt wide), and `minElementSpacing` against the M1 combat feel: boltbot detect range 360 pt ≈ 5.6 tiles, starter range 520 pt ≈ 8 tiles. Target: a typical room is about one screen; L1 total walking time stays near `parTimeSec`.
@@ -208,7 +208,7 @@ Accessibility ids (new): `hud.interactButton`, `hud.minimap`, `hud.keyChips`, `l
     - every `level.*.name` / `subtitle` key that is not there yet
   - Done when: JSON valid, `LocalizationKeyTests` green, the GDD change log explains every changed number, and no code is touched
 
-- [ ] **M2-2 visual-artist — Level visuals spec (ART_BIBLE §13)** (parallel; pass B uses placeholders until this lands)
+- [x] **M2-2 visual-artist — Level visuals spec (ART_BIBLE §13)** (parallel; pass B uses placeholders until this lands)
   - Inputs: `docs/ART_BIBLE.md` §4/§7, puzzle + tile atlases, M1 screenshot
   - Outputs: `docs/ART_BIBLE.md` new §13 "Level presentation". Optional slicer/atlas tweaks under `tools/` and `Strike/Resources/Atlases/` (no Swift).
   - §13 must cover:
@@ -277,13 +277,217 @@ Accessibility ids (new): `hud.interactButton`, `hud.minimap`, `hud.keyChips`, `l
     - kid-safety pass on the new strings
     - node count and FPS on L4 logged
 
-- [ ] **M2-8 game-manager — M2 review**: check deliverables against GDD/ART_BIBLE, update ROADMAP/TASKS/DECISIONS, plan M3
+- [x] **M2-8 game-manager — M2 review**: check deliverables against GDD/ART_BIBLE, update ROADMAP/TASKS/DECISIONS, plan M3 (2026-11-22, see below)
+
+### M2 review (2026-11-22, branch `m2-levels` @ 369bef8)
+**Accepted.** 138 Swift tests and 9 XCTest cases are green.
+- 10,000 fuzz seeds (2,000 per level) are valid under QA's independent checker, with no fallbacks used and at most 28 ms per level.
+- A scripted player finishes L1–L5 on 3 seeds each in a real `GameScene` without debug commands, including a rescue at a gate checkpoint.
+- L4 runs at about 194–250 nodes and 59–60 fps on the simulator, against the targets of under 1500 nodes and 150 ms generation.
+- The module map was followed. Extras: `LevelRandom`, `Leash`, `VisualCheckTests` (renders of the alert, chase, power-down and gate).
+- Data rules kept: `rules.json` exists, `knockbackSec` is now in JSON, and every changed number has a reason in the GDD change log (room-size re-check for 64 pt done: corridors 2, spacing 7–8, L4 grid 72 × 56).
+- ART_BIBLE §13 is implemented: minimap top-right 160 × 120 under pause, floors calmed (`FLOOR_CALM`), L4/L5 walls calmed.
+- QA-007 (machine focus) is fixed by measuring to the machine footprint. QA-003 is closed: the owner played on an iPad 10th gen (DECISIONS).
+
+Leftovers, all carried into M3 (task id in brackets):
+1. **QA-008**: the drawn exit pad is 32 pt off `GeneratedLevel.exitPad`. Pixel hints will use `level.exitPad`, so make the two agree. [M3-5]
+2. **QA-009**: power-down is subtle on the L1 floor (thin ring, a few dots, 0.4 s). Artist specifies a bigger "poof v2", coder implements it. [M3-2, M3-5]
+3. **Pickup halos, shadows and the enemy-shot under-glow** from ART_BIBLE §13.8 are not implemented. [M3-5]
+4. Minimap corridor reveal radius and timings from ART_BIBLE §13.9 are still constants and belong in `rules.json`. [M3-1]
+5. **Leash** is covered by unit tests only and has never been triggered by hand. [M3-7]
+6. **Crowded L4 room** performance has not been measured on a real iPad. A debug "spawn crowd" button plus an owner device run. [M3-5, owner question]
+7. **Main-actor warnings** in `StrikePlayPassUITests`. [M3-7]
+8. **QA id mix-up**: code comments in `InteractableNode.swift:86` and `ScenePlaythroughTests.swift:94` say "QA-009" for machine focus. The report calls that QA-007 (QA-009 is the power-down effect). Fix the comments. [M3-5]
+9. **56 story/Pixel keys** referenced by `levels.json → story` (`story.l1.intro.1`, `pixel.l1.move`, …) are missing from `Localizable.xcstrings`. `LocalizationKeyTests` only checks `*Key` fields, so they slipped through. [M3-1, M3-7]
+
+## M3 Systems
+
+Goal:
+- **Arrival:** the level starts with Pixel's intro card, then Pixel floats beside the hero.
+- **Bag:** the hero picks up food, heal packs, ammo and puzzle items into a 25-slot bag, uses them from 4 quick slots or the inventory screen, and drops items at their feet.
+- **Ammo and machines:** ammo fills per-type reserves, with overflow becoming ammo packs. Machines take items from the bag.
+- **Rescue:** at 0 HP, Pixel beams the hero to the last checkpoint (§12) with nothing lost.
+- **Hints and talk:** Pixel gives hints (tap or idle), pings the minimap, comments on firsts and plays the story beats.
+- **Save:** the loadout and level progress are saved and restored after relaunching the app.
+
+Out of scope for M3:
+- spread/rapid blasters, the SWAP button and weapon wheel, real weapon pickups (M4)
+- boss and boss story triggers (M4)
+- Settings screen (M5; M3 stores the settings in the save with defaults)
+- stars screen and level map (M5)
+- audio (M5)
+
+Order:
+- **M3-1** (designer) and **M3-2** (artist) run in parallel.
+- **Coder pass A** = **M3-3 + M3-4**. Pure logic and tests; starts now, with GDD defaults in `RulesDef.fallback` until M3-1 lands, as in M2.
+- **Coder pass B** = **M3-5 + M3-6**, scene and UI. It needs M3-1 strings/JSON and uses M3-2 visuals (placeholders marked `// TODO ART_BIBLE §14` otherwise).
+- Then **M3-7** (QA) and **M3-8** (review).
+
+### M3 module map (binding for M3-3 … M3-6)
+Same conventions as M1/M2: pure logic is `nonisolated struct/enum`, `Sendable`, `Codable` where it is saved, and unit-tested; SpriteKit/UI types are `@MainActor`. GameModel stays the only bridge: the scene pushes snapshots, and the UI sends `GameCommand`s.
+
+| File | Type(s) | Role |
+|---|---|---|
+| `Strike/Data/RulesDef.swift` | (extended) | new blocks from M3-1: `inventory`, `rescue`, `pixel`, `hints`, `lowHp`; `minimap.corridorRevealRadius` |
+| `Strike/Data/LevelDef.swift` | (extended) | `story` (`intro`, `outro`, `beats[{trigger, key}]`), `hintIdleSec`, `pickups.startGift` |
+| `Strike/Game/Inventory/ItemStack.swift` | `struct ItemStack: Codable` | `itemId`, `count` |
+| `Strike/Game/Inventory/Inventory.swift` | `struct Inventory: ItemCarrier, Codable` | 25 slots of `ItemStack?`, 4 quick links (`String?`, item id, not a slot). `add(_:count:) -> Int` (fills existing stacks up to `stackSize`, then the first empty slot; returns what did not fit), `remove`, `count(of:)`. Also `drop(slot:count:) -> ItemStack`, `assignQuick(itemId:to:)`, `tidy()` (puzzle → heal → food → ammo, then id). Auto-assign: first heal → Q1 if empty, first food → Q2 if empty. `storesInInventory == false` items are rejected. **Replaces `PuzzleBag`** (deleted) |
+| `Strike/Game/Inventory/ItemUse.swift` | `enum ItemUse`, `enum UseResult { used(heal: Int, ammo: (String, Int)?), alreadyFull, coolingDown, notUsable, none }`, `struct UseCooldowns` | GDD §6 use rules: no heal at full HP, 0.5 s cooldown per item type, heal capped; ammo packs add to reserve; puzzle items are never used from the bag |
+| `Strike/Game/Systems/AmmoBank.swift` | `struct AmmoBank: Codable` | one reserve per ammo id with `reserveMax` from `weapons.json`; `add(_:amount:) -> Int` overflow; ammo for blasters not owned yet still counts (§5.1) |
+| `Strike/Game/Systems/Loadout.swift` | `struct Loadout: Codable` | `owned` weapon ids, `equipped`, `magazines[weaponId]`, `ammo: AmmoBank`. `WeaponState` is refactored to keep only timers and fire/reload logic and to read and write magazine and reserve through `Loadout`. The starter safety net and `ammo_rescue` keep working (existing tests stay green) |
+| `Strike/Game/Systems/PickupResolver.swift` | `enum PickupResolver`, `enum PickupOutcome { stored, reserve(overflowPacks: Int), score(Int), datachip, staysBagFull, weaponPlaceholder }` | pure decision for every item category (GDD §6/§7): bolt → score; datachip → session count + score; ammo → reserve, overflow → ammo-pack item if a slot is free, else it stays on the floor; heal/food/puzzle → inventory or `staysBagFull`; blaster → placeholder until M4 |
+| `Strike/Game/Systems/RunState.swift` | `struct RunState: Codable` | everything that carries over between levels: `loadout`, `inventory`, `unlockedLevelIndex`, `bestResults[levelId]`, `settings` (`pixelTalk: lots/some/quiet`, `aimAssist`). Lives in `GameModel.run` |
+| `Strike/Game/Systems/RescueRules.swift` | `enum RescueRules` | pure §12 steps 3–7: full HP, invulnerability, starter topped up to ≥ 1 magazine, `rescues += 1`, which enemies reset. Timings (slow-mo 0.3 × 0.6 s, beam 0.8 s) come from `rules.json → rescue` |
+| `Strike/Game/Pixel/SpeechQueue.swift` | `struct SpeechQueue` | one line at a time, queue max 2 (older dropped), duration `base + perChar × length`, max 60 chars, talk-level filter (`lots` all; `some` story + hints; `quiet` story only), per-key cooldowns (low HP once per 60 s) |
+| `Strike/Game/Pixel/StoryDirector.swift` | `struct StoryDirector` | maps triggers `start`, `firstEnemy:<id>`, `firstPickup:<id>`, `firstSeen:<elementType or gate>`, `firstLowHp`, `zone:<n>`, `allElementsOn`, `doorOpen` to the level's `beats` (each once per level) plus the GDD §13 generic lines and `pixel.tip.<enemyId>` on first sight. `bossPhase`/`bossDefeated` are ignored until M4 |
+| `Strike/Game/Pixel/HintPlanner.swift` | `enum HintPlanner` | target = nearest **reachable** (current doors) required element that is off. If its machine lacks the item, target the item (in the bag → no fly, line `pixel.generic.need_*` instead; on the floor → its position). Else the next gate's element, else the exit pad (uses the QA-008-fixed `level.exitPad`). Also `pings(afterSec:)` for the minimap |
+| `Strike/Game/Pixel/PixelNode.swift` | `@MainActor final class PixelNode: SKNode` | sprite `pixel_idle_01` + `PoseAnimator` (float bob, talk wiggle), follows 56 pt behind-left with a 0.15 s lerp, ignores walls and physics; `flyTo(_:then:)` for hints, dotted hint arrow (6 s), scan beam, rescue beam |
+| `Strike/Game/Pixel/PixelController.swift` | `@MainActor final class PixelController` | owns `SpeechQueue`, `StoryDirector`, idle timer (`hintIdleSec`, reset on progress = element on, item picked, gate/door open, new room revealed), hint cooldown 10 s; pushes `bubble: PixelLine?` to the HUD |
+| `Strike/Persistence/SaveGame.swift` | `struct SaveGame: Codable` | `version: 1`, `run: RunState`, `savedAt`. No mid-level state (decision) |
+| `Strike/Persistence/SaveStore.swift` | `final class SaveStore` | `load() -> SaveGame?` / `save(_:)`: atomic write to Application Support `save.json` (directory injectable for tests); unknown version or corrupt file → move to `save.bak.json`, start fresh, never crash. Saves on level complete, checkpoint touch and app background |
+| `Strike/Game/Scenes/GameScene.swift` | (extended) | pickups through `PickupResolver` (floor "!" marker when the bag is full), item drops at the hero's feet (never despawn), Pixel, rescue sequence (slow-mo → beam → checkpoint), low-HP trigger, minimap pings, crowd debug spawn, QA-008/009 and §13.8 fixes |
+| `Strike/App/GameModel.swift` | (extended) | `run: RunState`, `Screen.levelIntro(levelId)`, `continueGame()`/`newGame()`, `HUDState` + `quickSlots: [QuickSlotState]`, `bubble: PixelLine?`, `lowHp: Bool`, `isPaused`; `GameCommand` + `useQuick(Int)`, `useItem(slot)`, `dropItem(slot, count)`, `assignQuick(itemId, slot)`, `tidy`, `openInventory`, `pause`, `resume`, `tapPixel` |
+| `Strike/UI/QuickSlotBar.swift` | `QuickSlotBar` | 4 × 72 pt bottom-centre (ART_BIBLE §7): icon + total count, dashed when empty, greyed at 0, cooldown sweep, shake + toast "Already full!" |
+| `Strike/UI/InventoryView.swift`, `ItemInfoPanel.swift` | | 5 × 5 grid of 64 pt slots (§7), info panel with Use / Drop (1 / all) / Put in quick slot / Tidy up; quick slots as drop targets (drag is nice-to-have, the tap flow is required); game time stops while open |
+| `Strike/UI/PauseMenuView.swift` | `PauseMenuView` | Resume, Inventory, Quit to title. Settings comes in M5 |
+| `Strike/UI/PixelBubbleView.swift` | `PixelBubbleView` | top-centre bubble (ART_BIBLE §7: max 420 × 90, `ui_icon_pixel` avatar, tap to dismiss) |
+| `Strike/UI/LevelIntroView.swift` | `LevelIntroView` | level name + subtitle + the `story.intro` lines with Pixel's avatar, tap to continue; `LevelCompleteView` shows the `outro` lines |
+| `Strike/UI/RootView.swift` | (extended) | title: "Continue" (if a save exists) + "New game" (asks for confirmation if a save exists) |
+
+Accessibility ids (new): `hud.quickSlot.0…3`, `hud.inventoryButton`, `hud.pauseButton`, `pixel.bubble`, `inventory.view`, `inventory.slot.0…24`, `inventory.use`, `inventory.drop`, `inventory.assign`, `inventory.tidy`, `inventory.close`, `pause.view`, `pause.resume`, `levelIntro.view`, `title.continue`, `title.newGame`, `debug.spawnCrowd`, `debug.damageHero`.
+
+### Tasks
+- [ ] **M3-1 game-designer — M3 rules, Pixel and story text, save schema**
+  - Inputs: GDD §4, §6, §7, §10, §12, §13, §15; `docs/levels/L1–L5.md`; `levels.json`; `rules.json`; ART_BIBLE §7 / §13.9
+  - Outputs: `rules.json`, `hero.json`, `Localizable.xcstrings`, `docs/GDD.md`, `docs/levels/L*.md` if lines change
+  - `rules.json` additions:
+    - `inventory { slots 25, quickSlots 4, useCooldownSec 0.5, dropScatter }`
+    - `rescue { slowMoScale 0.3, slowMoSec 0.6, beamSec 0.8, starterMinMagazine 12 }` (the invulnerability number stays `hero.respawnInvulnerableSec`)
+    - `pixel { followOffset, bobAmplitude, bobHz, followLerpSec, tapRadius 80, bubbleBaseSec 3.0, bubblePerCharSec 0.04, maxChars 60, queueMax 2 }`
+    - `hints { flySec 2, arrowSec 6, cooldownSec 10, pointerAfterSec 60 }`
+    - `lowHp { threshold 25, lineCooldownSec 60 }`
+    - `minimap.corridorRevealRadius 3` plus the §13.9 timings
+  - Strings (de + en; kid tone, ≤ 60 chars for Pixel):
+    - all 56 missing `story.*` / `pixel.l*.*` keys referenced by `levels.json`
+    - every GDD §13 `pixel.generic.*` and `pixel.tip.*` line
+    - inventory (`inventory.*`: use, drop, drop one, drop all, quick slot, tidy, close, empty)
+    - `ui.toast.already_full`, pause (`pause.*`)
+    - title Continue / New game / confirm text
+    - level intro "Tap to start"
+  - GDD:
+    - §13: the bubble is the HUD top-centre bubble (ART_BIBLE §7), not above Pixel
+    - define "progress" for the idle hint timer
+    - the tap-on-Pixel vs stick-touch rule (a touch inside `tapRadius` that ends within 0.25 s and moves < 12 pt is a Pixel tap and starts no stick)
+    - new §16.9 `rules.json` M3 blocks and §16.10 save-game contents
+    - change log
+  - Done when: JSON valid; every key in `levels.json → story` exists in de + en; Pixel lines ≤ 60 chars in both languages; no violent wording; no code touched
+
+- [ ] **M3-2 visual-artist — ART_BIBLE §14 "Systems UI and Pixel"** (parallel)
+  - Inputs: ART_BIBLE §7, §12, §13; `ui`/`pixel`/`fx` atlases; QA-009 screenshots `qa_m2_powerdown_a.png` / `_b.png` in the scratchpad
+  - Outputs: `docs/ART_BIBLE.md` §14. Optional atlas/slicer tweaks (no Swift).
+  - §14 covers:
+    - quick-slot states: empty dashed, count badge, greyed at 0, cooldown sweep, "full" shake
+    - inventory screen details beyond §7: selection, info panel layout, buttons ≥ 64 pt
+    - Pixel bubble style (font size, max 2 lines, avatar, appear/dismiss timing)
+    - Pixel feel: float bob, talk wiggle, scan beam
+    - hint fly + dotted arrow style
+    - minimap ping (blink rate, colour)
+    - rescue beam (cyan column + sparkles, slow-mo tint) and hero fade-in at the checkpoint
+    - low-HP heart pulse
+    - bag-full "!" marker on floor pickups
+    - **poof v2 (QA-009)**: bigger, colourful, ≥ 0.6 s, a burst of stars + bolts, readable on all 5 floors and still kid-safe (no red splats)
+  - Done when: every value is a concrete number or hex; nothing contradicts §7 / §13 or the GDD
+
+- [ ] **M3-3 swift-coder (pass A) — Inventory, ammo, pickups, run state, save**
+  - Outputs: `ItemStack`, `Inventory` (`PuzzleBag` removed, its callers moved over), `ItemUse`, `AmmoBank`, `Loadout`, `WeaponState` refactor, `PickupResolver`, `RunState`, `SaveGame`, `SaveStore`. Tests in `InventoryTests.swift`, `ItemUseTests.swift`, `AmmoBankTests.swift`, `PickupResolverTests.swift`, `SaveStoreTests.swift`; existing `WeaponStateTests` and `LootRollerTests` stay green.
+  - Done when (each is a test):
+    - **Inventory storage:**
+      - stacks fill up to `stackSize`, then a new slot
+      - the 26th distinct stack is rejected and the overflow is returned
+      - non-inventory items (bolt, datachip, blasters) are rejected
+    - **Inventory actions:**
+      - a quick slot shows the total count across stacks, stays linked at 0, and using it consumes from the first stack
+      - auto-assign puts the first heal in Q1 and the first food in Q2, only into empty slots
+      - drop returns the stack
+      - tidy order is correct
+      - the M2 machine tests pass with `Inventory` as the `ItemCarrier`
+    - **Item use:**
+      - heal is refused at full HP (`alreadyFull`) and capped at max
+      - a second use of the same item type within 0.5 s is `coolingDown`
+      - an ammo pack adds its amount to the matching reserve
+    - **Ammo:**
+      - ammo above `reserveMax` becomes ammo packs when a slot is free, otherwise `staysBagFull`
+      - ammo for a blaster not owned yet still fills its reserve
+    - **Save:**
+      - a `RunState` round-trips through `SaveStore` in a temp directory
+      - a corrupt file or a version mismatch gives `nil` plus a `.bak` file and does not crash
+    - **Start gift:** the L1 `startGift` is applied once on a new game (not again on replay if already owned)
+
+- [ ] **M3-4 swift-coder (pass A) — Rescue rules, Pixel brain, hints, story**
+  - Outputs: `RescueRules`, `SpeechQueue`, `StoryDirector`, `HintPlanner`. Tests in `RescueRulesTests.swift`, `SpeechQueueTests.swift`, `StoryDirectorTests.swift`, `HintPlannerTests.swift`.
+  - Done when (each is a test):
+    - **Rescue:**
+      - HP back to max, invulnerability set
+      - starter topped up to ≥ 1 magazine; inventory, quick slots, ammo and datachips unchanged
+      - puzzle states kept
+      - powered-down enemies stay down; living ones are marked for full HP and return home
+      - `rescues += 1`
+    - **Speech queue:**
+      - a third queued line drops the oldest
+      - duration formula correct
+      - lines over 60 chars are rejected in debug
+      - the talk-level filter works for lots / some / quiet
+      - the low-HP line plays at most once per 60 s
+    - **Story:** each beat fires once per level; `firstEnemy:boltbot` fires on first sight, not first contact
+    - **Hints:**
+      - on generated L2/L4 seeds, the planner never points behind a closed door
+      - it points at a floor item when the machine needs one and the bag lacks it
+      - it gives `need_*` when the item is in the bag
+      - it points at the exit pad once all elements are on
+      - pings start only after `pointerAfterSec`
+
+- [ ] **M3-5 swift-coder (pass B) — Scene: pickups, Pixel, rescue, leftovers**
+  - Outputs: `PixelNode`, `PixelController`, `GameScene` changes, `Particles` poof v2, `PickupNode` halo/shadow/bob (§13.8), enemy-shot under-glow on L4/L5, QA-008 fix (`LevelGenerator`/`LevelBuilder` agree on the exit pad; test), QA comment fix (leftover 8), debug `spawnCrowd` (12 boltbots + 2 crates in the current room) and `damageHero`
+  - Done when:
+    - all pickups route through `PickupResolver`, and the bag-full "!" stays on the floor
+    - items dropped from the inventory appear at the hero's feet and can be picked up again
+    - Pixel follows, bobs and passes through walls; tapping Pixel gives a hint (fly 2 s, arrow 6 s, return, 10 s cooldown) and never starts a stick
+    - the idle hint fires after `hintIdleSec` without progress
+    - the scan line plays on the first boltbot; story beats play
+    - at 0 HP: slow-mo 0.3 × for 0.6 s, beam 0.8 s, hero at the last checkpoint with full HP and 2 s invulnerability, living enemies healed and sent home, "Gotcha!" line, no "game over" anywhere
+    - poof v2 visible on all 5 floors (render test like `VisualCheckTests`)
+    - still under 1500 nodes and ~60 fps on the simulator with `spawnCrowd` on L4; result logged
+
+- [ ] **M3-6 swift-coder (pass B) — HUD, inventory, pause, intro, save flow, UI tests**
+  - Outputs: `QuickSlotBar`, `InventoryView`, `ItemInfoPanel`, `PauseMenuView`, `PixelBubbleView`, `LevelIntroView`, `RootView`/`GameModel` changes; `StrikeUITests/StrikeInventoryUITests.swift`
+  - Done when:
+    - quick slots show icon and total, tap = use, greyed at 0, shake + toast at full HP
+    - the inventory opens from the HUD button and the pause menu, game time stops, and Use / Drop / Put in quick slot / Tidy work
+    - the Pixel bubble shows the queued lines top-centre and taps dismiss it
+    - the intro card is shown before each level and outro lines on the Level complete card
+    - Continue after relaunch restores loadout, inventory, quick slots and unlocked level; New game asks before overwriting
+    - all text goes through the catalog; buttons ≥ 64 pt
+    - UI test (landscape): `-StrikeLevel l1 -StrikeSeed 42 -StrikeFreshSave`, tap through the intro, Q1 shows the healpack count 1, `debug.damageHero` then Q1 → count 0 and HP up, open the inventory, `inventory.tidy`, close, relaunch without `-StrikeFreshSave` → `title.continue` exists
+    - full `xcodegen generate` + `xcodebuild … test` green (own derivedDataPath + simulator per CLAUDE.md)
+
+- [ ] **M3-7 qa-tester — M3 verification**
+  - Outputs: `docs/QA_REPORT.md` M3 section; `StrikeTests/InventoryFuzzTests.swift`; `LocalizationKeyTests` extended to every string-array key in `levels.json → story` (leftover 9); main-actor warnings fixed in `StrikePlayPassUITests` (leftover 7)
+  - Inventory fuzz: 10,000 random add / remove / use / drop / tidy / assign sequences. Invariants: ≤ 25 slots used, every stack ≤ `stackSize`, item totals conserved (picked − used − dropped), quick links only to inventory item ids.
+  - Done when:
+    - suite green with no new warnings
+    - **leash checked by hand** (leftover 5): lure a boltbot two rooms away, wait 4 s, it walks home and is at full HP
+    - rescue checked by hand (slow-mo, beam, checkpoint, enemies home)
+    - save, kill app, relaunch → Continue restores everything
+    - Pixel lines read in de and en on device-size screenshots (no clipping in the bubble)
+    - kid-safety pass on all new text
+    - `spawnCrowd` on L4: FPS / node count logged on the simulator; ask the owner for the device number (owner question)
+
+- [ ] **M3-8 game-manager — M3 review**: check deliverables against GDD/ART_BIBLE, update ROADMAP/TASKS/DECISIONS, plan M4
 
 ## Questions for the owner
+- Performance check on your iPad 10th gen: in a DEBUG device build of M3, open L4 (`-StrikeLevel l4`), tap `spawnCrowd` once, fight for 30 s, and tell us the FPS shown in the corner (needed for the 60 fps goal on iPad 9th gen+)
 - Final title and character names (designer proposed options in GDD §19)
 - Gemini commercial-use terms for generated images (owner to confirm)
 - Music/SFX source (default: CC0 packs)
-- Apple Developer account for device/TestFlight builds? (bundle id is still `com.example.strike`)
 - Minimum iPad model (default iPadOS 18, iPad 9th gen+)
 - GDD §19 items 6–9 (Easy setting, hero looks, left-handed prompt, replay with new seed) are still open
-- QA-003: in the simulator, XCUITest touches arrive rotated unless the test forces landscape. Please play one round on a real iPad (move with the left stick, aim and fire with the right) to confirm touches are correct. This needs a device build, so it depends on the Apple Developer account question above.

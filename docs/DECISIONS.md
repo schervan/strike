@@ -42,3 +42,11 @@
 | 2026-11-22 | Debug-only overlay and launch args (`-StrikeLevel`, `-StrikeSeed`, `-StrikeTestRoom`) for QA and UI tests | Generated levels need reproducible seeds; debug code is compiled out of release builds |
 | 2026-11-22 | Bundle ID `io.schervan.strike`, team F5N3DQNZFC, automatic signing | Device builds on owner's iPad |
 | 2026-11-22 | QA-003 closed: owner played M1 on a real iPad (10th gen); move and shoot work | Real-device touch check |
+| 2026-11-22 | M2 "Levels" accepted (branch `m2-levels` @ 369bef8; 138 unit + 9 UI tests, 10,000 fuzz seeds clean, scripted L1–L5 playthroughs) | All M2 done-when criteria met; leftovers carried into M3 |
+| 2026-11-22 | Pixel's speech bubble is the top-centre HUD bubble (ART_BIBLE §7), not a bubble above Pixel in the world | Always readable, never off-screen or under walls; GDD §13 updated in M3-1 |
+| 2026-11-22 | Tapping Pixel = touch inside `pixel.tapRadius` that ends within 0.25 s and moves < 12 pt; such a touch starts no stick | Pixel floats inside the stick zones; kids must not get a hint when they meant to move |
+| 2026-11-22 | `Inventory` (25 slots, 4 quick links) replaces `PuzzleBag` via the `ItemCarrier` protocol; ammo reserves move to an `AmmoBank` per ammo type inside a `Loadout` | GDD §5.1/§7: one reserve per ammo type, inventory carries over |
+| 2026-11-22 | Save game basics in M3: one `save.json` (run state: loadout, inventory, quick slots, unlocked level, best results, settings) saved on level complete, checkpoint touch and app background; no mid-level state, Continue restarts the current level with the saved loadout | Smallest save that keeps kids' progress; mid-level save would need entity serialization (not worth it for 6–12 min levels) |
+| 2026-11-22 | Settings values (Pixel talk level, aim assist) live in the save from M3 with defaults; the Settings screen is M5 | Pixel's talk filter is needed now, the menu is presentation work |
+| 2026-11-22 | M3 pause menu = Resume, Inventory, Quit to title | Settings and the level map arrive in M5 |
+| 2026-11-22 | Story/Pixel text keys referenced by `levels.json` must be covered by `LocalizationKeyTests` | 56 keys were missing and no test caught it |

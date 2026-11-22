@@ -99,6 +99,8 @@ Note: another agent was running `xcodebuild test` on the shared simulator and de
 | l3 | 2000 | 0 | 0 | 3 | 17.5 ms |
 | l4 | 2000 | 0 | 0 | 5 | 28.2 ms |
 | l5 | 2000 | 0 | 0 | 3 | 21.9 ms |
+Fuzz seed count: `GeneratorFuzzTests` is `.serialized` and defaults to 400 seeds per level (36 s). The full 2,000 seeds per level (the table above, 203 s) run with `TEST_RUNNER_FUZZ_SEEDS=2000` on a dedicated simulator and derived-data path. A 2,000-seed run on the shared simulator was killed by the test host (cause unconfirmed).
+
 Generation including retries stays under 30 ms per level on the simulator, so no loading hitch.
 
 ### Scripted playthrough (15 runs, all completed)
@@ -126,3 +128,12 @@ Rooms 8-15, 0-2 gates; the script found and used every element, picked up fuse, 
 
 ### M2-7 verdict
 Green: fuzz 10,000/10,000 seeds clean, 15/15 scripted playthroughs complete, full suite green. No blockers; QA-007 and QA-009 are suggestions for M2-8.
+
+### M2-7 re-verification after coder fixes (2026-11-22, dedicated simulator, `build/DerivedDataQA`)
+- Full suite, default fuzz (400 seeds per level): 140 Swift Testing tests in 26 suites passed; 9 XCTest cases, 0 failures; `StrikeM2PassUITests` both cases passed (L1/L3 flow to Level complete and Continue, L4 run). TEST SUCCEEDED.
+- New `StrikeTests/FixVerificationTests.swift` (2 tests, 20 cases total counting arguments):
+  - QA-007 FIXED: in L2, L4 and L5 the hero stands on every walkable cell orthogonally beside each 2 x 2 machine (cell centres, no nudging); the machine is focused every time (8, 24 and 16 side cells). Before, no tile-centre position was in range.
+  - QA-008 trigger FIXED: with all elements on, standing on the logical `exitPad` cell or on the drawn pad completes the level in all 5 levels x 3 seeds. The 32 pt offset between the logical cell and the drawn pad still exists in every level (visible in the scripted playthrough log), but it no longer breaks anything; it stays as an info note for Pixel/hint code that might use `level.exitPad`.
+- QA-009 (subtle power-down) stays open for M3 (QA-009 in this report is the power-down effect; the machine-focus item was filed as QA-007 and is the one coder-m2 called QA-009).
+- Fuzz default: `GeneratorFuzzTests` is `.serialized`, 400 seeds per level (about 36 s); full 2,000 per level with `TEST_RUNNER_FUZZ_SEEDS=2000` (203 s on the dedicated setup).
+
