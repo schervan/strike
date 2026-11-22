@@ -40,3 +40,5 @@
 | 2026-11-22 | Minimap placement is decided by visual-artist (ART_BIBLE §13), not top-centre | GDD §3.1 sketch conflicts with the top-centre zone reserved for Pixel's bubble |
 | 2026-11-22 | Weapon pickups are placed by the generator in M2 but only become usable blasters in M4 | 3 blasters are M4 scope |
 | 2026-11-22 | Debug-only overlay and launch args (`-StrikeLevel`, `-StrikeSeed`, `-StrikeTestRoom`) for QA and UI tests | Generated levels need reproducible seeds; debug code is compiled out of release builds |
+| 2026-11-22 | Bundle ID `io.schervan.strike`, team F5N3DQNZFC, automatic signing | Device builds on owner's iPad |
+| 2026-11-22 | QA-003 closed: owner played M1 on a real iPad (10th gen); move and shoot work | Real-device touch check |

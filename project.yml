@@ -1,7 +1,7 @@
 name: Strike
 
 options:
-  bundleIdPrefix: com.example
+  bundleIdPrefix: io.schervan
   developmentLanguage: en
   deploymentTarget:
     iOS: "18.0"
@@ -20,6 +20,8 @@ settings:
     SWIFT_EMIT_LOC_STRINGS: YES
     ENABLE_USER_SCRIPT_SANDBOXING: YES
     DEAD_CODE_STRIPPING: YES
+    DEVELOPMENT_TEAM: F5N3DQNZFC
+    CODE_SIGN_STYLE: Automatic
 
 targets:
   Strike:
@@ -58,7 +60,7 @@ targets:
         ITSAppUsesNonExemptEncryption: false
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.example.strike
+        PRODUCT_BUNDLE_IDENTIFIER: io.schervan.strike
         TARGETED_DEVICE_FAMILY: "2"
         PRODUCT_NAME: Strike
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
@@ -76,7 +78,7 @@ targets:
       - target: Strike
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.example.strike.tests
+        PRODUCT_BUNDLE_IDENTIFIER: io.schervan.strike.tests
         TARGETED_DEVICE_FAMILY: "2"
         GENERATE_INFOPLIST_FILE: YES
         TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Strike.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Strike"
@@ -92,7 +94,7 @@ targets:
       - target: Strike
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.example.strike.uitests
+        PRODUCT_BUNDLE_IDENTIFIER: io.schervan.strike.uitests
         TARGETED_DEVICE_FAMILY: "2"
         GENERATE_INFOPLIST_FILE: YES
         TEST_TARGET_NAME: Strike
