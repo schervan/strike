@@ -556,6 +556,134 @@
         "de": { "stringUnit": { "state": "translated", "value": "Das große Abschalten" } },
         "en": { "stringUnit": { "state": "translated", "value": "The big switch-off" } }
       }
+    },
+    "hud.interact": {
+      "comment": "HUD INTERACT button label (press button, pull lever, use machine)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Benutzen" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Use" } }
+      }
+    },
+    "hud.interact.accessibility": {
+      "comment": "VoiceOver label of the INTERACT button",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Benutze das Ding neben dir" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Use the thing next to you" } }
+      }
+    },
+    "hud.door.accessibility": {
+      "comment": "VoiceOver value of the exit door counter. Arg 1 = switches on, arg 2 = switches needed",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "%1$lld von %2$lld Schaltern an" } },
+        "en": { "stringUnit": { "state": "translated", "value": "%1$lld of %2$lld switches on" } }
+      }
+    },
+    "hud.keyChips.accessibility": {
+      "comment": "VoiceOver label of the carried puzzle items (key chips) row",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Deine Sachen" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Your things" } }
+      }
+    },
+    "ui.toast.need_item": {
+      "comment": "Toast when a machine is used without its item. Arg = localized item name (item.<id>.name)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Das braucht: %@" } },
+        "en": { "stringUnit": { "state": "translated", "value": "This needs: %@" } }
+      }
+    },
+    "ui.toast.got_item": {
+      "comment": "Toast when a puzzle item is picked up. Arg = localized item name (item.<id>.name)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Du hast: %@" } },
+        "en": { "stringUnit": { "state": "translated", "value": "You got: %@" } }
+      }
+    },
+    "ui.toast.checkpoint": {
+      "comment": "Toast when the hero touches a checkpoint pad",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Checkpoint gespeichert!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Checkpoint saved!" } }
+      }
+    },
+    "ui.toast.bag_full": {
+      "comment": "Toast when an item cannot be picked up because the bag is full",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Deine Tasche ist voll!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Your bag is full!" } }
+      }
+    },
+    "ui.toast.gate_open": {
+      "comment": "Toast when a gate door opens",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Ein Tor ist offen!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "A gate is open!" } }
+      }
+    },
+    "ui.toast.door_open": {
+      "comment": "Toast when the exit door opens",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Der Ausgang ist offen!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "The exit is open!" } }
+      }
+    },
+    "levelComplete.title": {
+      "comment": "Title of the Level complete card",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Level geschafft!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Level complete!" } }
+      }
+    },
+    "levelComplete.time": {
+      "comment": "Level complete card: play time. Arg 1 = minutes, arg 2 = seconds (two digits)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Zeit: %1$lld:%2$02lld" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Time: %1$lld:%2$02lld" } }
+      }
+    },
+    "levelComplete.score": {
+      "comment": "Level complete card: score. Arg 1 = points",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Punkte: %1$lld" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Score: %1$lld" } }
+      }
+    },
+    "levelComplete.datachips": {
+      "comment": "Level complete card: datachips found. Arg 1 = found, arg 2 = total (3)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Datenchips: %1$lld / %2$lld" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Data Chips: %1$lld / %2$lld" } }
+      }
+    },
+    "levelComplete.continue": {
+      "comment": "Level complete card: go to the next level (after L5: back to the title screen)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Weiter" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Continue" } }
+      }
+    },
+    "levelComplete.toTitle": {
+      "comment": "Level complete card: back to the title screen",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Hauptmenü" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Main menu" } }
+      }
     }
   },
   "version": "1.0"

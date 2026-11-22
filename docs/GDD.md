@@ -1,6 +1,6 @@
 # Strike – Game Design Document (Season 1 MVP)
 
-Owner: game-designer · Status: v1.1 (M1-1) · Audience: kids 7–12 · iPad landscape · offline · DE + EN
+Owner: game-designer · Status: v1.2 (M2-1) · Audience: kids 7–12 · iPad landscape · offline · DE + EN
 
 This file is the single source of truth for the design. Balance numbers live in
 `Strike/Resources/Data/*.json`. If this doc and the JSON disagree, the JSON wins for numbers and
@@ -38,9 +38,9 @@ Tone: bright anime-cartoon. Blasters shoot light, foam and bubbles. Enemies neve
 
 Camera: follows the hero with 0.12 s smoothing (`hero.json → camera.smoothingSec`), scale 1.0,
 so it shows about **18.7 × 13 tiles** (1194 / 64 × 834 / 64). Small look-ahead of 60 pt in aim
-direction (`camera.lookAhead`). The camera is clamped to the room/map bounds. M2 room sizes
-(§14.2) are in tiles, so rooms read about 1.33 × larger than in v1.0; the generator ranges are
-re-checked in M2.
+direction (`camera.lookAhead`). The camera is clamped to the room/map bounds. Room sizes
+(§14.2) are in tiles and were re-checked for 64 pt in M2-1: a typical room (10–11 tiles) is about
+one screen once the HUD bands are subtracted (≈ 18.7 × 11 usable tiles).
 
 ---
 
@@ -227,7 +227,10 @@ All enemies power down into sparkles + their loot. Common rules:
 - **Idle → Alert** when the hero is within `detectRange` and in line of sight; alert shows a "!"
   bubble for 0.4 s before the first attack (fairness).
 - **Leash:** an enemy returns to its home room if the hero is > 2 × `detectRange` away for 4 s, and
-  heals to full.
+  heals to full (`rules.json → leash.rangeFactor`, `leash.returnAfterSec`, §16.8). Distance is the
+  straight line in pt (boltbot: 720 pt ≈ 11 tiles).
+- **Knockback:** a hit pushes the enemy by the weapon's `knockback` pt over the enemy's
+  `knockbackSec` (0.1 s for all in S1).
 - Contact damage triggers on touch, max once per hero invulnerability window.
 - Every attack that can hurt has a telegraph ≥ 0.4 s (glow, wind-up pose, or warning line).
 - Enemy projectiles are big, slow and colourful (min radius 8 pt, max speed 300 pt/s).
@@ -355,9 +358,23 @@ count for the exit door. Each element shows a small light: red = off, green = on
   counter, they only gate progress.
 - Opening the exit door does not end the level: the hero must walk into the exit pad behind it.
 
+**M2 notes (64 pt tiles).**
+- Timings live in `rules.json → puzzle` (§16.8): lever pull 0.4 s, plate hold 1.0 s, door pan
+  1.0 s, max 8 door lights. INTERACT range = `hero.json → hero.interactRadius` (64 pt = 1 tile),
+  measured from the hero centre to the element centre (machine: centre of its 2 × 2 cells).
+- Focus: if several interactables are in range, the nearest one is focused (ring + INTERACT glow).
+- The plate timer resets if the hero steps off before 1.0 s. Plate size = 1 tile; the hero
+  (36 pt) counts as "on" when its centre is inside the plate cell.
+- A machine without its item shows the item bubble and the toast `ui.toast.need_item`
+  ("This needs: Fuse"). The same toast is not repeated within `toast.repeatCooldownSec` (3 s).
+- Picking up a puzzle item shows `ui.toast.got_item`; opening a gate shows `ui.toast.gate_open`;
+  the exit door shows `ui.toast.door_open` after the pan. Pixel lines replace these toasts in M3.
+- Gate and exit doors fill the whole corridor width (2 cells in S1, `corridorWidth`).
+- `minElementSpacing` = tile distance between element anchor cells (machine: bottom-left cell).
+
 **Solvability (generator guarantee).** For every element: it is reachable from the start using
 only the doors that open before it. For every machine: its required item is placed in the same
-zone or an earlier zone and never behind the gate it opens. Verified by simulation (§13.3).
+zone or an earlier zone and never behind the gate it opens. Verified by simulation (§14.3).
 
 ---
 
@@ -449,18 +466,44 @@ Algorithm: **BSP rooms + corridors** with a zone lock-and-key pass (GameplayKit
 
 | Field | Type | Meaning | Range S1 |
 |---|---|---|---|
-| `gridWidth`, `gridHeight` | int | map size in tiles | 48–96 × 36–72 |
-| `roomCount` | {min,max} | rooms kept | 6–18 |
-| `minRoomSize`, `maxRoomSize` | int | room side length in tiles | 6–16 |
-| `bspMaxDepth` | int | BSP depth | 3–5 |
-| `corridorWidth` | int | tiles | 2–3 |
+| `gridWidth`, `gridHeight` | int | map size in tiles | 48–72 × 36–56 |
+| `roomCount` | {min,max} | rooms kept; `max ≤ 2^bspMaxDepth` | 6–15 |
+| `minRoomSize`, `maxRoomSize` | int | room side length in tiles (floor cells) | 7–14 |
+| `bspMaxDepth` | int | BSP depth | 3–4 |
+| `corridorWidth` | int | tiles | 2 |
 | `loopChance` | 0…1 | extra corridors | 0.1–0.35 |
 | `zones` | int | zones on critical path | 1–3 |
 | `enemyDensity` | float | threat multiplier | 0.6–1.6 |
 | `maxThreatPerRoom` | int | cap | 3–10 |
-| `minElementSpacing` | int | tiles | 8–12 |
-| `decorDensity` | 0…1 | prop chance per free floor tile | 0.03–0.08 |
+| `minElementSpacing` | int | tiles between element anchor cells | 7–8 |
+| `decorDensity` | 0…1 | prop chance per free floor tile (step 8 is Later) | 0.03–0.08 |
 | `maxAttempts` | int | regenerate tries | 50 |
+
+**64 pt re-check (M2-1).** Reference numbers: view 18.7 × 13 tiles, usable ≈ 18.7 × 11 below the
+HUD band; hero 36 pt wide (0.56 tile), speed 220 pt/s = 3.44 tiles/s; boltbot detect 360 pt =
+5.6 tiles; starter range 520 pt = 8.1 tiles.
+
+| Check | Rule | Result |
+|---|---|---|
+| Room size | typical room ≈ 1 screen | sides 7/8–12/14 tiles = 448/512–768/896 pt. Mean 9.5–11 tiles ≈ 0.55 × screen width, 0.9 × usable height → one screen. Max 14 (896 pt) scrolls a little vertically, which is fine for the big rooms of L3–L5. 15 (L4 before) was cut: 960 pt is > 1 screen high even without HUD |
+| Min room | fits a 2 × 2 machine + the 3-tile enemy gap + 2–3 enemies | 8 tiles in every level with machines (L2–L5). L1 has no machines and keeps 7 (448 pt), its BSP leaves (≈ 12 × 18 tiles) are too tight for 8 + margins |
+| Combat range | enemies across a room see you; you can hit them | room 10 tiles = 640 pt: boltbot (360 pt) wakes at about half a room, starter (520 pt) reaches ≈ 80 % of a room. Fair: the alert "!" fires before contact |
+| Corridor | wide enough to dodge, narrow enough to read as a corridor | 2 tiles = 128 pt = 3.5 × hero width; shieldandroid (40 pt) passes the hero. L1 3 → 2: at 64 pt a 3-tile corridor (192 pt) reads like a thin room and makes 3-cell doors |
+| Element spacing | elements in different spots, but zones with 4–5 elements still fit | 7–8 tiles = 448–512 pt ≈ ½ screen width, more than 1 boltbot detect range. 10 tiles (640 pt) made L4 zone 2 (fuse machine, keycard machine, 2 gate buttons, maybe the plate) hard to place in 4–5 rooms |
+| BSP | `roomCount.max ≤ 2^bspMaxDepth`, leaves fit `maxRoomSize` + 1-tile margin | L1 8 ≤ 8, L2 11 ≤ 16, L3 12 ≤ 16, L4 15 ≤ 16, L5 13 ≤ 16. L4 depth 5 (32 leaves for 15 rooms) dropped to 4 |
+| Fill | room floor (mean side² × mean rooms) ≈ 35–41 % of the grid, so corridors stay short | L1 37 %, L2 40 %, L3 41 %, L4 37 % → 41 % after 80 × 60 → 72 × 56, L5 36 % |
+
+**Walking-time check** (estimate: rooms visited × centre spacing `√(grid area / rooms)` × 1.5
+for backtracking, at 3.44 tiles/s). Pure walking stays at 12–15 % of par; the rest is fights,
+puzzles and kids exploring. `parTimeSec` is unchanged.
+
+| Level | Grid | Rooms (mean) | Spacing | Walk tiles | Walk s | Par s | Walk / par |
+|---|---|---|---|---|---|---|---|
+| L1 | 48 × 36 | 7 | 15.7 | 165 | 48 | 360 | 13 % |
+| L2 | 60 × 44 | 9.5 | 16.7 | 238 | 69 | 480 | 14 % |
+| L3 | 64 × 48 | 10.5 | 17.1 | 269 | 78 | 540 | 14 % |
+| L4 | 72 × 56 | 13.5 | 17.3 | 350 | 102 | 660 | 15 % (80 × 60: 111 s) |
+| L5 | 72 × 54 | 11.5 | 18.4 | 317 | 92 | 780 | 12 % (+ boss) |
 
 ### 14.3 Validation (must pass, else regenerate with seed + 1)
 
@@ -500,8 +543,8 @@ by finishing the previous one).
 
 ## 16. Data schemas
 
-All files: UTF-8 JSON, root object with `"version": 1` and one array (exception: `hero.json`,
-§16.6). Unknown fields must be
+All files: UTF-8 JSON, root object with `"version": 1` and one array (exceptions: `hero.json`
+§16.6 and `rules.json` §16.8). Unknown fields must be
 ignored by the decoder (forward compatible). Optional fields marked `?`. Ids reference each
 other and are validated at load (debug assert + unit test).
 
@@ -550,6 +593,7 @@ other and are validated at load (debug assert + unit test).
 | `contactDamage` | int | |
 | `detectRange` | float | pt |
 | `alertSec?` | float | "!" bubble time between Idle → Alert and the first chase/attack (§8). Default 0.4, must be ≥ 0.4 (fairness) |
+| `knockbackSec?` | float | duration of the push when a hero shot hits (distance = weapon `knockback`). Default 0.1; set on all 7 enemies |
 | `threatCost` | int | generator budget cost (0 = never spawned by budget) |
 | `scoreValue` | int | |
 | `lootTableId` | string | `loot.json` table id |
@@ -699,7 +743,58 @@ Aim-assist cone per blaster stays in `weapons.json → aimAssistConeDeg`.
 | `item.<id>.name`, `item.<id>.desc` | `items.json → nameKey/descKey` |
 | `level.<id>.name`, `level.<id>.subtitle` | `levels.json → nameKey/subtitleKey` |
 | `hud.*` | HUD labels; format args are positional (`%1$lld`, `%2$lld`) so DE/EN can reorder |
-| `pixel.*`, `story.*`, `ui.*` | added when their milestone needs them (M2+) |
+| `ui.toast.*` | one-line HUD toasts (M2) |
+| `levelComplete.*` | M2 "Level complete" card |
+| `pixel.*`, `story.*` | added when their milestone needs them (M3) |
+
+**M2 keys** (added in M2-1):
+
+| Key | Args | EN | DE |
+|---|---|---|---|
+| `hud.interact` | – | Use | Benutzen |
+| `hud.interact.accessibility` | – | Use the thing next to you | Benutze das Ding neben dir |
+| `hud.door.accessibility` | on, total | %1$lld of %2$lld switches on | %1$lld von %2$lld Schaltern an |
+| `hud.keyChips.accessibility` | – | Your things | Deine Sachen |
+| `ui.toast.need_item` | item name (`%@`) | This needs: %@ | Das braucht: %@ |
+| `ui.toast.got_item` | item name (`%@`) | You got: %@ | Du hast: %@ |
+| `ui.toast.checkpoint` | – | Checkpoint saved! | Checkpoint gespeichert! |
+| `ui.toast.bag_full` | – | Your bag is full! | Deine Tasche ist voll! |
+| `ui.toast.gate_open` | – | A gate is open! | Ein Tor ist offen! |
+| `ui.toast.door_open` | – | The exit is open! | Der Ausgang ist offen! |
+| `levelComplete.title` | – | Level complete! | Level geschafft! |
+| `levelComplete.time` | min, sec | Time: %1$lld:%2$02lld | Zeit: %1$lld:%2$02lld |
+| `levelComplete.score` | points | Score: %1$lld | Punkte: %1$lld |
+| `levelComplete.datachips` | found, total | Data Chips: %1$lld / %2$lld | Datenchips: %1$lld / %2$lld |
+| `levelComplete.continue` | – | Continue | Weiter |
+| `levelComplete.toTitle` | – | Main menu | Hauptmenü |
+
+`need_item` / `got_item` use "label: name" so German needs no article (eine Sicherung / einen
+Energiekern). The item name comes from `item.<id>.name`. The door counter itself shows only digits
+("3 / 5"). The debug overlay (`#if DEBUG`) is not localized.
+
+### 16.8 `rules.json`
+
+Exception to the "one array" rule: global rule numbers, grouped by system. Every block and field
+is required in the file; the decoder keeps `RulesDef.fallback` (same values) if the file is missing.
+
+```json
+{ "version": 1, "puzzle": Puzzle, "leash": Leash, "minimap": Minimap, "toast": Toast }
+```
+
+| Field | Type | Value | Meaning |
+|---|---|---|---|
+| `puzzle.leverPullSec` | float | 0.4 | lever pull animation; the lever toggles at the end (§11) |
+| `puzzle.plateHoldSec` | float | 1.0 | continuous standing time until a plate latches on; resets when the hero steps off |
+| `puzzle.doorPanSec` | float | 1.0 | camera pan to a door when its last element turns on; input locked, a tap skips |
+| `puzzle.doorMaxLights` | int | 8 | max lights drawn on a door; more required elements still count in "x / y" |
+| `leash.rangeFactor` | float | 2.0 | leash starts when hero distance > `rangeFactor × detectRange` (pt, straight line) |
+| `leash.returnAfterSec` | float | 4.0 | time beyond that range before the enemy walks home; at home it heals to full |
+| `minimap.revealOnEnter` | bool | true | a room is revealed when the hero's centre enters its rect; a corridor when it is entered |
+| `minimap.updateHz` | float | 10 | max minimap pushes per second from the scene |
+| `toast.showSec` | float | 2.5 | how long a `ui.toast.*` line stays (fade in/out included) |
+| `toast.repeatCooldownSec` | float | 3.0 | the same toast key is not shown again inside this time |
+
+INTERACT range is not here: it is `hero.json → hero.interactRadius` (64 pt).
 
 Every key referenced by a JSON file must exist in `Localizable.xcstrings` with `de` + `en`
 (guarded by `LocalizationKeyTests`, M1-11). Item `desc` texts repeat JSON numbers (heal,
@@ -775,3 +870,14 @@ Details: `docs/levels/L1.md` … `L5.md`.
 | 2026-11-22 | QA-004 new loot modifier `ammo_rescue` (`equippedAmmoBelowMagazines`, threshold 1.0, `guaranteeCount` 1) | – → 1 guaranteed equipped-ammo pack per powered-down enemy while mag + reserve < 1 magazine | Kids who miss a lot always get ammo back from the next enemy; self-limiting (+24 starter lifts them above 12) |
 | 2026-11-22 | QA-004 `loot_boltbot.dropChance` | 0.35 → 0.45 | Expected starter ammo per boltbot 4.2 → 5.4 shots vs 3 hits needed; leaves room for misses |
 | 2026-11-22 | §16.7 localization key patterns; xcstrings filled | 6 keys → 6 + 56 = 62 (4 hud, 3 weapon, 7 enemy, 32 item, 10 level) | M0 review #10 |
+| 2026-11-22 | M2-1 L1 `corridorWidth` | 3 → 2 | At 64 pt, 3 tiles = 192 pt reads like a thin room and needs 3-cell doors; 2 tiles = 128 pt is still 3.5 × the hero width. All levels now use 2 |
+| 2026-11-22 | M2-1 `minElementSpacing` | L1 8 → 7, L2 9 → 8, L3/L4/L5 10 → 8 | 10 tiles (640 pt) made L4 zone 2 (4–5 elements in 4–5 rooms) hard to place; 7–8 tiles (448–512 pt ≈ ½ screen) still keeps elements in different spots. Range 8–12 → 7–8 |
+| 2026-11-22 | M2-1 L2 `minRoomSize` | 7 → 8 | Room must fit the 2 × 2 fuse machine + the 3-tile enemy gap; same as L3–L5. L1 (no machines) keeps 7 |
+| 2026-11-22 | M2-1 L4 grid | 80 × 60 → 72 × 56 | Fill 37 % → 41 % like L1–L3, shorter corridors; walk ≈ 111 s → 102 s; helps the < 150 ms generation target |
+| 2026-11-22 | M2-1 L4 `maxRoomSize` | 15 → 14 | 15 tiles = 960 pt is taller than the whole 834 pt view; 14 is the S1 cap |
+| 2026-11-22 | M2-1 L4 `bspMaxDepth` | 5 → 4 | 32 leaves for 12–15 rooms threw away half the rooms; 16 leaves ≥ 15 rooms |
+| 2026-11-22 | §14.2 ranges | grid 48–96 × 36–72, rooms 6–18, sizes 6–16, depth 3–5, corridor 2–3, spacing 8–12 → 48–72 × 36–56, 6–15, 7–14, 3–4, 2, 7–8 | Match the S1 data after the 64 pt re-check; new 64 pt check + walking-time tables |
+| 2026-11-22 | new `rules.json` (§16.8) | rule text in §8/§11 → JSON: lever 0.4 s, plate 1.0 s, door pan 1.0 s, 8 lights, leash 2.0 × / 4.0 s, minimap reveal on enter / 10 Hz | DECISIONS: no balance in code. `puzzle.interactFocusRadius` from the TASKS draft is left out: `hero.interactRadius` already holds it |
+| 2026-11-22 | new `rules.json → toast` | – → `showSec` 2.5, `repeatCooldownSec` 3.0 | M2 toasts need a duration, and tapping a machine without its item must not spam the toast |
+| 2026-11-22 | new `enemies[].knockbackSec?` | `EnemyNode` code constant 0.1 → JSON 0.1 on all 7 enemies | M1 review leftover 1 (balance in code) |
+| 2026-11-22 | §11 M2 notes, §16.7 M2 keys | 62 keys → 78 (+4 hud, +6 ui.toast, +6 levelComplete) | M2-1; level name/subtitle keys already existed |

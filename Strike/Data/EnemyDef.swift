@@ -47,6 +47,14 @@ nonisolated struct EnemyDef: Codable, Sendable, Equatable, Identifiable {
 
     var effectiveAlertSec: Double { alertSec ?? Self.defaultAlertSec }
 
+    /// Duration of the blaster knockback shove (`enemies.json → knockbackSec`, M2-1).
+    let knockbackSec: Double?
+
+    /// M1 value, used only when an enemy has no `knockbackSec` in the JSON.
+    static let defaultKnockbackSec = 0.1
+
+    var effectiveKnockbackSec: Double { knockbackSec ?? Self.defaultKnockbackSec }
+
     /// Key pose texture in the `enemies` atlas (ART_BIBLE §11).
     var keyPoseTextureName: String { "enemy_\(id)_idle_01" }
 }

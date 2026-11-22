@@ -22,12 +22,12 @@
         "minRoomSize": 7,
         "maxRoomSize": 12,
         "bspMaxDepth": 3,
-        "corridorWidth": 3,
+        "corridorWidth": 2,
         "loopChance": 0.1,
         "zones": 1,
         "enemyDensity": 0.6,
         "maxThreatPerRoom": 3,
-        "minElementSpacing": 8,
+        "minElementSpacing": 7,
         "decorDensity": 0.05,
         "maxAttempts": 50
       },
@@ -157,7 +157,7 @@
           "min": 8,
           "max": 11
         },
-        "minRoomSize": 7,
+        "minRoomSize": 8,
         "maxRoomSize": 13,
         "bspMaxDepth": 4,
         "corridorWidth": 2,
@@ -165,7 +165,7 @@
         "zones": 2,
         "enemyDensity": 0.9,
         "maxThreatPerRoom": 5,
-        "minElementSpacing": 9,
+        "minElementSpacing": 8,
         "decorDensity": 0.06,
         "maxAttempts": 50
       },
@@ -312,7 +312,7 @@
         "zones": 2,
         "enemyDensity": 1.0,
         "maxThreatPerRoom": 6,
-        "minElementSpacing": 10,
+        "minElementSpacing": 8,
         "decorDensity": 0.08,
         "maxAttempts": 50
       },
@@ -447,21 +447,21 @@
       "fallbackSeed": 4004,
       "hintIdleSec": 30,
       "generator": {
-        "gridWidth": 80,
-        "gridHeight": 60,
+        "gridWidth": 72,
+        "gridHeight": 56,
         "roomCount": {
           "min": 12,
           "max": 15
         },
         "minRoomSize": 8,
-        "maxRoomSize": 15,
-        "bspMaxDepth": 5,
+        "maxRoomSize": 14,
+        "bspMaxDepth": 4,
         "corridorWidth": 2,
         "loopChance": 0.3,
         "zones": 3,
         "enemyDensity": 1.3,
         "maxThreatPerRoom": 8,
-        "minElementSpacing": 10,
+        "minElementSpacing": 8,
         "decorDensity": 0.06,
         "maxAttempts": 50
       },
@@ -625,7 +625,7 @@
         "zones": 2,
         "enemyDensity": 1.2,
         "maxThreatPerRoom": 8,
-        "minElementSpacing": 10,
+        "minElementSpacing": 8,
         "decorDensity": 0.05,
         "maxAttempts": 50
       },

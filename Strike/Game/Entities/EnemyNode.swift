@@ -25,8 +25,6 @@ final class EnemyNode: SKNode {
     var desiredVelocity = CGVector.zero
     private var knockbackVelocity = CGVector.zero
     private var knockbackRemaining: Double = 0
-    /// Short shove time for blaster knockback (feel constant; distance comes from weapons.json).
-    static let knockbackSec = 0.1
 
     private let alertBubble: SKLabelNode
 
@@ -100,9 +98,11 @@ final class EnemyNode: SKNode {
     func knockBack(along direction: CGVector, distance: CGFloat) {
         let len = hypot(direction.dx, direction.dy)
         guard len > 0, distance > 0 else { return }
-        let speed = distance / CGFloat(Self.knockbackSec)
+        let sec = def.effectiveKnockbackSec
+        guard sec > 0 else { return }
+        let speed = distance / CGFloat(sec)
         knockbackVelocity = CGVector(dx: direction.dx / len * speed, dy: direction.dy / len * speed)
-        knockbackRemaining = Self.knockbackSec
+        knockbackRemaining = sec
     }
 
     /// Runs the brain, then writes the physics velocity and drives the pose.

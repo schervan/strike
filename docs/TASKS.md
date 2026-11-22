@@ -219,7 +219,7 @@ Accessibility ids (new): `hud.interactButton`, `hud.minimap`, `hud.keyChips`, `l
     - Wall edge treatment confirmed for l2–l5 (the M1 contrast fix changed l1/l3/l4/l5).
   - Done when: every value in §13 is a concrete number or hex and nothing contradicts §7 or the GDD
 
-- [ ] **M2-3 swift-coder (pass A) — Level data + generator + solvability**
+- [x] **M2-3 swift-coder (pass A) — Level data + generator + solvability**
   - Outputs: `LevelDef`, `RulesDef` (decoding is tolerant if `rules.json` is still missing: use the GDD defaults in a single `RulesDef.fallback` and log once), `TileGrid`, `BSPLayout`, `LevelGraph`, `PuzzlePlacer`, `SpawnPlacer`, `LevelGenerator`, `SolvabilityChecker`. Tests in `StrikeTests/LevelDecodingTests.swift`, `TileGridTests.swift`, `LevelGeneratorTests.swift`, `SolvabilityTests.swift`.
   - Done when (each is a test):
     - all 5 levels decode; `validate()` also resolves level enemy/item/loot ids
@@ -231,7 +231,7 @@ Accessibility ids (new): `hud.interactButton`, `hud.minimap`, `hud.keyChips`, `l
     - 3 datachips with ≥ 1 off the critical path; the L2 `weaponPickup` is in zone 1 off the path
     - generating L4 (the largest) takes < 150 ms in a Debug test on the simulator
 
-- [ ] **M2-4 swift-coder (pass A) — PuzzleState, ItemCarrier, Pathfinder, leash logic**
+- [x] **M2-4 swift-coder (pass A) — PuzzleState, ItemCarrier, Pathfinder, leash logic**
   - Outputs: `PuzzleState`, `ItemCarrier`/`PuzzleBag`, `Pathfinder`, `LevelSession`; `ReturnHomeState` logic and the JSON `knockbackSec`. Tests in `PuzzleStateTests.swift`, `PathfinderTests.swift`, `LeashTests.swift`.
   - Done when (each is a test):
     - button latches; lever toggles and the exit needs every required lever on

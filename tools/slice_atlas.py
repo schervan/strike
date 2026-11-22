@@ -32,12 +32,12 @@ Raw file: art/raw/<sheet>.png (.jpg/.jpeg/.webp also accepted).
 import argparse, importlib.util, json, os, site, sys
 
 try:
-    from PIL import Image, ImageChops, ImageDraw, ImageFilter
+    from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageStat
 except ImportError:
     # `python3 -I` ignores the user site-packages where `pip install --user` puts Pillow.
     sys.path.append(site.getusersitepackages())
     try:
-        from PIL import Image, ImageChops, ImageDraw, ImageFilter
+        from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageStat
     except ImportError:
         sys.exit("Pillow is required: python3 -m pip install --user pillow")
 
@@ -312,6 +312,11 @@ DARK_GAP = 35            # ... and is lightened to floor + 40 when it is not
 WALL_SAT = 1.15          # saturation boost when a wall is adjusted
 WALL_CONTRAST = True
 
+# Floor calming (ART_BIBLE section 13.8): floors blend toward their own mean colour so loot, projectiles
+# and state lights pop. k = share of the mean colour (0 = untouched). Mean luminance is unchanged, so the
+# wall contrast rule is unaffected. Seamless: a per-pixel blend with a constant cannot create a seam.
+FLOOR_CALM = {"l1": 0.40, "l2": 0.45, "l3": 0.25, "l4": 0.30, "l5": 0.30}
+
 
 def mean_lum(im):
     h = im.convert("L").histogram()
@@ -362,6 +367,11 @@ def process_sheet(name, path, out_dir, icon_dir=ICON_DIR, tol=70, debug=False):
     if sh["bg"] == "none":  # tiles
         gr = M.group(sh["items"][0])
         base = make_seamless(im, gr.px[0]).resize(gr.px, Image.LANCZOS).convert("RGB")
+        if gr.anim == "floor" and FLOOR_CALM.get(gr.name, 0) > 0:
+            k = FLOOR_CALM[gr.name]
+            st = ImageStat.Stat(base)
+            mean = tuple(int(round(v)) for v in st.mean[:3])
+            base = Image.blend(base, Image.new("RGB", base.size, mean), k)
         if WALL_CONTRAST and gr.anim == "wall":
             fp = os.path.join(out_dir, "tiles.atlas", "tile_%s_floor_01@2x.png" % gr.name)
             if os.path.isfile(fp):
