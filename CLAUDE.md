@@ -36,6 +36,10 @@ xcodebuild -project Strike.xcodeproj -scheme Strike -destination 'platform=iOS S
 xcodebuild -project Strike.xcodeproj -scheme Strike -destination 'platform=iOS Simulator,name=iPad Pro 11-inch (M5)' test
 ```
 
+XcodeGen lives at `~/.local/opt/xcodegen-dl/xcodegen/bin/xcodegen` (not on PATH). Add `,OS=latest` to simulator destinations.
+
+**Parallel agents:** each agent builds with its own `-derivedDataPath build/DerivedData-<agent>` and, when running tests in parallel with others, its own simulator. Sharing one makes runs die with "signal kill". After the slicer writes into an `.atlas` folder, its mtime must change (the slicer does this); otherwise Xcode keeps stale textures.
+
 ## Hard rules
 - No blood, gore, or realistic guns. Enemies "power down" into sparkles and loot.
 - No networking, analytics, ads, IAP, or third-party SDKs.

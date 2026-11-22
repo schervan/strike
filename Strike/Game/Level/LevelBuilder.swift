@@ -135,7 +135,11 @@ enum LevelBuilder {
         static let shadowWidth: CGFloat = 10
         static let shadowAlpha: CGFloat = 0.22
         static let outlineWidth: CGFloat = 3
-        static let liftWidth: CGFloat = 4
+        /// ART_BIBLE §4 item 3 rim lift: 3 pt strip inside the wall cell, flush against the outline
+        /// (3–6 pt from the cell edge), only on sides that face floor.
+        static let liftWidth: CGFloat = 3
+        static let liftAlpha: CGFloat = 0.45
+        static let liftAlphaL3: CGFloat = 0.30
     }
 
     /// Every wall-cell side that touches a floor cell.
@@ -174,12 +178,12 @@ enum LevelBuilder {
             case .bottom:
                 shadow.addRect(CGRect(x: x, y: y - sw, width: t, height: sw))
                 outline.addRect(CGRect(x: x, y: y, width: t, height: ow))
-                lift.addRect(CGRect(x: x, y: y + t - EdgeStyle.liftWidth, width: t, height: EdgeStyle.liftWidth))
             case .top:
                 shadow.addRect(CGRect(x: x, y: y + t, width: t, height: sw))
                 outline.addRect(CGRect(x: x, y: y + t - ow, width: t, height: ow))
             }
         }
+        for r in rimLiftRects(grid) { lift.addRect(r) }
         func shape(_ path: CGPath, _ color: SKColor, z: CGFloat, name: String) -> SKShapeNode {
             let n = SKShapeNode(path: path)
             n.fillColor = color
@@ -193,9 +197,48 @@ enum LevelBuilder {
         let root = SKNode()
         root.name = "wallEdges"
         root.addChild(shape(shadow, Palette.outline.withAlphaComponent(EdgeStyle.shadowAlpha), z: 0.5, name: "floorShadow"))
-        root.addChild(shape(lift, Palette.wallTop(theme: theme), z: 1.1, name: "wallLift"))
+        let liftAlpha = theme == "l3" ? EdgeStyle.liftAlphaL3 : EdgeStyle.liftAlpha
+        root.addChild(shape(lift, Palette.wallTop(theme: theme).withAlphaComponent(liftAlpha), z: 1.1, name: "wallLift"))
         root.addChild(shape(outline, Palette.outline, z: 1.2, name: "wallOutline"))
         return root
+    }
+
+    /// Rim-lift strips (world points), one per run of consecutive floor-facing sides: never on a
+    /// side that touches another wall cell, so nothing is drawn inside thick walls.
+    static func rimLiftRects(_ grid: TileGrid) -> [CGRect] {
+        let t = TileGrid.tileSize
+        let o = EdgeStyle.outlineWidth, w = EdgeStyle.liftWidth
+        var out: [CGRect] = []
+        let edges = Set(wallEdges(grid).map { "\($0.column),\($0.row),\($0.side)" })
+        func has(_ c: Int, _ r: Int, _ side: Side) -> Bool { edges.contains("\(c),\(r),\(side)") }
+        // Horizontal runs (bottom / top sides) along x; vertical runs (left / right) along y.
+        for side in [Side.bottom, .top] {
+            for r in 0..<grid.height {
+                var c = 0
+                while c < grid.width {
+                    guard has(c, r, side) else { c += 1; continue }
+                    let start = c
+                    while c < grid.width, has(c, r, side) { c += 1 }
+                    let x = CGFloat(start) * t, len = CGFloat(c - start) * t
+                    let y = side == .bottom ? CGFloat(r) * t + o : CGFloat(r + 1) * t - o - w
+                    out.append(CGRect(x: x, y: y, width: len, height: w))
+                }
+            }
+        }
+        for side in [Side.left, .right] {
+            for c in 0..<grid.width {
+                var r = 0
+                while r < grid.height {
+                    guard has(c, r, side) else { r += 1; continue }
+                    let start = r
+                    while r < grid.height, has(c, r, side) { r += 1 }
+                    let y = CGFloat(start) * t, len = CGFloat(r - start) * t
+                    let x = side == .left ? CGFloat(c) * t + o : CGFloat(c + 1) * t - o - w
+                    out.append(CGRect(x: x, y: y, width: w, height: len))
+                }
+            }
+        }
+        return out
     }
 
     // MARK: Physics

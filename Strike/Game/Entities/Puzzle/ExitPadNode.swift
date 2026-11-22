@@ -11,6 +11,8 @@ final class ExitPadNode: SKNode {
     /// Seconds the hero must stand on the pad.
     static let standSec = 0.3
     static let glowDiameter: CGFloat = 120
+    /// White flash ring time before the Level complete card (ART_BIBLE §13.6).
+    static let flashSec = 0.4
 
     init(position p: CGPoint) {
         let t = TileGrid.tileSize

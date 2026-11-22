@@ -63,6 +63,17 @@ final class GameScene: SKScene, @preconcurrency SKPhysicsContactDelegate, EnemyW
     private var pan: DoorPan?
     private var panQueue: [DoorNode] = []
     private var exitStand: Double = 0
+    /// Counts down from `ExitPadNode.flashSec` after the pad is reached, then shows the card.
+    private var completionDelay: Double?
+    private var pendingResult: LevelResult?
+    /// Niche cells of the pad's row: standing on any of them counts (2-wide niches put the pad
+    /// sprite between two cells).
+    private lazy var exitPadCells: Set<GridPoint> = {
+        let door = level.exitDoor.cells
+        func dist(_ c: GridPoint) -> Int { door.map { $0.chebyshev(c) }.min() ?? 0 }
+        let far = level.exitDoor.niche.map(dist).max() ?? 0
+        return Set(level.exitDoor.niche.filter { dist($0) == far } + [level.exitPad])
+    }()
     private var clock: Double = 0
     private var minimapTimer: Double = 0
     private var lastMinimap: MinimapSnapshot?
@@ -235,6 +246,15 @@ final class GameScene: SKScene, @preconcurrency SKPhysicsContactDelegate, EnemyW
 
     /// One simulation step (separate from `update` so tests can drive it).
     func step(dt: Double) {
+        if var t = completionDelay {
+            t -= dt
+            completionDelay = t
+            if t <= 0, let r = pendingResult {
+                completionDelay = nil
+                pendingResult = nil
+                model?.completeLevel(r)
+            }
+        }
         guard !isComplete else { return }
         clock += dt
         if pan != nil {
@@ -498,7 +518,7 @@ final class GameScene: SKScene, @preconcurrency SKPhysicsContactDelegate, EnemyW
     private func updateFocus() {
         var best: (id: String, d: CGFloat)?
         for (id, node) in built.interactables where node.type != .pressureplate {
-            let d = hypot(node.position.x - hero.position.x, node.position.y - hero.position.y) - node.reachPadding
+            let d = node.interactDistance(from: hero.position)
             guard d <= interactRadius else { continue }
             if best == nil || d < best!.d || (d == best!.d && id < best!.id) { best = (id, d) }
         }
@@ -668,9 +688,9 @@ final class GameScene: SKScene, @preconcurrency SKPhysicsContactDelegate, EnemyW
 
     private func updateExit(dt: Double) {
         let pad = built.exitPad
-        guard puzzle.isExitOpen, built.exitDoor.isOpen,
-              hypot(pad.position.x - hero.position.x, pad.position.y - hero.position.y) <= ExitPadNode.triggerRadius
-        else { exitStand = 0; return }
+        let onPad = hypot(pad.position.x - hero.position.x, pad.position.y - hero.position.y) <= ExitPadNode.triggerRadius
+            || exitPadCells.contains(level.grid.cell(at: hero.position))
+        guard puzzle.isExitOpen, built.exitDoor.isOpen, onPad else { exitStand = 0; return }
         exitStand += dt
         guard exitStand >= ExitPadNode.standSec else { return }
         completeLevel()
@@ -685,7 +705,9 @@ final class GameScene: SKScene, @preconcurrency SKPhysicsContactDelegate, EnemyW
         let result = LevelResult(levelId: levelDef.id, nameKey: levelDef.nameKey, timeSec: Int(session.elapsed.rounded()),
                                  score: session.score, datachips: session.datachipsFound.count,
                                  datachipsTotal: levelDef.pickups.datachips, isLast: data.level(after: levelDef.id) == nil)
-        run(.sequence([.wait(forDuration: 0.4), .run { [weak self] in self?.model?.completeLevel(result) }]))
+        // Driven by `step` (not an SKAction) so headless tests reach the card too.
+        pendingResult = result
+        completionDelay = ExitPadNode.flashSec
     }
 
     // MARK: Hero damage + rescue

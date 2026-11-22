@@ -241,7 +241,7 @@ Accessibility ids (new): `hud.interactButton`, `hud.minimap`, `hud.keyChips`, `l
     - path around a 2 × 2 pillar exists and never enters a wall cell; no path through a closed door; a path appears after the door opens
     - leash triggers after `returnAfterSec` beyond `rangeFactor × detectRange` and restores full HP at home
 
-- [ ] **M2-5 swift-coder (pass B) — Level in the scene**
+- [x] **M2-5 swift-coder (pass B) — Level in the scene**
   - Outputs: `LevelBuilder`, `Entities/Puzzle/*`, `EnemyNode`/`BoltbotStates` updates, `GameScene` changes, `DebugOverlay`, launch args
   - Done when:
     - L1–L5 render in their themes with M1-style walls
@@ -255,7 +255,7 @@ Accessibility ids (new): `hud.interactButton`, `hud.minimap`, `hud.keyChips`, `l
     - the exit pad ends the level
     - 60 fps and < 1500 nodes on L4 on the iPad Pro 11 simulator (`showsFPS`)
 
-- [ ] **M2-6 swift-coder (pass B) — HUD, minimap, level flow, tests**
+- [x] **M2-6 swift-coder (pass B) — HUD, minimap, level flow, tests**
   - Outputs: `GameModel` extensions, `HUDView` (interact button, key chips, toast), `MinimapView`, `LevelCompleteView`; updated smoke tests; `StrikeUITests/StrikeLevelFlowUITests.swift`
   - Done when:
     - the minimap reveals rooms on entry and shows hero, doors and seen elements
@@ -266,7 +266,7 @@ Accessibility ids (new): `hud.interactButton`, `hud.minimap`, `hud.keyChips`, `l
     - UI test (landscape set, see QA-003): launch with `-StrikeLevel l1 -StrikeSeed 42`, find `hud.minimap` and `hud.interactButton`, tap `debug.solveAll` then `debug.gotoExit`, and `levelComplete.view` appears; then Continue starts L2
     - full `xcodegen generate` + `xcodebuild … test` green
 
-- [ ] **M2-7 qa-tester — M2 verification**
+- [x] **M2-7 qa-tester — M2 verification**
   - Outputs: `docs/QA_REPORT.md` M2 section; `StrikeTests/GeneratorFuzzTests.swift`
   - Fuzz: 2,000 seeds per level with an **independent** reachability check written by QA, not a call to `SolvabilityChecker`. It covers: all required elements reachable, machine items never behind their own gate, exit pad reachable once everything is on.
   - Done when:

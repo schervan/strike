@@ -81,6 +81,15 @@ class InteractableNode: SKNode {
     /// Distance from the element centre that still counts as "next to it" for INTERACT.
     var reachPadding: CGFloat { (spriteSize - TileGrid.tileSize) / 2 }
 
+    /// INTERACT distance, comparable to `interactRadius`: the distance from `p` to the element's
+    /// footprint square plus half a tile. For a 1-tile element this is roughly the centre distance;
+    /// for the 2 × 2 machine a hero on any side-adjacent cell is in range (QA-009).
+    func interactDistance(from p: CGPoint) -> CGFloat {
+        let h = spriteSize / 2
+        let dx = max(0, abs(p.x - position.x) - h), dy = max(0, abs(p.y - position.y) - h)
+        return hypot(dx, dy) + TileGrid.tileSize / 2
+    }
+
     func setFocus(_ style: FocusStyle) {
         guard style != focus else { return }
         focus = style

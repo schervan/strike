@@ -6,6 +6,7 @@ final class StrikeLevelScreenshotUITests: XCTestCase {
 
     override func setUp() { continueAfterFailure = true }
 
+    @MainActor
     private func shot(_ name: String) {
         let s = XCUIScreen.main.screenshot()
         let a = XCTAttachment(screenshot: s)

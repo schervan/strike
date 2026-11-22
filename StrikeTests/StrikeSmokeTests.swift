@@ -141,6 +141,26 @@ struct StrikeSmokeTests {
         #expect(scene.hudState.interact?.usable == false)
     }
 
+    @Test func machineIsFocusableFromEverySideCell() throws {
+        let scene = try Self.scene("l4", seed: 3)
+        for m in scene.level.elements where m.type == .machine {
+            let a = m.cell
+            for c in [GridPoint(a.x - 1, a.y), GridPoint(a.x + 2, a.y + 1), GridPoint(a.x, a.y - 1), GridPoint(a.x + 1, a.y + 2)] {
+                scene.hero.position = scene.level.grid.world(c)
+                scene.step(dt: 1.0 / 60)
+                #expect(scene.focusedId == m.id, "\(m.id) from \(c)")
+            }
+        }
+    }
+
+    @Test func exitTriggersFromEitherCellOfATwoWideNiche() throws {
+        let scene = try Self.scene("l2")
+        scene.handle(.debugSolveAll)
+        scene.hero.position = scene.level.grid.world(scene.level.exitPad)
+        for _ in 0..<30 { scene.step(dt: 1.0 / 60) }
+        #expect(scene.isComplete)
+    }
+
     @Test func plateNeedsTheHeroOnItsCell() throws {
         let data = try TestData.load()
         let scene = try Self.scene("l3")
@@ -189,9 +209,13 @@ struct StrikeSmokeTests {
         #expect(scene.built.gates.values.allSatisfy(\.isOpen) && scene.built.exitDoor.isOpen)
         #expect(scene.solidGrid.isWalkable(gate.cells[0]))
         #expect(scene.pathfinder.grid.isWalkable(scene.level.exitDoor.cells[0]))
+        let model = GameModel(data: try TestData.load())
+        scene.model = model
+        model.startLevel(id: "l4", seed: 3)
         scene.handle(.debugGotoExit)
-        for _ in 0..<30 { scene.step(dt: 1.0 / 60) }
+        for _ in 0..<60 { scene.step(dt: 1.0 / 60) }
         #expect(scene.isComplete)
+        if case .levelComplete(let r) = model.screen { #expect(r.levelId == "l4") } else { Issue.record("no Level complete card") }
     }
 
     @Test func lastElementStartsTheDoorPanAndATapSkipsIt() throws {

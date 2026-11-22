@@ -64,6 +64,21 @@ struct WallEdgeTests {
         #expect(edges.childNode(withName: "wallOutline") is SKShapeNode)
     }
 
+    @Test func rimLiftOnlyOnFloorFacingSidesAndMerged() {
+        let g = Self.room()
+        let rects = LevelBuilder.rimLiftRects(g)
+        // Ring: 4 merged runs; each 2 × 2 pillar: 4 sides of 2 cells → 4 runs.
+        #expect(rects.count == 4 + 2 * 4)
+        let t = TileGrid.tileSize
+        for r in rects {
+            // Every strip lies inside a wall cell, 3–6 pt from a floor-facing edge.
+            let cell = g.cell(at: CGPoint(x: r.midX, y: r.midY))
+            #expect(g[cell] == .wall)
+            #expect(min(r.width, r.height) == LevelBuilder.EdgeStyle.liftWidth)
+            #expect(max(r.width, r.height).truncatingRemainder(dividingBy: t) == 0)
+        }
+    }
+
     @Test func mergedWallRectsCoverEveryWallCellOnce() {
         let def = GeneratedCorpus.def("l4")
         let l = LevelGenerator.generate(def, seed: 3, catalog: GeneratedCorpus.catalog)
