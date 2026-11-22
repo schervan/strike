@@ -120,4 +120,12 @@ enum Particles {
             Burst(color: Palette.pixelLight, count: 6, lifetime: 0.5, speed: 100...200, size: 8),
         ])
     }
+
+    /// Puzzle element / checkpoint "on" burst (ART_BIBLE §13.4–13.6): green or cyan + white.
+    static func stateOn(at point: CGPoint, color: SKColor = Palette.stateOn, count: Int = 8) -> SKNode {
+        group(at: point, [
+            Burst(color: color, count: count, lifetime: 0.4, speed: 50...110, size: 9),
+            Burst(color: .white, count: max(2, count / 2), lifetime: 0.3, speed: 30...80, size: 6),
+        ])
+    }
 }

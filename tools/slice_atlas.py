@@ -32,12 +32,12 @@ Raw file: art/raw/<sheet>.png (.jpg/.jpeg/.webp also accepted).
 import argparse, importlib.util, json, os, site, sys
 
 try:
-    from PIL import Image, ImageChops, ImageDraw, ImageFilter
+    from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageStat
 except ImportError:
     # `python3 -I` ignores the user site-packages where `pip install --user` puts Pillow.
     sys.path.append(site.getusersitepackages())
     try:
-        from PIL import Image, ImageChops, ImageDraw, ImageFilter
+        from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageStat
     except ImportError:
         sys.exit("Pillow is required: python3 -m pip install --user pillow")
 
@@ -312,13 +312,21 @@ DARK_GAP = 35            # ... and is lightened to floor + 40 when it is not
 WALL_SAT = 1.15          # saturation boost when a wall is adjusted
 WALL_CONTRAST = True
 
+# Floor calming (ART_BIBLE section 13.8): floors blend toward their own mean colour so loot, projectiles
+# and state lights pop. k = share of the mean colour (0 = untouched). Mean luminance is unchanged, so the
+# wall contrast rule is unaffected. Seamless: a per-pixel blend with a constant cannot create a seam.
+# Wall calming (dark themes): detail blends toward the wall's mean colour by k, saturation scaled by sat,
+# applied BEFORE the luminance rule (which then lifts the mean to floor + 40 without a saturation boost).
+WALL_CALM = {"l4": (0.68, 0.60), "l5": (0.50, 0.75)}
+FLOOR_CALM = {"l1": 0.40, "l2": 0.45, "l3": 0.25, "l4": 0.30, "l5": 0.30}
+
 
 def mean_lum(im):
     h = im.convert("L").histogram()
     return sum(i * c for i, c in enumerate(h)) / float(max(1, sum(h)))
 
 
-def wall_contrast(wall, floor_lum, warn=None):
+def wall_contrast(wall, floor_lum, warn=None, sat=WALL_SAT):
     """Return (adjusted wall RGB image, old lum, new lum). Gain on RGB + saturation boost."""
     lum = mean_lum(wall)
     if floor_lum >= DARK_FLOOR:
@@ -330,7 +338,7 @@ def wall_contrast(wall, floor_lum, warn=None):
             return wall, lum, lum
         target = floor_lum + DARK_GAP + 5
     from PIL import ImageEnhance
-    out = ImageEnhance.Color(wall).enhance(WALL_SAT)
+    out = ImageEnhance.Color(wall).enhance(sat)
     for _ in range(3):  # gain converges quickly; clipping makes one step inexact
         out = out.point([min(255, int(i * target / max(1.0, mean_lum(out)))) for i in range(256)] * 3)
     return out, lum, mean_lum(out)
@@ -362,10 +370,22 @@ def process_sheet(name, path, out_dir, icon_dir=ICON_DIR, tol=70, debug=False):
     if sh["bg"] == "none":  # tiles
         gr = M.group(sh["items"][0])
         base = make_seamless(im, gr.px[0]).resize(gr.px, Image.LANCZOS).convert("RGB")
+        if gr.anim == "floor" and FLOOR_CALM.get(gr.name, 0) > 0:
+            k = FLOOR_CALM[gr.name]
+            st = ImageStat.Stat(base)
+            mean = tuple(int(round(v)) for v in st.mean[:3])
+            base = Image.blend(base, Image.new("RGB", base.size, mean), k)
+        calm_wall = gr.anim == "wall" and gr.name in WALL_CALM
+        if calm_wall:
+            from PIL import ImageEnhance
+            k, sat = WALL_CALM[gr.name]
+            mean = tuple(int(round(v)) for v in ImageStat.Stat(base).mean[:3])
+            base = Image.blend(base, Image.new("RGB", base.size, mean), k)
+            base = ImageEnhance.Color(base).enhance(sat)
         if WALL_CONTRAST and gr.anim == "wall":
             fp = os.path.join(out_dir, "tiles.atlas", "tile_%s_floor_01@2x.png" % gr.name)
             if os.path.isfile(fp):
-                base, l0, l1 = wall_contrast(base, mean_lum(Image.open(fp)))
+                base, l0, l1 = wall_contrast(base, mean_lum(Image.open(fp)), sat=1.0 if calm_wall else WALL_SAT)
                 if l0 != l1:
                     warn("wall contrast: luminance %.0f -> %.0f (floor %.0f)" % (l0, l1, mean_lum(Image.open(fp))))
             else:

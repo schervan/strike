@@ -18,6 +18,11 @@ enum Palette {
     static let robotMetalLight = hex(0xC9D2EA)
     static let uiPanel = hex(0x2E2A55)
     static let l1Sky = hex(0x8FD3FF)
+    /// ART_BIBLE §13 state colours.
+    static let stateOff = hex(0xFF3B5C)
+    static let stateOn = hex(0x5FE08A)
+    static let panelLine = hex(0x4A4585)
+    static let background = hex(0x1E1B3D)
 
     /// Level "wall top" colour (ART_BIBLE §2 per-level theme table).
     static func wallTop(theme: String) -> SKColor {

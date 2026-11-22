@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "puzzle": {
+    "leverPullSec": 0.4,
+    "plateHoldSec": 1.0,
+    "doorPanSec": 1.0,
+    "doorMaxLights": 8
+  },
+  "leash": {
+    "rangeFactor": 2.0,
+    "returnAfterSec": 4.0
+  },
+  "minimap": {
+    "revealOnEnter": true,
+    "updateHz": 10
+  },
+  "crate": {
+    "hp": 20
+  },
+  "toast": {
+    "showSec": 2.5,
+    "repeatCooldownSec": 3.0
+  }
+}

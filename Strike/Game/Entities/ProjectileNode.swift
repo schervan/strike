@@ -38,7 +38,7 @@ final class ProjectileNode: SKSpriteNode {
         b.friction = 0
         b.categoryBitMask = PhysicsCategory.heroShot
         b.collisionBitMask = PhysicsCategory.none
-        b.contactTestBitMask = PhysicsCategory.wall | PhysicsCategory.enemy
+        b.contactTestBitMask = PhysicsCategory.wall | PhysicsCategory.enemy | PhysicsCategory.crate
         b.usesPreciseCollisionDetection = true
         return b
     }

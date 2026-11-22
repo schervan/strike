@@ -59,7 +59,7 @@ Floors are kept low contrast and mid-light (L1-L3) or dark-but-not-black (L4-L5)
 - Assets are authored and shipped **@2x only** (iPad Retina is 2x), files named `...@2x.png`. pixels = pt x 2. AI images are generated larger and downscaled by `slice_atlas.py`.
 - Sprite anchor: characters bottom-center (feet on the tile ground line, anchor (0.5, 0.1)); everything else center.
 - **Wall vs floor contrast (kids must see where they cannot walk).** Luminance = mean of the grayscale value (0-255) of the 512 px texture. Light floors (lum >= 110): wall lum must be **<= 65 % of the floor lum** (target 60 %). Dark floors (lum < 110, L4/L5): wall lum must be **>= floor lum + 35** (target +40), i.e. walls glow lighter. `slice_atlas.py` enforces this automatically for wall sheets (gain on RGB + 15 % saturation boost; floor sheets must be sliced first, default order does; `WALL_CONTRAST = False` disables). Result (floor / wall lum, before -> after): L1 184 / 126 -> 110, L2 155 / 84 (ok, unchanged), L3 188 / 142 -> 112, L4 59 / 49 -> 98, L5 48 / 51 -> 87.
-- **Code-side wall treatment (spec for swift-coder).** (1) On every floor cell that touches a wall cell, draw an inner shadow strip on the floor side: 10 pt wide on the edge facing the wall, color #2B2140 at 22 % alpha (zPosition just above floor, below props). (2) Each wall cell (and each 2x2 pillar) gets a 3 pt #2B2140 outline on the sides that face floor (not between two wall cells). (3) Optional lift: a 4 pt strip in the level "wall top" color (section 2) along the top edge of each wall cell that has floor below it. Pillars use the wall texture, so they get the same treatment.
+- **Code-side wall treatment (spec for swift-coder).** (1) On every floor cell that touches a wall cell, draw an inner shadow strip on the floor side: 10 pt wide on the edge facing the wall, color #2B2140 at 22 % alpha (zPosition just above floor, below props). (2) Each wall cell (and each 2x2 pillar) gets a 3 pt #2B2140 outline on the sides that face floor (not between two wall cells). (3) Rim lift (revised M2 polish, replaces the old "top edge of every wall cell" strip, which drew a stray line through the middle of thick walls such as the L3 hedges): a **3 pt strip in the level "wall top" color at 45 % alpha (L3: 30 %)**, drawn **only on the side of a wall cell that directly faces a floor cell** (any of the four sides), placed **inside the cell, flush against the 3 pt outline** (strip occupies 3 to 6 pt from the cell edge). It is never drawn on a side that touches another wall cell, so it can never appear in the interior of a thick wall. Pillars use the wall texture, so they get the same treatment. Skip it entirely if it costs more than one extra node per wall edge: merge runs of the same side into one rectangle. Pillars use the wall texture, so they get the same treatment.
 - Collision radius (for Swift coder): about 40 percent of sprite width, centered at the feet area. Not tied to the sprite box.
 
 | Category | Size (pt) | Pixels @2x | Notes |
@@ -346,3 +346,108 @@ Common rules: no red or dark-red tints on enemy hits except OVERMIND enemy shots
 - Alert "!" above an enemy: pop scale 0.0 to 1.2 to 1.0 in 0.15 s, held to 0.4 s total, color #FFD93D with #2B2140 outline.
 - Projectile: no animation, spawn scale 0.6 to 1.0 in 0.05 s; trail optional (2 faded copies at 0.04 s spacing, alpha 0.4 and 0.2).
 - All motion uses SKAction timing modes (easeOut for impulses, easeInEaseOut for sways); nothing may exceed 4 simultaneous tweens per node.
+
+## 13. Level presentation (M2)
+All values are pt unless noted, zPosition numbers are relative (world layers: floor 0, wall shadow strip 1, floor props / pads / plates 2, loot 3, doors / buttons / levers / machines 4, characters 5+, projectiles 8, FX 9). Colors from section 2. Every value belongs in `rules.json` or a Swift constant named after the row, never inline magic numbers.
+
+### 13.1 Minimap
+**Placement (HUD camera child, origin top-right).** Panel 160 x 120, right inset +16 from the safe-area edge, top +96 (below the pause button 64 at top +16, gap 16). Reasons: top-center 120 pt stays free for Pixel's bubble (max 420 wide; on 1194 wide the bubble spans x 387-807, the panel starts at about x 998; on 1024 wide 302-722 vs 828); the key chips (left +16, top +92) and the interact/reload/swap column (right +24, bottom +164 to +412) do not collide (panel bottom is at top +216; on 768 high the column top is at y 356 from top, the panel ends at 216). GDD §3.1 "top-centre" is superseded by this (DECISIONS). The panel is display-only (`isUserInteractionEnabled = false`), so the right aim zone below it keeps working under it.
+| Part | Value |
+|---|---|
+| Panel | 160 x 120, corner radius 12, fill #1E1B3D at 80 % alpha, 2 pt stroke #4A4585 (light UI panel), z above world HUD |
+| Inner map area | panel inset 6 on all sides = 148 x 108 |
+| Map scale | `cellPt = floor(min(148 / gridW, 108 / gridH) * 2) / 2`, minimum 2.0, centered in the inner area; one cell = `cellPt` square. 48 x 32 grid gives 3.0 pt |
+| Render | one `SKSpriteNode` with a texture redrawn (CoreGraphics, 2x) only when a room / corridor is revealed or a door / element changes; marker nodes (hero, pulse) update at 10 Hz. No per-frame redraw |
+| Fog of war | unrevealed cells draw nothing (panel color shows through). Revealed room: all its cells, on first entry. Revealed corridor: cells within 3 cells of the hero's cell (Chebyshev), stays revealed. Walls are not drawn; the revealed floor area is the map. Revealed state persists in `LevelSession.revealedRoomIds` (+ corridor cell set) |
+| Room floor | #C9D2EA at 90 % alpha |
+| Corridor floor | #8FA3C8 at 90 % alpha |
+| Room edge | 1 pt #4A4585 around the outer boundary of revealed cells (cheap: draw wall-adjacent edges only) |
+| Hero | circle 7 pt diameter, #3D8BFF fill, 1.5 pt white outline; pulse scale 1.0 to 1.3 to 1.0 over 1.0 s, easeInEaseOut, forever; always above everything else, clamped to the inner area |
+| Door closed | bar across the corridor width: `cellPt * corridorWidth` long, 3 pt thick (thick side across the corridor), #FF3B5C |
+| Door open | same bar, #5FE08A at 70 % alpha |
+| Element off (button, lever, plate, machine) | 4 pt circle #FF3B5C with 1 pt #2B2140 outline, only if its room is revealed |
+| Element on | 4 pt circle #5FE08A with 1 pt #2B2140 outline |
+| Checkpoint | 5 pt diamond (square rotated 45 degrees) #3DE3D0, 1 pt #2B2140 outline; hollow (fill alpha 0.25) until touched |
+| Exit pad | 8 pt five-point star #FFD93D, 1 pt #2B2140 outline, shown once its room is revealed; gentle alpha pulse 0.7 to 1.0 over 1.2 s |
+| Crates, loot, enemies | not shown (keeps it calm; pings are M3) |
+| Draw order | floors, door bars, elements, checkpoints, exit, hero |
+| Colour-blind safety | on/off are never color only: off = filled circle with no center mark, on = the same circle with a 1.5 pt white check-dot (2 pt white center). Door closed = solid bar, open = bar at 70 % with a 1 cell gap in the middle |
+
+### 13.2 Doors across 2-3 tile corridors
+- A gate or exit door covers `GatesDef.cells` (a line of `corridorWidth` cells, 2 or 3). **One `DoorNode` per gate**, containing **one 64 x 64 sprite per cell**, each placed at its cell center. Never stretch a sprite (the outline would get fat).
+- Texture: `puzzle_door_closed / opening_01..04 / open`. All cells of a door use the same texture at the same time, but the frame is played with a **stagger of 0.04 s from the outer cell to the cell next to the other wall** (cell i starts at i * 0.04 s), so a 3-wide door ripples open. Opening total 4 frames x 0.07 s = 0.28 s (plus stagger up to 0.08 s); closing plays the frames in reverse.
+- Orientation: the art is drawn for a corridor running **west-east** (the door blocks east-west travel, the panel seam is vertical). For a **north-south** corridor (door blocks vertical travel) set `zRotation = pi / 2` on each sprite (allowed, doors are objects, section 1). Rotation is on the sprite, not on the DoorNode, so lights and counter stay upright.
+- Sprites touch exactly at cell borders (no gap, no overlap). The outer outline between two door cells is intentional and reads as one wide door of several panels. Cells at the corridor sides sit against wall cells, so no extra frame is needed.
+- Seam hiding: none needed. Optional: 4 pt #2B2140 strip, 100 % alpha, along both ends of the door (the sides touching walls) is **not** used (walls already have outlines per section 4).
+- Open door: the sprite shows `puzzle_door_open` (retracted panels). It stays 64 x 64 per cell, z 2 (floor prop) so characters walk over it. Closed door z 4. Physics body: one rectangle spanning all cells, removed when open.
+- **Lights and counter** (code nodes, one set per DoorNode, centered on the door's middle cell or, for 2-wide, on the shared edge of the two cells, 40 pt above the door's long axis center, outside the corridor line so it is never hidden by the hero):
+  - Lights: one circle per required element, 10 pt diameter, 4 pt gap, row centered. Off #FF3B5C, on #5FE08A, 1.5 pt #2B2140 outline, on-state gets a 3 pt soft halo (circle 16 pt, same color, alpha 0.35, additive). Maximum 6 lights; above 6 show only the counter.
+  - Counter: "3 / 5" (on / total) in SF Rounded bold 16 pt, white, 2 pt #2B2140 stroke, centered 14 pt above the lights, on a plum pill 56 x 22 (#2E2A55 at 85 %). Upright for both orientations (rotate nothing). Numbers are not localized text; no word is drawn.
+  - Counter hidden while the hero is farther than 6 tiles from the door and the door is closed, alpha 0 to 1 over 0.2 s; always shown (alpha 0.5) once open for 1.0 s then fades out.
+  - The counter pops (scale 1.0 to 1.25 to 1.0 in 0.2 s) when an element turns on; on the last one a white flash on all door cell sprites (colorBlendFactor 0.6 to 0 in 0.15 s) before the opening animation.
+
+### 13.3 Interact focus
+Exactly one interactable is the **focused** one (nearest within `interactRadius`, ties by smallest angle to the aim). Everything fades with 0.12 s alpha tweens.
+| Part | Value |
+|---|---|
+| Focus ring on the object | circle stroke, diameter = sprite size + 12 (76 for 1-tile, 140 for the machine), line width 3, color #FFD93D with a 1.5 pt #2B2140 underlay stroke (draw the dark 6 pt ring first), z 3.5 (above floor props, below the sprite) |
+| Ring animation | scale 0.95 to 1.05 and alpha 0.7 to 1.0 together, period 0.9 s, easeInEaseOut |
+| Soft glow | additive circle (texture generated radial, no new art), diameter sprite size + 28, #FFD93D at 30 % alpha, same pulse |
+| Arrow | none |
+| Interact button (HUD, section 7) | appears with scale 0.6 to 1.0 in 0.15 s (easeOut), alpha 0 to 1; while shown, a glow ring behind it: circle 88 pt (72 + 16), #FFD93D alpha 0.5, pulse 1.0 to 1.12 over 0.8 s. Disappears with alpha 0 over 0.1 s. Icon stays `ui_btn_interact`; no text |
+| Not usable (machine without item, plate already on, nothing to do) | ring color #FFFFFF at 50 % alpha instead of yellow, no pulse, interact button shown at 45 % alpha but still tappable (so the bubble in 13.5 appears) |
+| Hero feedback | none beyond the above (no hero rotation) |
+
+### 13.4 Pressure plate
+Sprite `puzzle_pressureplate_off/on` (64). Plates are held down while the hero (or a box, none in M2) stands on them; hold timer from `rules.json`.
+| Part | Value |
+|---|---|
+| Fill ring (hold timer) | arc centered on the plate, radius 26 (ring middle), line width 6, round caps, #FFD93D, starts at 12 o'clock, clockwise; track behind it: full circle radius 26 width 6 #2B2140 at 35 % alpha. Visible only while the hero stands on it or the timer runs; fades in over 0.1 s |
+| Timer drain | when the hero leaves, the arc drains back to 0 over the same remaining time (it is the remaining hold time), color switches to #FF3B5C below 25 % |
+| Complete | arc fills, color turns #5FE08A, sprite swaps to `_on`, pulse scale 1.0 to 1.15 to 1.0 in 0.2 s plus 6 particles (#5FE08A + white, 0.3 s) |
+| Idle (off, nobody on it) | faint dashed ring radius 26, 2 pt, #FFFFFF at 30 % alpha, no animation |
+| Held plate that needs hold time and counts down for a door | the door counter flashes yellow (text color #FFD93D) while the plate is held |
+
+### 13.5 Machine "needs item" bubble
+Machine sprite is 128 x 128 (2 x 2 cells). Bubble shown when the hero interacts without the item (`ActivationResult.needsItem`) and also, softly, when the focus is on a machine and the item is not in the bag.
+| Part | Value |
+|---|---|
+| Bubble | rounded rect 56 x 44, corner radius 12, fill #FFFFFF, 3 pt #2B2140 stroke, with a 10 x 8 pt tail pointing down; centered over the machine, bottom of the tail 8 pt above the sprite's top edge (so about 72 pt above the machine's center) |
+| Content | the required item sprite (`pickup_fuse`, `pickup_battery`, `pickup_energycore`, `pickup_keycard`) at 32 x 32 centered; no text. Above it nothing; if the hero already carries the item the bubble is not shown |
+| Silhouette hint | the item is drawn at 100 % when the hero does not own it; if the item exists in the level but the hero lacks it, same. (No dimming rules: kids need a clear picture.) |
+| Animation | pop scale 0.0 to 1.15 to 1.0 in 0.2 s (easeOut), hold 2.0 s (or while the hero stays in range, max 3.0 s), then fade out in 0.2 s. A small shake x +/- 3 pt (0.04 s each, 4 steps) on the machine sprite and a soft low "no" blip are allowed (sound is M6) |
+| Bubble size scale | on a 1024 x 768 screen identical (pt based) |
+| When the item is used | the item sprite flies from the hero to the machine slot in 0.25 s (easeIn, scale 1.0 to 0.6), then `puzzle_machine_on`, 8 particles (#5FE08A + white), and the machine plays a pulse 1.0 to 1.06 to 1.0 in 0.2 s |
+
+### 13.6 Checkpoint and exit pad states
+Sprites are 64 x 64, drawn top-down on the floor (z 2). All glows are code nodes using a generated radial gradient texture (white, alpha falling to 0), tinted by `color`, additive blend.
+| State | Visual |
+|---|---|
+| Checkpoint off (not touched) | `puzzle_checkpoint_off`; static, no glow; alpha 1.0 |
+| Checkpoint idle glow (off) | cyan hint: radial glow 88 pt diameter #3DE3D0 at 18 % alpha, pulse alpha 0.10 to 0.22 over 1.6 s, so kids spot it from afar. Visible even when the checkpoint is off |
+| Checkpoint touched | swap to `_on`; ring burst: white circle stroke 3 pt scale 0.5 to 2.0, alpha 0.8 to 0 over 0.4 s; 10 particles (#3DE3D0 + #BFFFF7, 0.5 s); glow becomes #5FE08A at 30 %, steady pulse 0.2 to 0.35 over 1.6 s; a small "saved" star (`fx_sparkles_01` 24 pt) pops above for 0.6 s; no text |
+| Exit pad off (exit door closed) | `puzzle_exitpad_off`; glow none; static. Counter style like doors is not used (the door shows it) |
+| Exit pad on (exit door open) | `_on` with glow 120 pt diameter #FFD93D at 35 %, pulse alpha 0.25 to 0.45 over 1.2 s; plus 3 rising sparkles (#FFD93D + white, 6 pt, 0.8 s life, one every 0.4 s, rise 24 pt) |
+| Reaching the exit pad | hero stands inside radius 28 for 0.3 s: white flash ring scale 0.5 to 2.2 alpha 0.9 to 0 over 0.4 s, then the Level complete card |
+| Trigger radius (checkpoint / exit) | 28 pt from the pad center (visual radius is 32) |
+
+### 13.7 Wall edge treatment l2 to l5 (confirmed)
+Section 4 rules apply to every theme: inner shadow strip 10 pt #2B2140 at 22 %, 3 pt #2B2140 outline on wall sides that face floor, and the revised rim lift (3 pt, 45 %, only on floor-facing sides, flush inside the outline; L3 30 %). With the M1 contrast fix the wall / floor luminance is L1 110 / 184, L2 84 / 155, L3 112 / 188, L4 98 / 58, L5 87 / 47 (checked on the sliced atlas, 2026-11-22). Visually confirmed for l2 to l5 with the strip and outline: walls separate clearly from floors; L4/L5 walls read as lighter than the floor, which is intended ("glowing walls"). Polish (slice_atlas.py `WALL_CALM`): L4 and L5 walls are calmed so they do not pull the eye: detail blends toward the wall mean by k (L4 0.68, L5 0.50), saturation x0.60 / x0.75, and the luminance rule then lifts the mean (no saturation boost). Wall lum unchanged (L4 98 vs floor 58 = +40; L5 87 vs 47 = +40); detail std-dev 52.0 -> 20.2 (L4), 32.3 -> 17.5 (L5); brightest 1 % 254 -> 169 (L4), 187 -> 151 (L5); mean saturation 175 -> 121 (L4), 160 -> 118 (L5).
+
+### 13.8 Readability test (floors L1 to L5) and results
+Test: composite of 8 loot sprites (bolt, datachip, healpack, three ammo crates, keycard, fuse), the starter and the enemy shot, and the puzzle sprites (button off/on, lever, plate off/on, door, checkpoint, exit pad on) over each `tile_lN_floor_01` at 1:1 (2x). Script: scratch composite (the `tools/contact_sheet.py` is label-only; no floor compositing there).
+Results before calming: every pickup (outlined 3 px, saturated) read on all floors; puzzle sprites are opaque plates (own panel, red/green lights are inside the plate) and read everywhere. Weak spots: L1 and L2 floors were busy (panel grid, rivets, L2 diamond-plate hatching, orange marks), and small 16 pt projectiles / the bolt's green dot lost contrast on L2 (hatching) and L5 (magenta glows). The enemy shot (#FF3B5C) on L5 (#3A1840) is the lowest contrast pair.
+Fix (applied in `tools/slice_atlas.py`, `FLOOR_CALM`): floor textures blend toward their own mean color by k = L1 0.40, L2 0.45, L3 0.25, L4 0.30, L5 0.30. Mean luminance is unchanged (wall contrast numbers hold), seams unaffected. Luminance std-dev of the 512 px floor, before -> after: L1 30.1 -> 18.1, L2 27.8 -> 15.3, L3 29.1 -> 21.9, L4 13.1 -> 9.2, L5 17.5 -> 12.3. After: loot pops on all five floors; L2 hatching is quiet. Atlas folder mtime bumped (Xcode recompiles).
+Code-side loot rules (readability, all themes):
+| Item | Value |
+|---|---|
+| Loot halo | additive radial glow under every pickup: diameter 44 (energycore 52), #FFFFFF at 28 % alpha on L1-L3, 38 % on L4-L5, z just below the loot; pulse alpha +/- 0.06 over 1.4 s |
+| Loot shadow | soft plum ellipse 22 x 8 at 25 % alpha, 12 pt below the item center (section 1: code adds item shadows) |
+| Loot bob | 3 pt vertical, period 1.2 s, random phase |
+| Enemy shot on dark floors (L4, L5) | add a white-pink under-glow circle 28 pt, #FFB3F2 at 40 % alpha, additive, behind the 16 pt projectile; keep the sprite as is |
+| Player shots | no change (orange, purple and yellow read on all floors) |
+| State lights | the red / green lights live inside the plate sprites and read everywhere; the extra door lights (13.2) have the 1.5 pt plum outline so they read on dark floors too |
+
+### 13.9 Open questions for the coder
+- Reveal radius (3 cells), hold-time ring, and stagger timings above should go to `rules.json -> minimap / puzzle / door` next to the designer's numbers; if the designer's values differ, JSON wins.
+- Generated radial glow texture: 128 px, white center to transparent edge, `pow(1 - r, 2)` falloff; create once at launch and share (no art file needed).

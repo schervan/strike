@@ -1,7 +1,8 @@
 import SwiftUI
 
-/// In-game SwiftUI overlay (ART_BIBLE §7 positions, minus the Fire button): HP bar and ammo
-/// readout top-left, RELOAD on the right column. Reads `GameModel.hud`, sends `GameCommand`s.
+/// In-game SwiftUI overlay (ART_BIBLE §7 positions, minus the Fire button): HP bar, ammo readout
+/// and key chips top-left, RELOAD and INTERACT on the right column, toast line top-centre.
+/// Reads `GameModel.hud`, sends `GameCommand`s.
 struct HUDView: View {
     @Environment(GameModel.self) private var model
 
@@ -14,6 +15,12 @@ struct HUDView: View {
         static let button: CGFloat = 72
         static let reloadRight: CGFloat = 24
         static let reloadBottom: CGFloat = 252
+        static let interactBottom: CGFloat = 164
+        static let interactGlow: CGFloat = 88
+        static let chip: CGFloat = 40
+        static let chipGap: CGFloat = 8
+        static let chipsTop: CGFloat = 92
+        static let toastTop: CGFloat = 124
     }
 
     private static let panel = Color(red: 0x2E / 255, green: 0x2A / 255, blue: 0x55 / 255)
@@ -33,10 +40,105 @@ struct HUDView: View {
             .padding(.top, Layout.margin)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
 
+            keyChips(hud)
+                .padding(.leading, Layout.margin)
+                .padding(.top, Layout.chipsTop)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+
             reloadButton(hud)
                 .padding(.trailing, Layout.reloadRight)
                 .padding(.bottom, Layout.reloadBottom)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+
+            interactButton(hud)
+                .padding(.trailing, Layout.reloadRight - (Layout.interactGlow - Layout.button) / 2)
+                .padding(.bottom, Layout.interactBottom - (Layout.interactGlow - Layout.button) / 2)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+
+            toastLine
+                .padding(.top, Layout.toastTop)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                .allowsHitTesting(false)
+        }
+    }
+
+    // MARK: Interact
+
+    @State private var glowPulse = false
+
+    private func interactButton(_ hud: HUDState) -> some View {
+        let focused = hud.interact != nil
+        let usable = hud.interact?.usable ?? false
+        return Button {
+            model.requestInteract()
+        } label: {
+            ZStack {
+                if focused && usable {
+                    Circle()
+                        .fill(Self.star.opacity(0.5))
+                        .frame(width: Layout.interactGlow, height: Layout.interactGlow)
+                        .scaleEffect(glowPulse ? 1.12 : 1.0)
+                        .animation(.easeInOut(duration: 0.4).repeatForever(autoreverses: true), value: glowPulse)
+                        .onAppear { glowPulse = true }
+                        .onDisappear { glowPulse = false }
+                }
+                AtlasImage("ui_btn_interact")
+                    .frame(width: Layout.button, height: Layout.button)
+            }
+            .frame(width: Layout.interactGlow, height: Layout.interactGlow)
+            .contentShape(Circle())
+        }
+        .buttonStyle(HUDButtonStyle())
+        .opacity(focused && usable ? 1 : 0.45)
+        .saturation(focused ? 1 : 0)
+        .animation(.easeOut(duration: 0.15), value: focused)
+        .accessibilityIdentifier("hud.interactButton")
+        .accessibilityLabel(Text("hud.interact"))
+        .accessibilityHint(Text("hud.interact.accessibility"))
+        .accessibilityValue(Text(verbatim: hud.interact?.kind ?? ""))
+    }
+
+    // MARK: Key chips
+
+    private func keyChips(_ hud: HUDState) -> some View {
+        VStack(alignment: .leading, spacing: Layout.chipGap) {
+            ForEach(hud.carried.keys.sorted(), id: \.self) { id in
+                ZStack(alignment: .bottomTrailing) {
+                    Circle()
+                        .fill(Self.panel.opacity(0.85))
+                        .overlay(Circle().stroke(Self.outline, lineWidth: 2))
+                    AtlasImage("pickup_\(id)", atlas: "items")
+                        .padding(4)
+                    if let n = hud.carried[id], n > 1 {
+                        Text(verbatim: "\(n)")
+                            .font(.system(size: 14, weight: .heavy, design: .rounded))
+                            .foregroundStyle(.white)
+                            .shadow(color: Self.outline, radius: 0, x: 1, y: 1)
+                    }
+                }
+                .frame(width: Layout.chip, height: Layout.chip)
+            }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityIdentifier("hud.keyChips")
+        .accessibilityLabel(Text("hud.keyChips.accessibility"))
+        .accessibilityValue(Text(verbatim: hud.carried.keys.sorted().map { "\($0) \(hud.carried[$0]!)" }.joined(separator: ", ")))
+    }
+
+    // MARK: Toast
+
+    @ViewBuilder private var toastLine: some View {
+        if let t = model.toast {
+            Text(verbatim: t.text)
+                .font(.system(size: 24, weight: .heavy, design: .rounded))
+                .foregroundStyle(.white)
+                .shadow(color: Self.outline, radius: 0, x: 2, y: 2)
+                .padding(.horizontal, 18)
+                .padding(.vertical, 8)
+                .background(Capsule().fill(Self.panel.opacity(0.85)))
+                .id(t.id)
+                .transition(.opacity.combined(with: .scale(scale: 0.9)))
+                .accessibilityIdentifier("hud.toast")
         }
     }
 

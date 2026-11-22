@@ -26,7 +26,11 @@ enum Textures {
             let full = texture(name, in: .tiles)
             // For atlas textures, SKTexture(rect:in:) reads `rect` in the unit space of the whole
             // atlas sheet, so offset by the tile's own textureRect (tiles are packed unrotated).
-            let base = full.textureRect()
+            // Inset by half a source pixel so linear filtering never samples the atlas neighbour
+            // at the tile's outer edges (safeguard; no seam was observed).
+            let raw = full.textureRect()
+            let pxW = full.size().width * 2, pxH = full.size().height * 2
+            let base = raw.insetBy(dx: pxW > 0 ? raw.width / pxW * 0.5 : 0, dy: pxH > 0 ? raw.height / pxH * 0.5 : 0)
             let w = base.width / CGFloat(n), h = base.height / CGFloat(n)
             var built: [SKTexture] = []
             built.reserveCapacity(n * n)
@@ -91,4 +95,36 @@ enum Textures {
         }
         return SKTexture(image: image)
     }()
+
+    /// ART_BIBLE §13.9: shared radial glow (128 px, white centre to transparent, `pow(1 - r, 2)`).
+    static let radialGlow: SKTexture = {
+        let px = 128
+        let image = UIGraphicsImageRenderer(size: CGSize(width: px, height: px),
+                                            format: { let f = UIGraphicsImageRendererFormat(); f.scale = 1; return f }()).image { ctx in
+            let stops = 8
+            var colors: [CGColor] = []
+            var locs: [CGFloat] = []
+            for i in 0...stops {
+                let r = CGFloat(i) / CGFloat(stops)
+                colors.append(UIColor.white.withAlphaComponent(pow(1 - r, 2)).cgColor)
+                locs.append(r)
+            }
+            if let g = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: colors as CFArray, locations: locs) {
+                let c = CGPoint(x: px / 2, y: px / 2)
+                ctx.cgContext.drawRadialGradient(g, startCenter: c, startRadius: 0, endCenter: c,
+                                                 endRadius: CGFloat(px) / 2, options: [])
+            }
+        }
+        return SKTexture(image: image)
+    }()
+
+    /// Additive glow sprite of `diameter` in `color` at `alpha`.
+    static func glow(diameter: CGFloat, color: SKColor, alpha: CGFloat) -> SKSpriteNode {
+        let s = SKSpriteNode(texture: radialGlow, size: CGSize(width: diameter, height: diameter))
+        s.color = color
+        s.colorBlendFactor = 1
+        s.blendMode = .add
+        s.alpha = alpha
+        return s
+    }
 }

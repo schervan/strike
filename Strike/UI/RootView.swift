@@ -10,7 +10,13 @@ struct RootView: View {
                 TitleView()
                     .transition(.opacity)
             case .game:
-                GameContainerView()
+                if let run = model.run {
+                    GameContainerView(run: run)
+                        .id(run.id)
+                        .transition(.opacity)
+                }
+            case .levelComplete(let result):
+                LevelCompleteView(result: result)
                     .transition(.opacity)
             }
         }

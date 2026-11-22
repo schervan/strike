@@ -34,7 +34,7 @@ class EnemyState: GKState, @unchecked Sendable {
 
     @MainActor var canSeeHero: Bool {
         guard let w = enemy.world else { return false }
-        return w.roomGeometry.hasLineOfSight(from: enemy.position, to: w.heroPosition)
+        return w.solidGrid.hasLineOfSight(from: enemy.position, to: w.heroPosition)
     }
 }
 
@@ -72,7 +72,8 @@ final class AlertState: EnemyState, @unchecked Sendable {
     }
 }
 
-/// Chases the hero with steering; every `hopEverySec` it may pause for `hopPauseSec`.
+/// Chases the hero (straight when visible, else along the grid path); every `hopEverySec` it
+/// may pause for `hopPauseSec`. Leash: far away for `returnAfterSec` → `ReturnHomeState`.
 final class ChaseState: EnemyState, @unchecked Sendable {
     private var hopTimer: Double = 0
 
@@ -82,7 +83,11 @@ final class ChaseState: EnemyState, @unchecked Sendable {
 
     @MainActor override func tick(dt: Double) {
         guard let w = enemy.world else { return }
-        enemy.steer(toward: w.heroPosition)
+        if enemy.leash.update(dt: dt, distanceToHero: Double(distanceToHero), detectRange: enemy.def.detectRange) {
+            stateMachine?.enter(ReturnHomeState.self)
+            return
+        }
+        enemy.moveToward(w.heroPosition, dt: dt)
         guard let every = enemy.def.hopEverySec, every > 0,
               let chance = enemy.def.hopChance, chance > 0 else { return }
         hopTimer -= dt
@@ -113,6 +118,23 @@ final class HopState: EnemyState, @unchecked Sendable {
         enemy.desiredVelocity = .zero
         remaining -= dt
         if remaining <= 0 { stateMachine?.enter(ChaseState.self) }
+    }
+}
+
+/// Leash (GDD §8): walk back to the spawn point, heal to full on arrival, then idle. The hero
+/// is ignored on the way home.
+final class ReturnHomeState: EnemyState, @unchecked Sendable {
+    @MainActor override func enter() {
+        if !enemy.leash.isReturning { enemy.leash.forceReturn() }
+        enemy.clearPath()
+    }
+
+    @MainActor override func tick(dt: Double) {
+        enemy.moveToward(enemy.spawnPoint, dt: dt)
+        if enemy.leash.updateReturn(position: enemy.position, home: enemy.spawnPoint, health: &enemy.health) {
+            enemy.desiredVelocity = .zero
+            stateMachine?.enter(IdleState.self)
+        }
     }
 }
 

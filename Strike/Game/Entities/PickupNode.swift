@@ -5,6 +5,8 @@ import SpriteKit
 @MainActor
 final class PickupNode: SKSpriteNode {
     let item: ItemDef
+    /// Generator placement id (datachips, puzzle items); nil for loot drops.
+    var placementId: String?
 
     private var basePosition: CGPoint
     private var popFrom: CGPoint
