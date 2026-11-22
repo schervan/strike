@@ -75,6 +75,12 @@ struct StrikeSmokeTests {
         #expect(bot.brain.currentState is ChaseState || bot.brain.currentState is HopState)
     }
 
+    @Test func heroStarterHasSafetyNetWired() throws {
+        let data = try TestData.load()
+        let scene = GameScene(data: data, seed: 1)
+        #expect(scene.hero.weapon.safetyNet == data.hero.starterSafetyNet)
+    }
+
     @Test func stringCatalogHasGermanAndEnglish() {
         let localizations = Bundle.main.localizations
         #expect(localizations.contains("de"))

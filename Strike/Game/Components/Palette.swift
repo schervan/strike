@@ -19,6 +19,17 @@ enum Palette {
     static let uiPanel = hex(0x2E2A55)
     static let l1Sky = hex(0x8FD3FF)
 
+    /// Level "wall top" colour (ART_BIBLE §2 per-level theme table).
+    static func wallTop(theme: String) -> SKColor {
+        switch theme {
+        case "l2": hex(0x6B7080)
+        case "l3": hex(0x5FBF7A)
+        case "l4": hex(0x3A4CA0)
+        case "l5": hex(0x6B1E5E)
+        default: hex(0x7E90B5)
+        }
+    }
+
     /// Projectile color per `projectileStyle` (ART_BIBLE §2 weapon colors).
     static func projectile(style: String) -> SKColor {
         switch style {

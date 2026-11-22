@@ -6,9 +6,9 @@ struct LootRollerTests {
     let data: GameData
     init() throws { data = try TestData.load() }
 
-    func ctx(level: Int = 1, hp: Double = 1, ammo: Double = 1) -> LootContext {
+    func ctx(level: Int = 1, hp: Double = 1, ammo: Double = 1, total: Int = 60) -> LootContext {
         LootContext(level: level, heroHpRatio: hp, equippedWeaponId: "blaster_starter",
-                    equippedAmmoRatio: ammo, ownedWeaponIds: ["blaster_starter"])
+                    equippedAmmoRatio: ammo, equippedAmmoTotal: total, ownedWeaponIds: ["blaster_starter"])
     }
 
     @Test func seededRollsAreIdentical() {
@@ -72,6 +72,28 @@ struct LootRollerTests {
         let m = LootRoller.multiplier(for: "ammo_starter", modifiers: data.lootModifiers, items: data.items,
                                       weapons: data.weapons, context: ctx(ammo: 0.1))
         #expect(m == 2.5)
+    }
+
+    /// QA-004 `ammo_rescue`: below one magazine every power-down guarantees the equipped ammo.
+    @Test func ammoRescueGuaranteesEquippedAmmoBelowOneMagazine() throws {
+        let rescue = try #require(data.lootModifiers.first { $0.id == "ammo_rescue" })
+        let n = rescue.guaranteeCount ?? 0
+        #expect(n > 0)
+        let r = GKMersenneTwisterRandomSource(seed: 3)
+        for total in [0, 5, 11] {
+            for _ in 0..<50 {
+                let drops = LootRoller.roll(tableId: "loot_boltbot", data: data, context: ctx(ammo: 0.05, total: total), random: r)
+                let packs = drops.filter { $0.itemId == "ammo_starter" }.map(\.count).reduce(0, +)
+                #expect(packs >= n)
+            }
+        }
+        // At or above one magazine there is no guarantee: some rolls give no ammo.
+        var withoutAmmo = 0
+        for _ in 0..<200 {
+            let drops = LootRoller.roll(tableId: "loot_boltbot", data: data, context: ctx(total: 12), random: r)
+            if !drops.contains(where: { $0.itemId == "ammo_starter" }) { withoutAmmo += 1 }
+        }
+        #expect(withoutAmmo > 0)
     }
 
     @Test func guaranteedEntriesAlwaysDrop() {

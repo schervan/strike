@@ -94,7 +94,7 @@ Touch split: sticks live in the SpriteKit scene (`touchesBegan/Moved/Ended` in `
   - Outputs: `WeaponState`, `Health`, `AimAssist`, `LootRoller`, `StickInput`; tests `StrikeTests/DataDecodingTests.swift`, `WeaponStateTests.swift`, `HealthTests.swift`, `AimAssistTests.swift`, `LootRollerTests.swift`, `StickInputTests.swift`
   - Done when (each is a test):
     - decoding: starter = mag 12 / reserveMax 96 / reload 1.0 / fireRate 4; boltbot hp 30 speed 110; `validate()` empty
-    - ammo: fire uses mag only; no fire faster than `1/fireRate`; empty mag cannot fire; reload moves `min(magazineSize − mag, reserve)` after `reloadSec`; reload refused when mag full or reserve 0; swap/cancel loses no ammo; auto-reload starts at mag 0 with trigger held; starter safety net +1 per 1.5 s up to 12 only when mag + reserve = 0; `addReserve` returns overflow above `reserveMax`
+    - ammo: fire uses mag only; no fire faster than `1/fireRate`; empty mag cannot fire; reload moves `min(magazineSize − mag, reserve)` after `reloadSec`; reload refused when mag full or reserve 0; swap/cancel loses no ammo; auto-reload starts at mag 0 with trigger held; starter safety net +1 per `rechargeEverySec` (hero.json) up to the cap only when mag + reserve = 0; `addReserve` returns overflow above `reserveMax`
     - health: damage reduces HP, second hit inside 0.8 s is `ignored`, HP clamps at 0 → `depleted`, heal caps at max
     - aim assist: target inside ±cone pulled by 0.6 of the difference; outside cone / out of range / no LOS → raw angle; nearest wins ties
     - stick: below dead zone inactive (move) / aim-only no fire (aim); ≥ 0.85 → magnitude 1
@@ -124,7 +124,7 @@ Touch split: sticks live in the SpriteKit scene (`touchesBegan/Moved/Ended` in `
   - Outputs: updated `StrikeTests/StrikeSmokeTests.swift` (scene builds a room + hero instead of the placeholder label), `StrikeUITests/StrikeCoreLoopUITests.swift`
   - Done when: UI test taps Start, finds `gameView`, `hud.hpBar`, `hud.ammoLabel` (value "12 / 48") and taps `hud.reloadButton` without crash; `xcodegen generate` + full `xcodebuild … test` green
 
-- [ ] **M1-11 qa-tester — M1 verification**
+- [x] **M1-11 qa-tester — M1 verification**
   - Inputs: everything above
   - Outputs: `docs/QA_REPORT.md` (M1 section), extra tests: `StrikeTests/LocalizationKeyTests.swift` (every JSON `nameKey`/`descKey` + `hud.*` key exists with de + en), JSON fuzz (missing optional fields / unknown fields still decode), `ProjectilePool` stress
   - Done when: full test run green (or bugs filed in QA_REPORT with repro), manual sim pass of the M1 goal sentence, kid-safety check (no red splats, no death wording in code strings or UI), node count stable after 2 min of firing

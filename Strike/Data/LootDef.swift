@@ -31,9 +31,12 @@ nonisolated struct LootModifier: Codable, Sendable, Equatable, Identifiable {
     let threshold: Double?
     let appliesTo: String
     let weightMultiplier: Double
+    /// While the condition holds, this many `appliesTo` items (count 1 each) are added to the
+    /// guaranteed drops of every roll (GDD §16.4, `ammo_rescue`). Absent = 0.
+    let guaranteeCount: Int?
 
     enum Condition: String, Sendable {
-        case heroHpRatioBelow, equippedAmmoRatioBelow, weaponNotOwned
+        case heroHpRatioBelow, equippedAmmoRatioBelow, weaponNotOwned, equippedAmmoBelowMagazines
     }
 
     var knownCondition: Condition? { Condition(rawValue: condition) }

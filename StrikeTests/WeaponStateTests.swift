@@ -135,4 +135,45 @@ struct WeaponStateTests {
         #expect(r133 == 0)
         #expect(e.reserve == 24)
     }
+
+    // QA-004: values straight from hero.json.
+    @Test func safetyNetFromHeroJSONRefillsToCapAndNeverAbove() throws {
+        let hero = try TestData.load().hero
+        let net = hero.starterSafetyNet
+        var w = WeaponState(def: def, magazine: 0, reserve: 0, safetyNet: net)
+        w.tick(dt: net.rechargeEverySec * 0.9)
+        #expect(w.reserve == 0)
+        w.tick(dt: net.rechargeEverySec * 0.2)
+        #expect(w.reserve == 1)
+        for _ in 0..<600 { w.tick(dt: 0.1) } // 60 s
+        #expect(w.totalAmmo == net.rechargeTo)
+        #expect(!w.safetyNetActive)
+        // Spend some, but not all: the net stays off until mag + reserve hits 0 again.
+        _ = w.startReload()
+        w.tick(dt: def.reloadSec + 0.01)
+        for _ in 0..<3 {
+            _ = w.tryFire(triggerHeld: true)
+            w.tick(dt: 1)
+        }
+        let before = w.totalAmmo
+        for _ in 0..<100 { w.tick(dt: 0.5) }
+        #expect(w.totalAmmo == before)
+        #expect(w.totalAmmo <= net.rechargeTo)
+    }
+
+    /// QA-004: with the trigger held at 0 / 0 the safety net still yields about one shot per
+    /// `rechargeEverySec` and never exceeds `rechargeTo`.
+    @Test func safetyNetUnderSustainedFireTrickles() throws {
+        let net = try TestData.load().hero.starterSafetyNet
+        var w = WeaponState(def: def, magazine: 0, reserve: 0, safetyNet: net)
+        var shots = 0
+        let dt = 1.0 / 60
+        for _ in 0..<(30 * 60) { // 30 s holding fire
+            if w.tryFire(triggerHeld: true) { shots += 1 }
+            w.tick(dt: dt)
+        }
+        let expected = 30 / net.rechargeEverySec
+        #expect(Double(shots) >= expected * 0.8 && Double(shots) <= expected)
+        #expect(w.totalAmmo <= net.rechargeTo)
+    }
 }

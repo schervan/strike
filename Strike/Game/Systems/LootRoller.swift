@@ -16,6 +16,8 @@ nonisolated struct LootContext: Sendable, Equatable {
     var equippedWeaponId: String
     /// (mag + reserve) / (magazineSize + reserveMax) of the equipped blaster, 0…1.
     var equippedAmmoRatio: Double
+    /// mag + reserve of the equipped blaster.
+    var equippedAmmoTotal: Int
     var ownedWeaponIds: Set<String>
 }
 
@@ -44,9 +46,16 @@ nonisolated enum LootRoller {
         let bolts = randomInt(table.boltsMin, table.boltsMax, random)
         if bolts > 0 { drops.append(LootDrop(itemId: boltItemId, count: bolts)) }
 
-        // 2. Guaranteed.
+        // 2. Guaranteed, plus helper guarantees (e.g. `ammo_rescue`).
         for g in table.guaranteed where g.count > 0 {
             drops.append(LootDrop(itemId: g.itemId, count: g.count))
+        }
+        for mod in modifiers {
+            guard let n = mod.guaranteeCount, n > 0,
+                  conditionHolds(mod, weapons: weapons, context: context),
+                  let itemId = guaranteedItem(for: mod.appliesTo, weapons: weapons, context: context),
+                  items[itemId] != nil else { continue }
+            for _ in 0..<n { drops.append(LootDrop(itemId: itemId, count: 1)) }
         }
 
         // 4. Modifiers change weights before the rolls.
@@ -83,19 +92,33 @@ nonisolated enum LootRoller {
         guard let item = items[itemId] else { return 1 }
         var m = 1.0
         for mod in modifiers {
-            guard let condition = mod.knownCondition else { continue }
-            let applies: Bool
-            switch condition {
-            case .heroHpRatioBelow:
-                applies = context.heroHpRatio <= (mod.threshold ?? 0) && matches(item, mod.appliesTo, weapons, context)
-            case .equippedAmmoRatioBelow:
-                applies = context.equippedAmmoRatio <= (mod.threshold ?? 0) && matches(item, mod.appliesTo, weapons, context)
-            case .weaponNotOwned:
-                applies = matches(item, mod.appliesTo, weapons, context)
-            }
-            if applies { m *= mod.weightMultiplier }
+            guard conditionHolds(mod, weapons: weapons, context: context),
+                  matches(item, mod.appliesTo, weapons, context) else { continue }
+            m *= mod.weightMultiplier
         }
         return m
+    }
+
+    /// Whether a modifier's condition is true in `context` (unknown conditions: false).
+    static func conditionHolds(_ mod: LootModifier, weapons: [String: WeaponDef], context: LootContext) -> Bool {
+        guard let condition = mod.knownCondition else { return false }
+        switch condition {
+        case .heroHpRatioBelow:
+            return context.heroHpRatio <= (mod.threshold ?? 0)
+        case .equippedAmmoRatioBelow:
+            return context.equippedAmmoRatio <= (mod.threshold ?? 0)
+        case .weaponNotOwned:
+            return true // the per-item check lives in the `unownedAmmo` selector
+        case .equippedAmmoBelowMagazines:
+            guard let w = weapons[context.equippedWeaponId] else { return false }
+            return Double(context.equippedAmmoTotal) < (mod.threshold ?? 0) * Double(w.magazineSize)
+        }
+    }
+
+    /// Item a guarantee selector stands for (only `equippedAmmo` names a single item).
+    static func guaranteedItem(for selector: String, weapons: [String: WeaponDef], context: LootContext) -> String? {
+        guard selector == "equippedAmmo" else { return nil }
+        return weapons[context.equippedWeaponId]?.ammoId
     }
 
     /// `appliesTo` selector: `category:a,b` / `equippedAmmo` / `unownedAmmo`.

@@ -304,6 +304,38 @@ def derive_blaster_icons(out_dir):
     return n
 
 
+# Wall contrast rule (ART_BIBLE section 4). Luminance = mean of the L channel (0-255).
+WALL_MAX_RATIO = 0.65    # light floors (lum >= DARK_FLOOR): wall must be <= 65 % of the floor luminance
+WALL_TARGET_RATIO = 0.60  # ... and is darkened to 60 % when it is not
+DARK_FLOOR = 110         # below this the floor is "dark": wall must be >= floor + DARK_GAP
+DARK_GAP = 35            # ... and is lightened to floor + 40 when it is not
+WALL_SAT = 1.15          # saturation boost when a wall is adjusted
+WALL_CONTRAST = True
+
+
+def mean_lum(im):
+    h = im.convert("L").histogram()
+    return sum(i * c for i, c in enumerate(h)) / float(max(1, sum(h)))
+
+
+def wall_contrast(wall, floor_lum, warn=None):
+    """Return (adjusted wall RGB image, old lum, new lum). Gain on RGB + saturation boost."""
+    lum = mean_lum(wall)
+    if floor_lum >= DARK_FLOOR:
+        if lum <= floor_lum * WALL_MAX_RATIO:
+            return wall, lum, lum
+        target = floor_lum * WALL_TARGET_RATIO
+    else:
+        if lum >= floor_lum + DARK_GAP:
+            return wall, lum, lum
+        target = floor_lum + DARK_GAP + 5
+    from PIL import ImageEnhance
+    out = ImageEnhance.Color(wall).enhance(WALL_SAT)
+    for _ in range(3):  # gain converges quickly; clipping makes one step inexact
+        out = out.point([min(255, int(i * target / max(1.0, mean_lum(out)))) for i in range(256)] * 3)
+    return out, lum, mean_lum(out)
+
+
 def process_sheet(name, path, out_dir, icon_dir=ICON_DIR, tol=70, debug=False):
     """Slice one sheet. Returns (files_written, warnings)."""
     sh = M.SHEETS[name]
@@ -329,7 +361,16 @@ def process_sheet(name, path, out_dir, icon_dir=ICON_DIR, tol=70, debug=False):
 
     if sh["bg"] == "none":  # tiles
         gr = M.group(sh["items"][0])
-        base = make_seamless(im, gr.px[0]).resize(gr.px, Image.LANCZOS).convert("RGBA")
+        base = make_seamless(im, gr.px[0]).resize(gr.px, Image.LANCZOS).convert("RGB")
+        if WALL_CONTRAST and gr.anim == "wall":
+            fp = os.path.join(out_dir, "tiles.atlas", "tile_%s_floor_01@2x.png" % gr.name)
+            if os.path.isfile(fp):
+                base, l0, l1 = wall_contrast(base, mean_lum(Image.open(fp)))
+                if l0 != l1:
+                    warn("wall contrast: luminance %.0f -> %.0f (floor %.0f)" % (l0, l1, mean_lum(Image.open(fp))))
+            else:
+                warn("floor not sliced yet, wall contrast skipped (slice the floor first)")
+        base = base.convert("RGBA")
         for i, v in enumerate(tile_variants(gr, base)):
             write(out_dir, gr.atlas, gr.files()[i], v)
             written += 1

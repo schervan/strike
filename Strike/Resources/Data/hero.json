@@ -17,7 +17,7 @@
       "reserve": 48
     },
     "starterSafetyNet": {
-      "rechargeEverySec": 1.5,
+      "rechargeEverySec": 0.5,
       "rechargeTo": 12
     }
   },

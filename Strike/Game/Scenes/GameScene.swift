@@ -102,7 +102,8 @@ final class GameScene: SKScene, @preconcurrency SKPhysicsContactDelegate, EnemyW
         cameraNode.name = "camera"
         addChild(cameraNode)
         camera = cameraNode
-        cameraController = CameraController(camera: cameraNode, def: data.camera, bounds: room.bounds)
+        cameraController = CameraController(camera: cameraNode, def: data.camera, bounds: room.bounds,
+                                            hudBand: CGFloat(data.controls.hudBandHeight))
         cameraController.snap(to: hero.position, visibleSize: visibleSize)
         sticks = TwinStickController(controls: data.controls, layer: cameraNode)
     }
@@ -297,6 +298,7 @@ final class GameScene: SKScene, @preconcurrency SKPhysicsContactDelegate, EnemyW
         return LootContext(level: Self.level, heroHpRatio: hero.health.ratio,
                            equippedWeaponId: w.def.id,
                            equippedAmmoRatio: Double(w.totalAmmo) / Double(cap),
+                           equippedAmmoTotal: w.totalAmmo,
                            ownedWeaponIds: [data.hero.startLoadout.weaponId])
     }
 

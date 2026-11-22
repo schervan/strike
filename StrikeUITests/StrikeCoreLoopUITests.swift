@@ -7,6 +7,7 @@ final class StrikeCoreLoopUITests: XCTestCase {
 
     @MainActor
     func testStartShowsHUDAndReloadDoesNotCrash() {
+        XCUIDevice.shared.orientation = .landscapeLeft
         let app = XCUIApplication()
         app.launch()
 

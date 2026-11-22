@@ -160,7 +160,12 @@ and the boss.
   floor.
 - Using an ammo-pack item from the inventory/quick slot adds its amount to the reserve.
 - **Safety net (starter only):** if `blaster_starter` mag + reserve = 0, the reserve recharges
-  +1 every 1.5 s up to 12. The hero can never be fully stuck.
+  +1 every 0.5 s up to 12 (`hero.json → starterSafetyNet`). The hero can never be fully stuck:
+  with fire held this gives 2 shots/s (a boltbot powers down in about 1.5 s); after release the
+  magazine is full again in 6 s.
+- **Ammo rescue drop:** while the equipped blaster's mag + reserve is below one magazine, every
+  powered-down enemy (and opened crate) drops 1 extra pack of that blaster's ammo for sure
+  (`loot.json → modifiers.ammo_rescue`, §10).
 - Mag + reserve carry over between levels. Each level start tops starter ammo up to at least
   12 + 48.
 
@@ -308,11 +313,14 @@ cores stay inserted.
    - mag + reserve of the **equipped** blaster ≤ 25 % of (magazine + reserveMax) → weight of that
      blaster's ammo × 2.5
    - ammo for blasters the hero does not own yet → weight × 0 (except in levels ≥ unlock level)
+   - **ammo rescue:** mag + reserve of the **equipped** blaster < 1.0 × its `magazineSize` →
+     add 1 pack of that blaster's `ammoId` as a guaranteed drop (step 2). Self-limiting: one
+     starter pack (+24) lifts the hero above the threshold.
 5. Pickups pop out in a small arc (max 48 pt) and never land inside walls.
 
 | Table | Bolts | dropChance × rolls | Main entries (weight) |
 |---|---|---|---|
-| `loot_boltbot` | 1–3 | 0.35 × 1 | ammo_starter 50, food_apple 30, ammo_spread 10, ammo_rapid 10 |
+| `loot_boltbot` | 1–3 | 0.45 × 1 | ammo_starter 50, food_apple 30, ammo_spread 10, ammo_rapid 10 |
 | `loot_laserdrone` | 2–4 | 0.45 × 1 | ammo_starter 35, ammo_rapid 25, ammo_spread 15, food_cookie 25 |
 | `loot_slimemutant` | 1–2 | 0.30 × 1 | food_apple 40, food_cookie 30, ammo_spread 30 |
 | `loot_slimemutant_small` | 0–1 | 0.15 × 1 | food_apple 60, ammo_spread 40 |
@@ -591,11 +599,12 @@ other and are validated at load (debug assert + unit test).
 | `tables[].rolls` | int | |
 | `tables[].entries` | [{itemId, weight, min, max}] | weighted pool |
 | `tables[].guaranteed` | [{itemId, count}] | always dropped |
-| `modifiers[].id` | string | `low_hp` / `low_ammo` / `unowned_weapon_ammo` |
-| `modifiers[].condition` | string | `heroHpRatioBelow` / `equippedAmmoRatioBelow` / `weaponNotOwned` |
-| `modifiers[].threshold?` | float | ratio for the condition |
+| `modifiers[].id` | string | `low_hp` / `low_ammo` / `unowned_weapon_ammo` / `ammo_rescue` |
+| `modifiers[].condition` | string | `heroHpRatioBelow` / `equippedAmmoRatioBelow` / `weaponNotOwned` / `equippedAmmoBelowMagazines` |
+| `modifiers[].threshold?` | float | ratio for the condition. For `equippedAmmoBelowMagazines`: true when equipped mag + reserve < `threshold × magazineSize` (strictly below) |
 | `modifiers[].appliesTo` | string | `category:heal,food` / `equippedAmmo` / `unownedAmmo` |
-| `modifiers[].weightMultiplier` | float | |
+| `modifiers[].weightMultiplier` | float | 1.0 = no weight change |
+| `modifiers[].guaranteeCount?` | int | if set and the condition is true: add `guaranteeCount` × the `appliesTo` item (for `equippedAmmo` = equipped weapon's `ammoId`) to the guaranteed drops of step 2, count 1 each. Applies to every table roll (enemies + crates), independent of `dropChance`/`rolls`, and in addition to them. Absent = 0 |
 
 ### 16.5 `levels.json`
 
@@ -654,7 +663,7 @@ Exception to the "one array" rule: one hero, so the root holds three objects.
 | `magnetRadius` | float | 96 | pt, items with `magnet: true` (bolts) fly to the hero |
 | `interactRadius` | float | 64 | pt, INTERACT range |
 | `startLoadout` | {weaponId, magazine, reserve} | `blaster_starter`, 12, 48 | equipped blaster at a fresh L1 start (items of the start gift come from `levels.json → pickups.startGift`) |
-| `starterSafetyNet` | {rechargeEverySec, rechargeTo} | 1.5, 12 | starter only: when mag + reserve = 0, reserve +1 every `rechargeEverySec` up to `rechargeTo` (§5.1) |
+| `starterSafetyNet` | {rechargeEverySec, rechargeTo} | 0.5, 12 | starter only: when mag + reserve = 0, reserve +1 every `rechargeEverySec` up to `rechargeTo` (§5.1) |
 
 **`controls`** (fractions are of screen width/height or of `stickRadius`, see Meaning)
 
@@ -762,4 +771,7 @@ Details: `docs/levels/L1.md` … `L5.md`.
 | 2026-11-22 | §5 blaster display names | – → Light / Bubble / Foam Blaster (DE Licht- / Blasen- / Schaum-Blaster) | Names needed for `weapon.*.name` strings |
 | 2026-11-22 | §16.6 new `hero.json` | hero, controls, camera numbers only in GDD text → JSON (values unchanged from §2–§4) | CLAUDE.md: balance never in code (M0 review #5) |
 | 2026-11-22 | new fields `hero.respawnInvulnerableSec` (2.0) and `enemies[].alertSec?` (0.4, set on all 7 enemies) | rule text only (§8, §12) → JSON | Coder request: no balance in code (M1-8, M1-9) |
+| 2026-11-22 | QA-004 starter safety net `rechargeEverySec` | 1.5 s → 0.5 s | Held fire at 0/0 gave 0.67 shots/s (≈ 4.5 s per boltbot), refill 18 s. Now 2 shots/s (≈ 1.5 s per boltbot), refill 6 s: running dry is a short moment, not a stuck state |
+| 2026-11-22 | QA-004 new loot modifier `ammo_rescue` (`equippedAmmoBelowMagazines`, threshold 1.0, `guaranteeCount` 1) | – → 1 guaranteed equipped-ammo pack per powered-down enemy while mag + reserve < 1 magazine | Kids who miss a lot always get ammo back from the next enemy; self-limiting (+24 starter lifts them above 12) |
+| 2026-11-22 | QA-004 `loot_boltbot.dropChance` | 0.35 → 0.45 | Expected starter ammo per boltbot 4.2 → 5.4 shots vs 3 hits needed; leaves room for misses |
 | 2026-11-22 | §16.7 localization key patterns; xcstrings filled | 6 keys → 6 + 56 = 62 (4 hud, 3 weapon, 7 enemy, 32 item, 10 level) | M0 review #10 |
