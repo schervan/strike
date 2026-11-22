@@ -7,6 +7,7 @@ sprites have no <NN>; single-state sprites have no <anim>.
 """
 
 SCALE = 2
+TILE_REPEAT = 4   # one tile texture covers TILE_REPEAT x TILE_REPEAT cells (64 pt each); each cell samples a 1/4 sub-rect
 
 
 class Group:
@@ -77,10 +78,10 @@ def _build():
                          ("exitpad", ("off", "on"))):
         for st in states:
             A(Group("puzzle", "puzzle", name, st, 1, 64, 64, "puzzle_" + name + "_" + st))
-    # --- tiles (64pt) ---
+    # --- tiles: texture = TILE_REPEAT x TILE_REPEAT cells of 64 pt (256 pt = 512 px @2x) ---
     for t in ("l1", "l2", "l3", "l4", "l5"):
-        A(Group("tiles", "tile", t, "floor", 3, 64, 64, "tile_" + t + "_floor"))
-        A(Group("tiles", "tile", t, "wall", 2, 64, 64, "tile_" + t + "_wall"))
+        A(Group("tiles", "tile", t, "floor", 3, 64 * TILE_REPEAT, 64 * TILE_REPEAT, "tile_" + t + "_floor"))
+        A(Group("tiles", "tile", t, "wall", 2, 64 * TILE_REPEAT, 64 * TILE_REPEAT, "tile_" + t + "_wall"))
     # --- fx ---
     A(Group("fx", "fx", "hitflash", None, 3, 48, 48, "fx_hitflash"))
     A(Group("fx", "fx", "poof", None, 6, 64, 64, "fx_poof"))

@@ -1,6 +1,6 @@
 # Strike – Game Design Document (Season 1 MVP)
 
-Owner: game-designer · Status: v1.0 (M0-2) · Audience: kids 7–12 · iPad landscape · offline · DE + EN
+Owner: game-designer · Status: v1.1 (M1-1) · Audience: kids 7–12 · iPad landscape · offline · DE + EN
 
 This file is the single source of truth for the design. Balance numbers live in
 `Strike/Resources/Data/*.json`. If this doc and the JSON disagree, the JSON wins for numbers and
@@ -28,7 +28,7 @@ Tone: bright anime-cartoon. Blasters shoot light, foam and bubbles. Enemies neve
 
 | Term | Value |
 |---|---|
-| Distance | points (pt). 1 tile = 48 pt. iPad reference view ≈ 1194 × 834 pt |
+| Distance | points (pt). 1 tile = **64 pt** (128 px @2x). iPad reference view ≈ 1194 × 834 pt |
 | Speed | pt/s |
 | Time | seconds (`…Sec` fields) |
 | Angles | degrees (`…Deg` fields) |
@@ -36,8 +36,11 @@ Tone: bright anime-cartoon. Blasters shoot light, foam and bubbles. Enemies neve
 | Ids | lowercase snake_case, equal to asset names (see §17) |
 | Text | every visible string is a key in `Localizable.xcstrings` (`nameKey`, `descKey`, …) |
 
-Camera: follows the hero with 0.12 s smoothing, shows about 25 × 17 tiles. Small look-ahead of
-60 pt in aim direction.
+Camera: follows the hero with 0.12 s smoothing (`hero.json → camera.smoothingSec`), scale 1.0,
+so it shows about **18.7 × 13 tiles** (1194 / 64 × 834 / 64). Small look-ahead of 60 pt in aim
+direction (`camera.lookAhead`). The camera is clamped to the room/map bounds. M2 room sizes
+(§14.2) are in tiles, so rooms read about 1.33 × larger than in v1.0; the generator ranges are
+re-checked in M2.
 
 ---
 
@@ -45,26 +48,32 @@ Camera: follows the hero with 0.12 s smoothing, shows about 25 × 17 tiles. Smal
 
 ### 3.1 Layout (landscape)
 
+Positions: `docs/ART_BIBLE.md` §7 wins (quick slots bottom centre). This doc owns the rules.
+There is **no Fire button**: the right stick aims and auto-fires (`ui_btn_fire` stays unused).
+
 ```
 +--------------------------------------------------------------+
-| [HP bar]  [Q1][Q2][Q3][Q4]        [minimap]        [II pause]|
+| [HP bar]  [weapon + ammo "12 / 48"]   [minimap]    [II pause]|
 |                                                              |
 |                                                              |
 |                                        [SWAP]                |
 |                                   [RELOAD]  [INTERACT]       |
 |   (move zone: left 45%)            (aim zone: right 45%)     |
-|        ( L )                                  ( R )          |
+|        ( L )         [Q1][Q2][Q3][Q4]         ( R )          |
 +--------------------------------------------------------------+
-  weapon + ammo "12 / 96" shown next to SWAP
+  rough sketch only; exact positions in ART_BIBLE §7
 ```
 
 ### 3.2 Sticks
+
+All values live in `hero.json → controls` (§16.6).
 
 | Parameter | Left stick (move) | Right stick (aim + fire) |
 |---|---|---|
 | Zone | left 45 % of screen width, below the top 15 % HUD band | right 45 %, below HUD band, outside button hit boxes |
 | Type | floating: base appears where the finger lands | floating |
-| Base radius | 70 pt | 70 pt |
+| Travel radius | 70 pt (`stickRadius`) | 70 pt |
+| Visual | base circle 140 pt, knob 64 pt, 70 % alpha, drawn in code | same |
 | Dead zone | 0.15 of radius | 0.30 of radius (below = aim only, no fire) |
 | Output | direction × magnitude (0…1). Speed = `moveSpeed × magnitude`, magnitude ≥ 0.85 counts as 1.0 | aim angle; magnitude ≥ 0.30 → **auto-fire** at the weapon's `fireRate` |
 | Follow | if the finger drags > 1.4 × radius away, the base follows | same |
@@ -79,6 +88,7 @@ All touch targets ≥ 64 × 64 pt (kids' fingers), 12 pt gap.
 
 | Button | Action | Notes |
 |---|---|---|
+| (no Fire button) | – | firing = right stick ≥ aim dead zone |
 | RELOAD | reload current blaster | auto-reload also starts when the magazine hits 0 and fire is held |
 | INTERACT | press button / pull lever / insert item into machine / pick up item when bag was full / open door | glows + icon changes when an interactable is within 64 pt; greyed out otherwise |
 | SWAP | next owned blaster (starter → spread → rapid → starter) | long-press (0.4 s) opens a 3-slot weapon wheel |
@@ -101,11 +111,13 @@ when walking over them (pickup radius 40 pt; bolts are magnet-pulled within 96 p
 ### 3.5 Feedback
 
 - Light haptic on hit taken, medium on enemy power-down, success haptic on puzzle element on.
-- Hit sparkle on enemy, white flash 0.08 s. No damage numbers (kids read stars, not numbers).
+- Hit sparkle on enemy (particles), white flash 0.1 s (ART_BIBLE feel constant). No damage numbers (kids read stars, not numbers).
 
 ---
 
 ## 4. Player stats (`hero`)
+
+Numbers live in `Strike/Resources/Data/hero.json` (§16.6).
 
 | Stat | Value |
 |---|---|
@@ -130,9 +142,9 @@ zone-1 treasure room), `blaster_rapid` in L3. Owned blasters carry over between 
 
 | id | Fires | Damage | Pellets | Spread / jitter | Fire rate | Proj. speed | Range | Magazine | Reserve max | Reload | Ammo |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| `blaster_starter` | blue light bolt | 10 | 1 | 0° / 2° | 4.0 /s | 720 | 520 | 12 | 96 | 1.0 s | `ammo_starter` |
-| `blaster_spread` | 5 pink bubbles in a fan | 7 each (35 max) | 5 | 40° / 0° | 1.4 /s | 560 | 330 | 6 | 36 | 1.6 s | `ammo_spread` |
-| `blaster_rapid` | green foam pellets | 5 | 1 | 0° / 7° | 10.0 /s | 820 | 470 | 40 | 200 | 1.8 s | `ammo_rapid` |
+| `blaster_starter` "Light Blaster" | orange light bolt | 10 | 1 | 0° / 2° | 4.0 /s | 720 | 520 | 12 | 96 | 1.0 s | `ammo_starter` |
+| `blaster_spread` "Bubble Blaster" | 5 purple bubbles in a fan | 7 each (35 max) | 5 | 40° / 0° | 1.4 /s | 560 | 330 | 6 | 36 | 1.6 s | `ammo_spread` |
+| `blaster_rapid` "Foam Blaster" | yellow foam pellets | 5 | 1 | 0° / 7° | 10.0 /s | 820 | 470 | 40 | 200 | 1.8 s | `ammo_rapid` |
 
 DPS (sustained, incl. reload): starter ≈ 30, spread ≈ 40 at close range, rapid ≈ 38.
 Roles: starter = precise all-rounder, spread = close crowd and slimes, rapid = shields-from-the-side
@@ -148,7 +160,12 @@ and the boss.
   floor.
 - Using an ammo-pack item from the inventory/quick slot adds its amount to the reserve.
 - **Safety net (starter only):** if `blaster_starter` mag + reserve = 0, the reserve recharges
-  +1 every 1.5 s up to 12. The hero can never be fully stuck.
+  +1 every 0.5 s up to 12 (`hero.json → starterSafetyNet`). The hero can never be fully stuck:
+  with fire held this gives 2 shots/s (a boltbot powers down in about 1.5 s); after release the
+  magazine is full again in 6 s.
+- **Ammo rescue drop:** while the equipped blaster's mag + reserve is below one magazine, every
+  powered-down enemy (and opened crate) drops 1 extra pack of that blaster's ammo for sure
+  (`loot.json → modifiers.ammo_rescue`, §10).
 - Mag + reserve carry over between levels. Each level start tops starter ammo up to at least
   12 + 48.
 
@@ -166,9 +183,9 @@ Collected by walking over them. All text via `item.<id>.name` / `item.<id>.desc`
 | `food_apple` | food | +10 HP | 10 | yes | common drop |
 | `food_cookie` | food | +15 HP | 10 | yes | |
 | `food_onigiri` | food | +25 HP | 10 | yes | rarer |
-| `ammo_starter` | ammo | +24 reserve `ammo_starter` | 5 packs | only as overflow | blue cell |
-| `ammo_spread` | ammo | +12 reserve `ammo_spread` | 5 packs | only as overflow | pink bubble jar |
-| `ammo_rapid` | ammo | +60 reserve `ammo_rapid` | 5 packs | only as overflow | green foam can |
+| `ammo_starter` | ammo | +24 reserve `ammo_starter` | 5 packs | only as overflow | orange cell (matches starter) |
+| `ammo_spread` | ammo | +12 reserve `ammo_spread` | 5 packs | only as overflow | purple bubble jar (matches spread) |
+| `ammo_rapid` | ammo | +60 reserve `ammo_rapid` | 5 packs | only as overflow | yellow foam can (matches rapid) |
 | `fuse` | puzzle | powers a `machine` with `requiresItem: fuse` | 3 | yes | |
 | `battery` | puzzle | powers a `machine` with `requiresItem: battery` | 3 | yes | |
 | `keycard` | puzzle | opens a keycard `machine` (card reader) | 1 | yes | |
@@ -296,11 +313,14 @@ cores stay inserted.
    - mag + reserve of the **equipped** blaster ≤ 25 % of (magazine + reserveMax) → weight of that
      blaster's ammo × 2.5
    - ammo for blasters the hero does not own yet → weight × 0 (except in levels ≥ unlock level)
+   - **ammo rescue:** mag + reserve of the **equipped** blaster < 1.0 × its `magazineSize` →
+     add 1 pack of that blaster's `ammoId` as a guaranteed drop (step 2). Self-limiting: one
+     starter pack (+24) lifts the hero above the threshold.
 5. Pickups pop out in a small arc (max 48 pt) and never land inside walls.
 
 | Table | Bolts | dropChance × rolls | Main entries (weight) |
 |---|---|---|---|
-| `loot_boltbot` | 1–3 | 0.35 × 1 | ammo_starter 50, food_apple 30, ammo_spread 10, ammo_rapid 10 |
+| `loot_boltbot` | 1–3 | 0.45 × 1 | ammo_starter 50, food_apple 30, ammo_spread 10, ammo_rapid 10 |
 | `loot_laserdrone` | 2–4 | 0.45 × 1 | ammo_starter 35, ammo_rapid 25, ammo_spread 15, food_cookie 25 |
 | `loot_slimemutant` | 1–2 | 0.30 × 1 | food_apple 40, food_cookie 30, ammo_spread 30 |
 | `loot_slimemutant_small` | 0–1 | 0.15 × 1 | food_apple 60, ammo_spread 40 |
@@ -480,7 +500,8 @@ by finishing the previous one).
 
 ## 16. Data schemas
 
-All files: UTF-8 JSON, root object with `"version": 1` and one array. Unknown fields must be
+All files: UTF-8 JSON, root object with `"version": 1` and one array (exception: `hero.json`,
+§16.6). Unknown fields must be
 ignored by the decoder (forward compatible). Optional fields marked `?`. Ids reference each
 other and are validated at load (debug assert + unit test).
 
@@ -528,6 +549,7 @@ other and are validated at load (debug assert + unit test).
 | `flying` | bool | ignores pressure plates and low props |
 | `contactDamage` | int | |
 | `detectRange` | float | pt |
+| `alertSec?` | float | "!" bubble time between Idle → Alert and the first chase/attack (§8). Default 0.4, must be ≥ 0.4 (fairness) |
 | `threatCost` | int | generator budget cost (0 = never spawned by budget) |
 | `scoreValue` | int | |
 | `lootTableId` | string | `loot.json` table id |
@@ -577,11 +599,12 @@ other and are validated at load (debug assert + unit test).
 | `tables[].rolls` | int | |
 | `tables[].entries` | [{itemId, weight, min, max}] | weighted pool |
 | `tables[].guaranteed` | [{itemId, count}] | always dropped |
-| `modifiers[].id` | string | `low_hp` / `low_ammo` / `unowned_weapon_ammo` |
-| `modifiers[].condition` | string | `heroHpRatioBelow` / `equippedAmmoRatioBelow` / `weaponNotOwned` |
-| `modifiers[].threshold?` | float | ratio for the condition |
+| `modifiers[].id` | string | `low_hp` / `low_ammo` / `unowned_weapon_ammo` / `ammo_rescue` |
+| `modifiers[].condition` | string | `heroHpRatioBelow` / `equippedAmmoRatioBelow` / `weaponNotOwned` / `equippedAmmoBelowMagazines` |
+| `modifiers[].threshold?` | float | ratio for the condition. For `equippedAmmoBelowMagazines`: true when equipped mag + reserve < `threshold × magazineSize` (strictly below) |
 | `modifiers[].appliesTo` | string | `category:heal,food` / `equippedAmmo` / `unownedAmmo` |
-| `modifiers[].weightMultiplier` | float | |
+| `modifiers[].weightMultiplier` | float | 1.0 = no weight change |
+| `modifiers[].guaranteeCount?` | int | if set and the condition is true: add `guaranteeCount` × the `appliesTo` item (for `equippedAmmo` = equipped weapon's `ammoId`) to the guaranteed drops of step 2, count 1 each. Applies to every table roll (enemies + crates), independent of `dropChance`/`rolls`, and in addition to them. Absent = 0 |
 
 ### 16.5 `levels.json`
 
@@ -616,6 +639,71 @@ other and are validated at load (debug assert + unit test).
 | `bossId?` | string | `megamech` for L5 |
 | `bossArena?` | {width, height, coreMachines, pillars} | fixed arena |
 | `story` | {intro: [key], outro: [key], beats: [{trigger, key}]} | Pixel lines; triggers: `start`, `firstEnemy:<id>`, `firstPickup:<id>`, `firstSeen:<elementType or gate>`, `firstLowHp`, `zone:<n>`, `allElementsOn`, `doorOpen`, `bossPhase:<n>`, `bossDefeated`. `intro`/`outro` lines play on the level card before/after play |
+
+### 16.6 `hero.json`
+
+Exception to the "one array" rule: one hero, so the root holds three objects.
+
+```json
+{ "version": 1, "hero": Hero, "controls": Controls, "camera": Camera }
+```
+
+**`hero`**
+
+| Field | Type | Value | Meaning |
+|---|---|---|---|
+| `maxHp` | int | 100 | |
+| `moveSpeed` | float | 220 | pt/s at stick magnitude 1 |
+| `radius` | float | 18 | collision circle pt |
+| `invulnerableSec` | float | 0.8 | after a hit (blinks) |
+| `respawnInvulnerableSec` | float | 2.0 | after a rescue / respawn (§12 step 3) |
+| `knockbackDistance` | float | 80 | pt pushed when hit |
+| `knockbackSec` | float | 0.12 | duration of the push |
+| `pickupRadius` | float | 40 | pt, auto pickup |
+| `magnetRadius` | float | 96 | pt, items with `magnet: true` (bolts) fly to the hero |
+| `interactRadius` | float | 64 | pt, INTERACT range |
+| `startLoadout` | {weaponId, magazine, reserve} | `blaster_starter`, 12, 48 | equipped blaster at a fresh L1 start (items of the start gift come from `levels.json → pickups.startGift`) |
+| `starterSafetyNet` | {rechargeEverySec, rechargeTo} | 0.5, 12 | starter only: when mag + reserve = 0, reserve +1 every `rechargeEverySec` up to `rechargeTo` (§5.1) |
+
+**`controls`** (fractions are of screen width/height or of `stickRadius`, see Meaning)
+
+| Field | Type | Value | Meaning |
+|---|---|---|---|
+| `moveZoneWidth` | 0…1 | 0.45 | left share of screen width for the move stick |
+| `aimZoneWidth` | 0…1 | 0.45 | right share of screen width for the aim stick |
+| `hudBandHeight` | 0…1 | 0.15 | top share of screen height where no stick can start |
+| `stickRadius` | float | 70 | knob travel radius pt (visual base 140, knob 64 are art constants) |
+| `moveDeadZone` | 0…1 | 0.15 | × `stickRadius`; below = no movement |
+| `aimDeadZone` | 0…1 | 0.30 | × `stickRadius`; below = aim only, no fire |
+| `fullMagnitudeAt` | 0…1 | 0.85 | magnitude at or above this counts as 1.0 |
+| `followFactor` | float | 1.4 | base follows when the finger is > `followFactor × stickRadius` from the base |
+| `fadeSec` | float | 0.15 | stick fade-out after release |
+| `aimAssistStrength` | 0…1 | 0.6 | share of the angle difference to rotate toward the target (§3.4) |
+| `aimAssistDefaultOn` | bool | true | Settings default |
+
+Aim-assist cone per blaster stays in `weapons.json → aimAssistConeDeg`.
+
+**`camera`**
+
+| Field | Type | Value | Meaning |
+|---|---|---|---|
+| `smoothingSec` | float | 0.12 | follow smoothing time constant |
+| `lookAhead` | float | 60 | pt offset in aim direction (move direction if not aiming) |
+
+### 16.7 Localization keys
+
+| Pattern | Source |
+|---|---|
+| `weapon.<id>.name` | `weapons.json → nameKey` |
+| `enemy.<id>.name` | `enemies.json → nameKey` |
+| `item.<id>.name`, `item.<id>.desc` | `items.json → nameKey/descKey` |
+| `level.<id>.name`, `level.<id>.subtitle` | `levels.json → nameKey/subtitleKey` |
+| `hud.*` | HUD labels; format args are positional (`%1$lld`, `%2$lld`) so DE/EN can reorder |
+| `pixel.*`, `story.*`, `ui.*` | added when their milestone needs them (M2+) |
+
+Every key referenced by a JSON file must exist in `Localizable.xcstrings` with `de` + `en`
+(guarded by `LocalizationKeyTests`, M1-11). Item `desc` texts repeat JSON numbers (heal,
+ammo, score); change both together.
 
 ---
 
@@ -673,3 +761,17 @@ Details: `docs/levels/L1.md` … `L5.md`.
 | Date | Change | Before → After | Reason |
 |---|---|---|---|
 | 2026-11-22 | v1.0 initial GDD + data schemas | – | M0-2 |
+| 2026-11-22 | §2 tile size | 48 pt → 64 pt | All tile/character art is on a 64 pt grid (DECISIONS, M0 review #1) |
+| 2026-11-22 | §2 camera view | ≈ 25 × 17 tiles → ≈ 18.7 × 13 tiles (scale 1.0) | Follows from 64 pt tiles; M2 re-checks room sizes |
+| 2026-11-22 | §3 Fire button | implied by HUD art → none; right stick auto-fires | M0 review #2 |
+| 2026-11-22 | §3.1 HUD sketch | quick slots top → bottom centre; positions owned by ART_BIBLE §7 | M0 review #7 |
+| 2026-11-22 | §3.2 stick visual | "base radius 70" → travel radius 70, visual base 140, knob 64 | M0 review #3 (numbers unchanged, wording clarified) |
+| 2026-11-22 | §3.5 hit flash | 0.08 s → 0.1 s | M0 review #8 (art bible value) |
+| 2026-11-22 | §5/§6 blaster + ammo colors | starter blue / spread pink / rapid green → orange / purple / yellow | M0 review #4, art is owner-approved |
+| 2026-11-22 | §5 blaster display names | – → Light / Bubble / Foam Blaster (DE Licht- / Blasen- / Schaum-Blaster) | Names needed for `weapon.*.name` strings |
+| 2026-11-22 | §16.6 new `hero.json` | hero, controls, camera numbers only in GDD text → JSON (values unchanged from §2–§4) | CLAUDE.md: balance never in code (M0 review #5) |
+| 2026-11-22 | new fields `hero.respawnInvulnerableSec` (2.0) and `enemies[].alertSec?` (0.4, set on all 7 enemies) | rule text only (§8, §12) → JSON | Coder request: no balance in code (M1-8, M1-9) |
+| 2026-11-22 | QA-004 starter safety net `rechargeEverySec` | 1.5 s → 0.5 s | Held fire at 0/0 gave 0.67 shots/s (≈ 4.5 s per boltbot), refill 18 s. Now 2 shots/s (≈ 1.5 s per boltbot), refill 6 s: running dry is a short moment, not a stuck state |
+| 2026-11-22 | QA-004 new loot modifier `ammo_rescue` (`equippedAmmoBelowMagazines`, threshold 1.0, `guaranteeCount` 1) | – → 1 guaranteed equipped-ammo pack per powered-down enemy while mag + reserve < 1 magazine | Kids who miss a lot always get ammo back from the next enemy; self-limiting (+24 starter lifts them above 12) |
+| 2026-11-22 | QA-004 `loot_boltbot.dropChance` | 0.35 → 0.45 | Expected starter ammo per boltbot 4.2 → 5.4 shots vs 3 hits needed; leaves room for misses |
+| 2026-11-22 | §16.7 localization key patterns; xcstrings filled | 6 keys → 6 + 56 = 62 (4 hud, 3 weapon, 7 enemy, 32 item, 10 level) | M0 review #10 |

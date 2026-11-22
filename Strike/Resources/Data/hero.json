@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "hero": {
+    "maxHp": 100,
+    "moveSpeed": 220,
+    "radius": 18,
+    "invulnerableSec": 0.8,
+    "respawnInvulnerableSec": 2.0,
+    "knockbackDistance": 80,
+    "knockbackSec": 0.12,
+    "pickupRadius": 40,
+    "magnetRadius": 96,
+    "interactRadius": 64,
+    "startLoadout": {
+      "weaponId": "blaster_starter",
+      "magazine": 12,
+      "reserve": 48
+    },
+    "starterSafetyNet": {
+      "rechargeEverySec": 0.5,
+      "rechargeTo": 12
+    }
+  },
+  "controls": {
+    "moveZoneWidth": 0.45,
+    "aimZoneWidth": 0.45,
+    "hudBandHeight": 0.15,
+    "stickRadius": 70,
+    "moveDeadZone": 0.15,
+    "aimDeadZone": 0.30,
+    "fullMagnitudeAt": 0.85,
+    "followFactor": 1.4,
+    "fadeSec": 0.15,
+    "aimAssistStrength": 0.6,
+    "aimAssistDefaultOn": true
+  },
+  "camera": {
+    "smoothingSec": 0.12,
+    "lookAhead": 60
+  }
+}

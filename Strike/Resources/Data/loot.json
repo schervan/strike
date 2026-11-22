@@ -16,6 +16,14 @@
       "weightMultiplier": 2.5
     },
     {
+      "id": "ammo_rescue",
+      "condition": "equippedAmmoBelowMagazines",
+      "threshold": 1.0,
+      "appliesTo": "equippedAmmo",
+      "weightMultiplier": 1.0,
+      "guaranteeCount": 1
+    },
+    {
       "id": "unowned_weapon_ammo",
       "condition": "weaponNotOwned",
       "appliesTo": "unownedAmmo",
@@ -27,7 +35,7 @@
       "id": "loot_boltbot",
       "boltsMin": 1,
       "boltsMax": 3,
-      "dropChance": 0.35,
+      "dropChance": 0.45,
       "rolls": 1,
       "entries": [
         {

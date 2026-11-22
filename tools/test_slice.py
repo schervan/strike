@@ -125,7 +125,7 @@ n, w = S.process_sheet("pickups_keys", p, out, icon)
 check(any("fell back" in x for x in w) or any("nothing found" in x for x in w),
       "wrong blob count warns (%s)" % w)
 
-# 6. tile: 128 px, seamless-ish (opposite edges close), 3 floor variants
+# 6. tile: 512 px, seamless-ish (opposite edges close), 3 floor variants
 p = os.path.join(tmp, "tile_l1_floor.png")
 t = Image.new("RGB", (1024, 1024), (184, 196, 214))
 dt = ImageDraw.Draw(t)
@@ -137,8 +137,8 @@ t.save(p)
 n, w = S.process_sheet("tile_l1_floor", p, out, icon)
 check(n == 3, "tile_l1_floor writes 3 variants (got %d)" % n)
 im = Image.open(outfile("tiles", "tile_l1_floor_01")).convert("RGB")
-check(im.size == (128, 128), "tile is 128x128")
-diff = sum(sum(abs(a - b) for a, b in zip(im.getpixel((0, y)), im.getpixel((127, y)))) for y in range(128)) / 128.0
+check(im.size == (512, 512), "tile is 512x512 (TILE_REPEAT 4)")
+diff = sum(sum(abs(a - b) for a, b in zip(im.getpixel((0, y)), im.getpixel((511, y)))) for y in range(512)) / 512.0
 check(diff < 40, "tile left/right edges match (avg diff %.1f)" % diff)
 
 # 7. app icon: 1024 opaque, Contents.json updated

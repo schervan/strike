@@ -108,6 +108,454 @@
           }
         }
       }
+    },
+    "hud.reload": {
+      "comment": "HUD reload button label and accessibility label",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Nachladen" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Reload" } }
+      }
+    },
+    "hud.reloading": {
+      "comment": "HUD state while the blaster reloads",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Lädt nach…" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Reloading…" } }
+      }
+    },
+    "hud.hp.accessibility": {
+      "comment": "VoiceOver value of the HP bar. Arg 1 = current HP, arg 2 = max HP",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Leben %1$lld von %2$lld" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Health %1$lld of %2$lld" } }
+      }
+    },
+    "hud.ammo.accessibility": {
+      "comment": "VoiceOver value of the ammo readout. Arg 1 = shots in magazine, arg 2 = reserve",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "%1$lld Schüsse, %2$lld in Reserve" } },
+        "en": { "stringUnit": { "state": "translated", "value": "%1$lld shots, %2$lld in reserve" } }
+      }
+    },
+    "weapon.blaster_starter.name": {
+      "comment": "Weapon name (weapons.json)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Licht-Blaster" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Light Blaster" } }
+      }
+    },
+    "weapon.blaster_spread.name": {
+      "comment": "Weapon name (weapons.json)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Blasen-Blaster" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Bubble Blaster" } }
+      }
+    },
+    "weapon.blaster_rapid.name": {
+      "comment": "Weapon name (weapons.json)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Schaum-Blaster" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Foam Blaster" } }
+      }
+    },
+    "enemy.boltbot.name": {
+      "comment": "Enemy name (enemies.json)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Boltbot" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Boltbot" } }
+      }
+    },
+    "enemy.laserdrone.name": {
+      "comment": "Enemy name (enemies.json)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Laserdrohne" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Laser Drone" } }
+      }
+    },
+    "enemy.slimemutant.name": {
+      "comment": "Enemy name (enemies.json)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Schleim-Mutant" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Slime Mutant" } }
+      }
+    },
+    "enemy.slimemutant_small.name": {
+      "comment": "Enemy name (enemies.json)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Mini-Schleim" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Mini Slime" } }
+      }
+    },
+    "enemy.shieldandroid.name": {
+      "comment": "Enemy name (enemies.json)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Schild-Android" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Shield Android" } }
+      }
+    },
+    "enemy.sporeplant.name": {
+      "comment": "Enemy name (enemies.json)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Sporenpflanze" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Spore Plant" } }
+      }
+    },
+    "enemy.megamech.name": {
+      "comment": "Boss name (enemies.json)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "MEGA-MECH Einheit Null" } },
+        "en": { "stringUnit": { "state": "translated", "value": "MEGA-MECH Unit Zero" } }
+      }
+    },
+    "item.healpack.name": {
+      "comment": "Item name (items.json)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Heilpaket" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Heal Pack" } }
+      }
+    },
+    "item.healpack.desc": {
+      "comment": "Item description (items.json). Keep in sync with healAmount",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Gibt dir 50 Leben." } },
+        "en": { "stringUnit": { "state": "translated", "value": "Gives you 50 health." } }
+      }
+    },
+    "item.food_apple.name": {
+      "comment": "Item name (items.json)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Apfel" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Apple" } }
+      }
+    },
+    "item.food_apple.desc": {
+      "comment": "Item description (items.json). Keep in sync with healAmount",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Gibt dir 10 Leben." } },
+        "en": { "stringUnit": { "state": "translated", "value": "Gives you 10 health." } }
+      }
+    },
+    "item.food_cookie.name": {
+      "comment": "Item name (items.json)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Keks" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Cookie" } }
+      }
+    },
+    "item.food_cookie.desc": {
+      "comment": "Item description (items.json). Keep in sync with healAmount",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Gibt dir 15 Leben." } },
+        "en": { "stringUnit": { "state": "translated", "value": "Gives you 15 health." } }
+      }
+    },
+    "item.food_onigiri.name": {
+      "comment": "Item name (items.json)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Onigiri" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Onigiri" } }
+      }
+    },
+    "item.food_onigiri.desc": {
+      "comment": "Item description (items.json). Keep in sync with healAmount",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Ein Reisbällchen. Gibt dir 25 Leben." } },
+        "en": { "stringUnit": { "state": "translated", "value": "A rice ball. Gives you 25 health." } }
+      }
+    },
+    "item.ammo_starter.name": {
+      "comment": "Item name (items.json)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Lichtzelle" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Light Cell" } }
+      }
+    },
+    "item.ammo_starter.desc": {
+      "comment": "Item description (items.json). Keep in sync with ammoAmount",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "24 Schüsse für den Licht-Blaster." } },
+        "en": { "stringUnit": { "state": "translated", "value": "24 shots for the Light Blaster." } }
+      }
+    },
+    "item.ammo_spread.name": {
+      "comment": "Item name (items.json)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Blasenglas" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Bubble Jar" } }
+      }
+    },
+    "item.ammo_spread.desc": {
+      "comment": "Item description (items.json). Keep in sync with ammoAmount",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "12 Schüsse für den Blasen-Blaster." } },
+        "en": { "stringUnit": { "state": "translated", "value": "12 shots for the Bubble Blaster." } }
+      }
+    },
+    "item.ammo_rapid.name": {
+      "comment": "Item name (items.json)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Schaumdose" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Foam Can" } }
+      }
+    },
+    "item.ammo_rapid.desc": {
+      "comment": "Item description (items.json). Keep in sync with ammoAmount",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "60 Schüsse für den Schaum-Blaster." } },
+        "en": { "stringUnit": { "state": "translated", "value": "60 shots for the Foam Blaster." } }
+      }
+    },
+    "item.fuse.name": {
+      "comment": "Item name (items.json)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Sicherung" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Fuse" } }
+      }
+    },
+    "item.fuse.desc": {
+      "comment": "Item description (items.json)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Steck sie in eine Maschine." } },
+        "en": { "stringUnit": { "state": "translated", "value": "Put it in a machine." } }
+      }
+    },
+    "item.battery.name": {
+      "comment": "Item name (items.json)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Batterie" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Battery" } }
+      }
+    },
+    "item.battery.desc": {
+      "comment": "Item description (items.json)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Gibt einer Maschine Strom." } },
+        "en": { "stringUnit": { "state": "translated", "value": "Gives a machine power." } }
+      }
+    },
+    "item.keycard.name": {
+      "comment": "Item name (items.json)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Schlüsselkarte" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Keycard" } }
+      }
+    },
+    "item.keycard.desc": {
+      "comment": "Item description (items.json)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Öffnet ein Kartenschloss." } },
+        "en": { "stringUnit": { "state": "translated", "value": "Opens a card reader." } }
+      }
+    },
+    "item.energycore.name": {
+      "comment": "Item name (items.json)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Energiekern" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Energy Core" } }
+      }
+    },
+    "item.energycore.desc": {
+      "comment": "Item description (items.json)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Startet eine Kern-Maschine." } },
+        "en": { "stringUnit": { "state": "translated", "value": "Starts a core machine." } }
+      }
+    },
+    "item.bolt.name": {
+      "comment": "Item name (items.json)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Schraube" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Bolt" } }
+      }
+    },
+    "item.bolt.desc": {
+      "comment": "Item description (items.json). Keep in sync with scoreValue",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "10 Punkte!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "10 points!" } }
+      }
+    },
+    "item.datachip.name": {
+      "comment": "Item name (items.json)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Datenchip" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Data Chip" } }
+      }
+    },
+    "item.datachip.desc": {
+      "comment": "Item description (items.json). Keep in sync with scoreValue",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "250 Punkte! Pixel erzählt dir etwas Neues." } },
+        "en": { "stringUnit": { "state": "translated", "value": "250 points! Pixel tells you a fun fact." } }
+      }
+    },
+    "item.blaster_starter.name": {
+      "comment": "Weapon pickup name (items.json)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Licht-Blaster" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Light Blaster" } }
+      }
+    },
+    "item.blaster_starter.desc": {
+      "comment": "Weapon pickup description (items.json)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Schießt helle Lichtblitze." } },
+        "en": { "stringUnit": { "state": "translated", "value": "Shoots bright light bolts." } }
+      }
+    },
+    "item.blaster_spread.name": {
+      "comment": "Weapon pickup name (items.json)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Blasen-Blaster" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Bubble Blaster" } }
+      }
+    },
+    "item.blaster_spread.desc": {
+      "comment": "Weapon pickup description (items.json)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Schießt 5 Blasen auf einmal." } },
+        "en": { "stringUnit": { "state": "translated", "value": "Shoots 5 bubbles at once." } }
+      }
+    },
+    "item.blaster_rapid.name": {
+      "comment": "Weapon pickup name (items.json)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Schaum-Blaster" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Foam Blaster" } }
+      }
+    },
+    "item.blaster_rapid.desc": {
+      "comment": "Weapon pickup description (items.json)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Schießt Schaum, super schnell." } },
+        "en": { "stringUnit": { "state": "translated", "value": "Shoots foam, super fast." } }
+      }
+    },
+    "level.l1.name": {
+      "comment": "Level name (levels.json)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Labor auf dem Dach" } },
+        "en": { "stringUnit": { "state": "translated", "value": "City Rooftop Lab" } }
+      }
+    },
+    "level.l1.subtitle": {
+      "comment": "Level subtitle (levels.json)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Trainingstag" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Training day" } }
+      }
+    },
+    "level.l2.name": {
+      "comment": "Level name (levels.json)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Roboterfabrik" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Robot Factory" } }
+      }
+    },
+    "level.l2.subtitle": {
+      "comment": "Level subtitle (levels.json)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Zahnräder und Schrauben" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Gears and bolts" } }
+      }
+    },
+    "level.l3.name": {
+      "comment": "Level name (levels.json)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Gen-Labor Gewächshaus" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Gene Lab Greenhouse" } }
+      }
+    },
+    "level.l3.subtitle": {
+      "comment": "Level subtitle (levels.json)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Schleim-Zeit" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Slime time" } }
+      }
+    },
+    "level.l4.name": {
+      "comment": "Level name (levels.json)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Server-Festung" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Server Fortress" } }
+      }
+    },
+    "level.l4.subtitle": {
+      "comment": "Level subtitle (levels.json)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Blink blink" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Blink blink" } }
+      }
+    },
+    "level.l5.name": {
+      "comment": "Level name (levels.json)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "OVERMIND-Kern" } },
+        "en": { "stringUnit": { "state": "translated", "value": "OVERMIND Core" } }
+      }
+    },
+    "level.l5.subtitle": {
+      "comment": "Level subtitle (levels.json)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Das große Abschalten" } },
+        "en": { "stringUnit": { "state": "translated", "value": "The big switch-off" } }
+      }
     }
   },
   "version": "1.0"

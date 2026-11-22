@@ -1,13 +1,14 @@
 import SpriteKit
 import SwiftUI
 
-/// Hosts the SpriteKit scene. The HUD will be layered on top as a SwiftUI overlay.
+/// Hosts the SpriteKit scene with the SwiftUI HUD layered on top. Sticks are handled by the
+/// scene; HUD buttons sit above it and swallow their own touches.
 struct GameContainerView: View {
     @Environment(GameModel.self) private var model
     @State private var scene = GameScene.makeDefault()
 
     var body: some View {
-        ZStack(alignment: .topLeading) {
+        ZStack(alignment: .topTrailing) {
             SpriteView(
                 scene: scene,
                 preferredFramesPerSecond: 60,
@@ -19,18 +20,21 @@ struct GameContainerView: View {
             .accessibilityIdentifier("gameView")
             .accessibilityLabel(Text("game.accessibilityLabel"))
 
+            HUDView()
+
             Button {
                 model.returnToTitle()
             } label: {
-                Image(systemName: "pause.circle.fill")
-                    .font(.system(size: 44))
-                    .foregroundStyle(.white.opacity(0.8))
-                    .padding(24)
+                AtlasImage("ui_btn_pause")
+                    .frame(width: 64, height: 64)
             }
+            .buttonStyle(HUDButtonStyle())
+            .padding(16)
             .accessibilityIdentifier("menuButton")
             .accessibilityLabel(Text("game.menu"))
         }
         .onAppear { scene.model = model }
+        .onDisappear { model.commandHandler = nil }
     }
 
     private var debugOptions: SpriteView.DebugOptions {
