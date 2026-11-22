@@ -77,7 +77,7 @@ nonisolated enum SolvabilityChecker {
             }
         }
         for (i, a) in l.elements.enumerated() {
-            for b in l.elements[(i + 1)...] where hypot(a.center.x - b.center.x, a.center.y - b.center.y) < Double(p.minElementSpacing) {
+            for b in l.elements[(i + 1)...] where a.cell.distance(b.cell) < Double(p.minElementSpacing) {
                 out.append("\(a.id)–\(b.id) closer than \(p.minElementSpacing)")
             }
         }

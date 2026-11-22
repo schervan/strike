@@ -755,6 +755,7 @@ Aim-assist cone per blaster stays in `weapons.json → aimAssistConeDeg`.
 | `hud.interact.accessibility` | – | Use the thing next to you | Benutze das Ding neben dir |
 | `hud.door.accessibility` | on, total | %1$lld of %2$lld switches on | %1$lld von %2$lld Schaltern an |
 | `hud.keyChips.accessibility` | – | Your things | Deine Sachen |
+| `hud.minimap.accessibility` | – | Map | Karte |
 | `ui.toast.need_item` | item name (`%@`) | This needs: %@ | Das braucht: %@ |
 | `ui.toast.got_item` | item name (`%@`) | You got: %@ | Du hast: %@ |
 | `ui.toast.checkpoint` | – | Checkpoint saved! | Checkpoint gespeichert! |
@@ -778,7 +779,7 @@ Exception to the "one array" rule: global rule numbers, grouped by system. Every
 is required in the file; the decoder keeps `RulesDef.fallback` (same values) if the file is missing.
 
 ```json
-{ "version": 1, "puzzle": Puzzle, "leash": Leash, "minimap": Minimap, "toast": Toast }
+{ "version": 1, "puzzle": Puzzle, "leash": Leash, "minimap": Minimap, "crate": Crate, "toast": Toast }
 ```
 
 | Field | Type | Value | Meaning |
@@ -791,6 +792,7 @@ is required in the file; the decoder keeps `RulesDef.fallback` (same values) if 
 | `leash.returnAfterSec` | float | 4.0 | time beyond that range before the enemy walks home; at home it heals to full |
 | `minimap.revealOnEnter` | bool | true | a room is revealed when the hero's centre enters its rect; a corridor when it is entered |
 | `minimap.updateHz` | float | 10 | max minimap pushes per second from the scene |
+| `crate.hp` | int | 20 | supply crate HP: 2 starter shots, 1 spread volley (3 × 7), 4 rapid shots. On 0 it poofs and rolls `pickups.crates.lootTableId`. Crates never hurt and never move |
 | `toast.showSec` | float | 2.5 | how long a `ui.toast.*` line stays (fade in/out included) |
 | `toast.repeatCooldownSec` | float | 3.0 | the same toast key is not shown again inside this time |
 
@@ -879,5 +881,6 @@ Details: `docs/levels/L1.md` … `L5.md`.
 | 2026-11-22 | §14.2 ranges | grid 48–96 × 36–72, rooms 6–18, sizes 6–16, depth 3–5, corridor 2–3, spacing 8–12 → 48–72 × 36–56, 6–15, 7–14, 3–4, 2, 7–8 | Match the S1 data after the 64 pt re-check; new 64 pt check + walking-time tables |
 | 2026-11-22 | new `rules.json` (§16.8) | rule text in §8/§11 → JSON: lever 0.4 s, plate 1.0 s, door pan 1.0 s, 8 lights, leash 2.0 × / 4.0 s, minimap reveal on enter / 10 Hz | DECISIONS: no balance in code. `puzzle.interactFocusRadius` from the TASKS draft is left out: `hero.interactRadius` already holds it |
 | 2026-11-22 | new `rules.json → toast` | – → `showSec` 2.5, `repeatCooldownSec` 3.0 | M2 toasts need a duration, and tapping a machine without its item must not spam the toast |
+| 2026-11-22 | new `rules.json → crate.hp` | – (code fallback 20) → 20 | Coder request (pass B). Breaks fast (2 starter shots) so crates feel like a treat, not a chore |
 | 2026-11-22 | new `enemies[].knockbackSec?` | `EnemyNode` code constant 0.1 → JSON 0.1 on all 7 enemies | M1 review leftover 1 (balance in code) |
-| 2026-11-22 | §11 M2 notes, §16.7 M2 keys | 62 keys → 78 (+4 hud, +6 ui.toast, +6 levelComplete) | M2-1; level name/subtitle keys already existed |
+| 2026-11-22 | §11 M2 notes, §16.7 M2 keys | 62 keys → 79 (+5 hud incl. `hud.minimap.accessibility` on coder request, +6 ui.toast, +6 levelComplete) | M2-1; level name/subtitle keys already existed |

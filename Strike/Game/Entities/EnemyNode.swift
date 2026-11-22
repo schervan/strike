@@ -5,19 +5,25 @@ import SpriteKit
 @MainActor
 protocol EnemyWorld: AnyObject {
     var heroPosition: CGPoint { get }
-    var roomGeometry: RoomGeometry { get }
+    /// Current solid map (closed doors are walls).
+    var solidGrid: TileGrid { get }
+    var pathfinder: Pathfinder { get }
     var activeEnemies: [EnemyNode] { get }
     var random: GKRandom { get }
 }
 
 /// Generic enemy built from an `EnemyDef`: key-pose sprite, `PoseAnimator`, `Health` and a
-/// `GKStateMachine` brain. M1 ships the boltbot (chaser) brain.
+/// `GKStateMachine` brain. Every enemy uses the chaser brain until its own behaviour lands in M4
+/// (DECISIONS); static enemies (`moveSpeed 0`) just stand still.
 @MainActor
 final class EnemyNode: SKNode {
     let def: EnemyDef
     let animator: PoseAnimator
     var health: Health
     let spawnPoint: CGPoint
+    /// Room the enemy was spawned in (leash target).
+    let homeRoomId: Int?
+    var leash: Leash
     weak var world: EnemyWorld?
     private(set) var brain: GKStateMachine!
 
@@ -28,9 +34,17 @@ final class EnemyNode: SKNode {
 
     private let alertBubble: SKLabelNode
 
-    init(def: EnemyDef, at point: CGPoint, world: EnemyWorld) {
+    /// Re-plan interval for grid paths (AI cadence, not balance).
+    static let repathSec = 0.25
+    private var waypoint: CGPoint?
+    private var waypointTarget: CGPoint?
+    private var repathTimer: Double = 0
+
+    init(def: EnemyDef, at point: CGPoint, world: EnemyWorld, homeRoomId: Int? = nil, leash: LeashRulesDef) {
         self.def = def
         self.spawnPoint = point
+        self.homeRoomId = homeRoomId
+        self.leash = Leash(rules: leash)
         self.world = world
         animator = PoseAnimator(textureName: def.keyPoseTextureName, atlas: .enemies, style: .boltbot)
         health = Health(max: def.hp)
@@ -65,13 +79,13 @@ final class EnemyNode: SKNode {
         body.friction = 0
         body.restitution = 0
         body.categoryBitMask = PhysicsCategory.enemy
-        body.collisionBitMask = PhysicsCategory.wall | PhysicsCategory.enemy
+        body.collisionBitMask = PhysicsCategory.wall | PhysicsCategory.enemy | PhysicsCategory.crate
         body.contactTestBitMask = PhysicsCategory.heroShot
         physicsBody = body
 
         brain = GKStateMachine(states: [
             IdleState(enemy: self), AlertState(enemy: self), ChaseState(enemy: self),
-            HopState(enemy: self), PoweredDownState(enemy: self),
+            HopState(enemy: self), ReturnHomeState(enemy: self), PoweredDownState(enemy: self),
         ])
         brain.enter(IdleState.self)
     }
@@ -82,6 +96,7 @@ final class EnemyNode: SKNode {
     var radius: CGFloat { CGFloat(def.radius) }
     var isPoweredDown: Bool { brain.currentState is PoweredDownState }
     var isAware: Bool { !(brain.currentState is IdleState) && !isPoweredDown }
+    var isReturningHome: Bool { brain.currentState is ReturnHomeState }
 
     func showAlert(duration: Double) {
         alertBubble.removeAllActions()
@@ -125,6 +140,35 @@ final class EnemyNode: SKNode {
         animator.update(dt: dt)
     }
 
+    /// Walks toward `target`: straight when a body-wide line is clear, else along the grid path
+    /// (`Pathfinder`, re-planned every `repathSec`). Returns false when no path exists.
+    @discardableResult
+    func moveToward(_ target: CGPoint, dt: Double) -> Bool {
+        guard let world, def.moveSpeed > 0 else { desiredVelocity = .zero; return true }
+        let grid = world.solidGrid
+        if grid.isSweepClear(from: position, to: target, radius: radius * 0.9) {
+            waypoint = nil
+            steer(toward: target)
+            return true
+        }
+        repathTimer -= dt
+        let reached = waypoint.map { hypot($0.x - position.x, $0.y - position.y) < radius } ?? true
+        if waypoint == nil || reached || repathTimer <= 0 || waypointTarget.map({ grid.cell(at: $0) != grid.cell(at: target) }) ?? true {
+            repathTimer = Self.repathSec
+            waypointTarget = target
+            waypoint = world.pathfinder.nextWaypoint(from: position, to: target, radius: radius)
+        }
+        guard let w = waypoint else { desiredVelocity = .zero; return false }
+        steer(toward: w)
+        return true
+    }
+
+    /// Drops the cached waypoint (doors changed, teleported).
+    func clearPath() {
+        waypoint = nil
+        waypointTarget = nil
+    }
+
     /// Steering toward `target`: seek + wall avoidance (feelers) + separation from allies.
     func steer(toward target: CGPoint) {
         guard let world else { desiredVelocity = .zero; return }
@@ -152,7 +196,7 @@ final class EnemyNode: SKNode {
         }
 
         // Wall avoidance: probe ahead; if blocked, try rotated headings.
-        let geo = world.roomGeometry
+        let geo = world.solidGrid
         let probe = radius + 20
         func free(_ a: CGFloat) -> Bool {
             let p = CGPoint(x: position.x + cos(a) * probe, y: position.y + sin(a) * probe)

@@ -41,19 +41,36 @@ struct CameraControllerTests {
 
 @MainActor
 struct WallEdgeTests {
+    /// The M1 test room as a grid: 20 × 14, wall ring, two 2 × 2 pillars.
+    static func room() -> TileGrid {
+        var g = TileGrid(width: 20, height: 14)
+        for y in 1..<13 { for x in 1..<19 { g[x, y] = .floor } }
+        for (c, r) in [(6, 4), (12, 8)] { for y in r..<(r + 2) { for x in c..<(c + 2) { g[x, y] = .wall } } }
+        return g
+    }
+
     @Test func edgesOnlyBetweenWallAndFloor() {
-        let edges = TestRoom.wallEdges()
-        // Border ring: interior is 18 × 12 → 2·18 + 2·12 floor-facing sides.
-        // Two 2 × 2 pillars: 8 sides each.
+        let g = Self.room()
+        let edges = LevelBuilder.wallEdges(g)
+        // Border ring: interior is 18 × 12 → 2·18 + 2·12 floor-facing sides. Pillars: 8 sides each.
         #expect(edges.count == 2 * 18 + 2 * 12 + 2 * 8)
-        for e in edges { #expect(TestRoom.isWall(e.column, e.row)) }
+        for e in edges { #expect(g[e.column, e.row] == .wall) }
     }
 
     @Test func treatmentIsThreeNodes() {
-        let layout = TestRoom.build()
-        let edges = layout.node.childNode(withName: "wallEdges")
-        #expect(edges?.children.count == 3)
-        #expect(edges?.childNode(withName: "floorShadow") is SKShapeNode)
-        #expect(edges?.childNode(withName: "wallOutline") is SKShapeNode)
+        let edges = LevelBuilder.buildEdgeTreatment(grid: Self.room(), theme: "l1")
+        #expect(edges.children.count == 3)
+        #expect(edges.childNode(withName: "floorShadow") is SKShapeNode)
+        #expect(edges.childNode(withName: "wallOutline") is SKShapeNode)
+    }
+
+    @Test func mergedWallRectsCoverEveryWallCellOnce() {
+        let def = GeneratedCorpus.def("l4")
+        let l = LevelGenerator.generate(def, seed: 3, catalog: GeneratedCorpus.catalog)
+        var covered = Array(repeating: 0, count: l.grid.width * l.grid.height)
+        let rects = LevelBuilder.wallRects(l.grid)
+        for r in rects { for y in r.y..<(r.y + r.h) { for x in r.x..<(r.x + r.w) { covered[y * l.grid.width + x] += 1 } } }
+        for (i, t) in l.grid.tiles.enumerated() { #expect(covered[i] == (t == .wall ? 1 : 0)) }
+        #expect(rects.count < l.grid.tiles.count / 8)
     }
 }

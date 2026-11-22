@@ -55,16 +55,22 @@ nonisolated enum GridSearch {
         return nil
     }
 
-    /// Greedy string pulling: from each anchor, skip to the farthest later waypoint a circle of
-    /// `radius` can slide to in a straight line.
+    /// Waypoints checked ahead of each anchor while string pulling (bounds the cost per path).
+    static let pullLookahead = 12
+
+    /// Forward greedy string pulling: from each anchor, advance while a circle of `radius` can
+    /// slide straight to the next waypoint (at most `pullLookahead` ahead).
     static func stringPull(_ grid: TileGrid, from start: CGPoint, waypoints: [CGPoint], radius: CGFloat) -> [CGPoint] {
         guard !waypoints.isEmpty else { return [] }
         var out: [CGPoint] = []
         var anchor = start
         var i = 0
         while i < waypoints.count {
-            var j = waypoints.count - 1
-            while j > i, !grid.isSweepClear(from: anchor, to: waypoints[j], radius: radius) { j -= 1 }
+            var j = i
+            while j + 1 < waypoints.count, j + 1 - i <= pullLookahead,
+                  grid.isSweepClear(from: anchor, to: waypoints[j + 1], radius: radius) {
+                j += 1
+            }
             out.append(waypoints[j])
             anchor = waypoints[j]
             i = j + 1
@@ -131,5 +137,19 @@ final class Pathfinder {
         var points = cells.dropFirst().map { grid.world($0) }
         if grid.isWalkable(grid.cell(at: b)), !grid.isBlocked(b, radius: radius) { points[points.count - 1] = b }
         return GridSearch.stringPull(grid, from: a, waypoints: Array(points), radius: radius)
+    }
+
+    /// First string-pulled waypoint only (cheap per-frame steering). Nil when unreachable or
+    /// already in the target cell.
+    func nextWaypoint(from a: CGPoint, to b: CGPoint, radius: CGFloat) -> CGPoint? {
+        let cells = cellPath(from: grid.cell(at: a), to: grid.cell(at: b))
+        guard cells.count > 1 else { return nil }
+        let n = min(cells.count - 1, GridSearch.pullLookahead)
+        var best = grid.world(cells[1])
+        for k in stride(from: n, through: 2, by: -1) {
+            let p = k == cells.count - 1 && !grid.isBlocked(b, radius: radius) ? b : grid.world(cells[k])
+            if grid.isSweepClear(from: a, to: p, radius: radius) { best = p; break }
+        }
+        return best
     }
 }

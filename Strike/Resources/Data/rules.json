@@ -14,6 +14,9 @@
     "revealOnEnter": true,
     "updateHz": 10
   },
+  "crate": {
+    "hp": 20
+  },
   "toast": {
     "showSec": 2.5,
     "repeatCooldownSec": 3.0

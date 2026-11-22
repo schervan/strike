@@ -6,4 +6,6 @@ nonisolated enum PhysicsCategory {
     static let heroShot: UInt32 = 1 << 2
     static let wall: UInt32 = 1 << 3
     static let pickup: UInt32 = 1 << 4
+    /// Supply crates: solid for walkers, hit by hero shots.
+    static let crate: UInt32 = 1 << 5
 }

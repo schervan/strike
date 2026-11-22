@@ -33,12 +33,18 @@ nonisolated struct ToastRulesDef: Codable, Sendable, Equatable {
     let repeatCooldownSec: Double
 }
 
+/// `rules.json → crate` (generator-placed supply boxes).
+nonisolated struct CrateRulesDef: Codable, Sendable, Equatable {
+    let hp: Int
+}
+
 nonisolated struct RulesFile: Codable, Sendable {
     let version: Int
     let puzzle: PuzzleRulesDef
     let leash: LeashRulesDef
     let minimap: MinimapRulesDef
     let toast: ToastRulesDef?
+    let crate: CrateRulesDef?
 }
 
 /// Global gameplay rules from `rules.json`.
@@ -47,23 +53,28 @@ nonisolated struct RulesDef: Sendable, Equatable {
     let leash: LeashRulesDef
     let minimap: MinimapRulesDef
     let toast: ToastRulesDef
+    let crate: CrateRulesDef
 
-    init(puzzle: PuzzleRulesDef, leash: LeashRulesDef, minimap: MinimapRulesDef, toast: ToastRulesDef? = nil) {
+    init(puzzle: PuzzleRulesDef, leash: LeashRulesDef, minimap: MinimapRulesDef, toast: ToastRulesDef? = nil,
+         crate: CrateRulesDef? = nil) {
         self.puzzle = puzzle
         self.leash = leash
         self.minimap = minimap
         self.toast = toast ?? Self.fallback.toast
+        self.crate = crate ?? Self.fallback.crate
     }
 
     init(file: RulesFile) {
-        self.init(puzzle: file.puzzle, leash: file.leash, minimap: file.minimap, toast: file.toast)
+        self.init(puzzle: file.puzzle, leash: file.leash, minimap: file.minimap, toast: file.toast, crate: file.crate)
     }
 
-    private init(fallbackPuzzle: PuzzleRulesDef, leash: LeashRulesDef, minimap: MinimapRulesDef, toast: ToastRulesDef) {
+    private init(fallbackPuzzle: PuzzleRulesDef, leash: LeashRulesDef, minimap: MinimapRulesDef, toast: ToastRulesDef,
+                 crate: CrateRulesDef) {
         self.puzzle = fallbackPuzzle
         self.leash = leash
         self.minimap = minimap
         self.toast = toast
+        self.crate = crate
     }
 
     /// GDD defaults (§8 leash, §11 puzzle timings), used only while `rules.json` is missing
@@ -73,5 +84,6 @@ nonisolated struct RulesDef: Sendable, Equatable {
                                        doorMaxLights: 8, interactFocusRadius: nil),
         leash: LeashRulesDef(rangeFactor: 2.0, returnAfterSec: 4.0),
         minimap: MinimapRulesDef(revealOnEnter: true, updateHz: 10),
-        toast: ToastRulesDef(showSec: 2.5, repeatCooldownSec: 3.0))
+        toast: ToastRulesDef(showSec: 2.5, repeatCooldownSec: 3.0),
+        crate: CrateRulesDef(hp: 20))
 }

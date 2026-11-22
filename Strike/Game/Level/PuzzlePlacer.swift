@@ -2,7 +2,7 @@ import Foundation
 
 /// GDD §14.1 step 5: puzzle elements (exit and gate elements) and machine items.
 /// Rules: never in the start room or in corridors, never in the doorway reserve, one cell off
-/// the walls, at least `minElementSpacing` tiles apart (centre to centre); gate elements in
+/// the walls, at least `minElementSpacing` tiles apart (anchor cell to anchor cell, GDD §14.2); gate elements in
 /// `zone − 1`; machine items in a different room of the same zone (`sameZone`) or an earlier
 /// zone (`earlierZone`), which also keeps them in front of the gate they open.
 nonisolated enum PuzzlePlacer {
@@ -77,9 +77,7 @@ nonisolated enum PuzzlePlacer {
                             if blocked.contains(where: { $0.chebyshev(c) <= 1 }) { return false }
                         }
                     }
-                    let h = Double(n) / 2
-                    let cx = Double(anchor.x) + h, cy = Double(anchor.y) + h
-                    return elements.allSatisfy { hypot($0.center.x - cx, $0.center.y - cy) >= spacing }
+                    return elements.allSatisfy { $0.cell.distance(anchor) >= spacing }
                 }
                 guard let cell = random.pick(cells) else { continue }
                 let k = perType[r.type, default: 0]

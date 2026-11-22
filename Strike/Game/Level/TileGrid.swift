@@ -33,7 +33,7 @@ nonisolated enum Tile: UInt8, Sendable, Codable {
     case wall, floor
 }
 
-/// Rectangular tile map (GDD §2: 64 pt tiles). Replaces `RoomGeometry` for generated levels.
+/// Rectangular tile map (GDD §2: 64 pt tiles), the single level geometry API.
 /// Pure value type; closed doors are written in as `.wall` by the caller (see `settingWalls`).
 nonisolated struct TileGrid: Sendable, Equatable {
     /// Tile edge in points (DECISIONS: 64 pt).

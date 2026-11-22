@@ -589,6 +589,14 @@
         "en": { "stringUnit": { "state": "translated", "value": "Your things" } }
       }
     },
+    "hud.minimap.accessibility": {
+      "comment": "VoiceOver label of the minimap panel",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Karte" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Map" } }
+      }
+    },
     "ui.toast.need_item": {
       "comment": "Toast when a machine is used without its item. Arg = localized item name (item.<id>.name)",
       "extractionState": "manual",

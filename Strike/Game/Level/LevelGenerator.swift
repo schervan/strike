@@ -488,7 +488,7 @@ nonisolated struct PlacedElement: Sendable, Equatable, Identifiable {
         return out
     }
 
-    /// Centre in tile units (continuous), used for spacing.
+    /// Centre in tile units (continuous). Spacing uses the anchor `cell`.
     var center: (x: Double, y: Double) {
         let h = Double(type.footprint) / 2
         return (Double(cell.x) + h, Double(cell.y) + h)

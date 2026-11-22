@@ -32,7 +32,7 @@ final class HeroNode: SKNode {
         body.friction = 0
         body.restitution = 0
         body.categoryBitMask = PhysicsCategory.hero
-        body.collisionBitMask = PhysicsCategory.wall
+        body.collisionBitMask = PhysicsCategory.wall | PhysicsCategory.crate
         body.contactTestBitMask = PhysicsCategory.none
         physicsBody = body
     }

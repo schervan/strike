@@ -109,7 +109,7 @@ struct LevelGeneratorTests {
             let reserve = LevelGraph.doorwayReserve(grid: l.grid, graph: graph, depth: 1)
             for (i, a) in l.elements.enumerated() {
                 for b in l.elements[(i + 1)...] {
-                    #expect(hypot(a.center.x - b.center.x, a.center.y - b.center.y) >= Double(def.generator.minElementSpacing))
+                    #expect(a.cell.distance(b.cell) >= Double(def.generator.minElementSpacing))
                 }
                 // Not in corridors, not next to a corridor mouth, not in the start room.
                 #expect(a.cells.allSatisfy { l.room(at: $0)?.id == a.roomId && !reserve.contains($0) })
