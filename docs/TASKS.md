@@ -85,12 +85,12 @@ Touch split: sticks live in the SpriteKit scene (`touchesBegan/Moved/Ended` in `
   - Outputs: `docs/ART_BIBLE.md` §1/§3 (particles, not frame FX), §7 (no Fire button; reload/swap/interact cluster re-flowed; stick visual 140 base / 64 knob / zones 45 %; touch targets ≥ 64), new §12 "PoseAnimator feel" (bob amplitude/Hz, walk squash %, tilt deg, recoil pt, hit-flash timing, power-down timing, particle colors per projectile style); ART-6 may be done in the same pass
   - Done when: no contradiction left with GDD §3 and DECISIONS; §12 values are concrete numbers the coder can copy into `PoseStyle`
 
-- [ ] **M1-3 swift-coder — Data layer** (needs `hero.json` from M1-1; if not there yet, coder creates it from GDD §4 numbers and the designer reviews)
+- [x] **M1-3 swift-coder — Data layer** (needs `hero.json` from M1-1; if not there yet, coder creates it from GDD §4 numbers and the designer reviews)
   - Inputs: GDD §16, `Strike/Resources/Data/*.json`
   - Outputs: `Strike/Data/*.swift` per module map
   - Done when: `GameData.load()` decodes weapons/enemies/items/loot/hero from the bundle; `validate()` returns `[]`; unknown fields ignored; optional fields optional
 
-- [ ] **M1-4 swift-coder — Pure gameplay systems + unit tests**
+- [x] **M1-4 swift-coder — Pure gameplay systems + unit tests**
   - Outputs: `WeaponState`, `Health`, `AimAssist`, `LootRoller`, `StickInput`; tests `StrikeTests/DataDecodingTests.swift`, `WeaponStateTests.swift`, `HealthTests.swift`, `AimAssistTests.swift`, `LootRollerTests.swift`, `StickInputTests.swift`
   - Done when (each is a test):
     - decoding: starter = mag 12 / reserveMax 96 / reload 1.0 / fireRate 4; boltbot hp 30 speed 110; `validate()` empty
@@ -100,27 +100,27 @@ Touch split: sticks live in the SpriteKit scene (`touchesBegan/Moved/Ended` in `
     - stick: below dead zone inactive (move) / aim-only no fire (aim); ≥ 0.85 → magnitude 1
     - loot: seeded `GKMersenneTwisterRandomSource` gives identical drops; bolts within `[boltsMin, boltsMax]`; in level 1 with only the starter owned `ammo_spread`/`ammo_rapid` never drop (unowned modifier); low-HP modifier doubles heal/food weight
 
-- [ ] **M1-5 swift-coder — Test room, hero, camera**
+- [x] **M1-5 swift-coder — Test room, hero, camera**
   - Outputs: `TestRoom`, `PhysicsCategory`, `HeroNode`, `CameraController`, `GameScene` rewrite
   - Done when: room renders with L1 tiles at 64 pt, hero spawns with `hero_idle_01`, walls block the hero, camera follows with smoothing and stays inside room bounds; 60 fps on iPad Pro 11 simulator with `showsFPS`
 
-- [ ] **M1-6 swift-coder — Twin-stick input, firing, projectile pool, aim-assist**
+- [x] **M1-6 swift-coder — Twin-stick input, firing, projectile pool, aim-assist**
   - Outputs: `TwinStickController`, `StickInput` wiring, `ProjectileNode`, `ProjectilePool` (capacity 64), aim-assist hook (toggle read from `controls.aimAssistDefaultOn`)
   - Done when: left stick floats where the thumb lands in the left zone and moves at `moveSpeed × magnitude`; right stick aims, auto-fires at `fireRate` above the aim dead zone, stops on release and keeps the last aim; no right input → hero faces move direction; shots stop at walls and fade at `range`; `ProjectilePoolTests` proves 200 shots never exceed capacity and nodes are reused
 
-- [ ] **M1-7 swift-coder — PoseAnimator + particles** (replaces the old "M1-x" line)
+- [x] **M1-7 swift-coder — PoseAnimator + particles** (replaces the old "M1-x" line)
   - Outputs: `PoseAnimator`, `PoseStyle` (values from ART_BIBLE §12 if M1-2 landed, else sensible defaults marked `// TODO ART_BIBLE §12`), `Particles`
   - Done when: hero and boltbot bob when idle, squash/tilt when moving, flip with `xScale` (never rotate), flash white + shake on hit, recoil on each shot; power-down = poof sparkles + shrink/fade; no red/blood-like particles
 
-- [ ] **M1-8 swift-coder — Boltbot enemy, damage, power-down, loot**
+- [x] **M1-8 swift-coder — Boltbot enemy, damage, power-down, loot**
   - Outputs: `EnemyNode`, `BoltbotStates`, `PickupNode`; contact handling in `GameScene`
   - Done when: 3 boltbots idle until the hero is within `detectRange` with LOS, show "!" 0.4 s, then chase with separation and hop pauses; hero shots deal `damage` and knockback; at 0 HP the boltbot powers down (no "die/kill" wording anywhere), score += `scoreValue`, `LootRoller` drops spawn as `PickupNode`s. M1 pickup effects: `bolt` → score + 10, `ammo_starter` → `addReserve(ammoAmount)`, everything else is collected and counted only (inventory is M3). Contact damage hurts the hero once per invulnerability window with knockback, light haptic; medium haptic on power-down
 
-- [ ] **M1-9 swift-coder — GameModel HUD + SwiftUI HUD + M1 rescue**
+- [x] **M1-9 swift-coder — GameModel HUD + SwiftUI HUD + M1 rescue**
   - Outputs: `GameModel` (`HUDState`, `GameCommand`), `HUDView`, `AtlasImage`, `GameContainerView` overlay
   - Done when: HP bar and "mag / reserve" update live; RELOAD button (≥ 64 pt) starts reload and shows progress, greyed while reloading or nothing to reload; all text via `Localizable.xcstrings`; at 0 HP the hero sparkles and reappears at the room spawn with full HP + 2 s invulnerability (placeholder for the full M3 rescue; no "game over")
 
-- [ ] **M1-10 swift-coder — Smoke/UI tests**
+- [x] **M1-10 swift-coder — Smoke/UI tests**
   - Outputs: updated `StrikeTests/StrikeSmokeTests.swift` (scene builds a room + hero instead of the placeholder label), `StrikeUITests/StrikeCoreLoopUITests.swift`
   - Done when: UI test taps Start, finds `gameView`, `hud.hpBar`, `hud.ammoLabel` (value "12 / 48") and taps `hud.reloadButton` without crash; `xcodegen generate` + full `xcodebuild … test` green
 

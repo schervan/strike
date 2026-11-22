@@ -18,6 +18,10 @@ background type (green / magenta / none), layout hint. Per sheet:
      floor/wall variants derived by rotating/flipping. App icon: 1024 px opaque PNG
      into Assets.xcassets/AppIcon.appiconset + Contents.json.
 
+Tiles: each tile texture is the full seamless image at 512 px (TILE_REPEAT = 4 cells per side;
+the game samples a 1/4 sub-rect per 64 pt cell). Every write touches the .atlas folder mtime
+(os.utime) so Xcode recompiles the atlas.
+
 Usage:
   python3 tools/slice_atlas.py                 # every sheet found in art/raw
   python3 tools/slice_atlas.py hero pixel      # selected sheets
@@ -252,6 +256,8 @@ def write(out_dir, atlas, name, im):
     d = os.path.join(out_dir, atlas + ".atlas")
     os.makedirs(d, exist_ok=True)
     im.save(os.path.join(d, name + "@2x.png"))
+    # Xcode recompiles a .atlas only when the folder mtime changes; replacing files inside does not.
+    os.utime(d, None)
 
 
 def write_group(out_dir, gr, pose, derive=None):
@@ -270,6 +276,32 @@ def tile_variants(gr, base):
         else:
             vs.append(base.transpose(Image.FLIP_LEFT_RIGHT) if i % 2 else base)
     return vs
+
+
+BLASTER_ICONS = ("starter", "spread", "rapid")
+
+
+def derive_blaster_icons(out_dir):
+    """ui_icon_blaster_* come from items.atlas pickup_blaster_* (64x64 px, fit to 90 %, centred),
+    never from the ui_icons_b sheet (its blaster drawings looked like real guns)."""
+    n = 0
+    for k in BLASTER_ICONS:
+        src = os.path.join(out_dir, "items.atlas", "pickup_blaster_%s@2x.png" % k)
+        if not os.path.isfile(src):
+            continue
+        im = Image.open(src).convert("RGBA")
+        bb = im.getchannel("A").getbbox()
+        if not bb:
+            continue
+        crop = im.crop(bb)
+        S = 64
+        sc = (S * 0.9) / float(max(crop.size))
+        crop = crop.resize((max(1, round(crop.width * sc)), max(1, round(crop.height * sc))), Image.LANCZOS)
+        icon = Image.new("RGBA", (S, S), (0, 0, 0, 0))
+        icon.paste(crop, ((S - crop.width) // 2, (S - crop.height) // 2), crop)
+        write(out_dir, "ui", "ui_icon_blaster_" + k, icon)
+        n += 1
+    return n
 
 
 def process_sheet(name, path, out_dir, icon_dir=ICON_DIR, tol=70, debug=False):
@@ -297,7 +329,7 @@ def process_sheet(name, path, out_dir, icon_dir=ICON_DIR, tol=70, debug=False):
 
     if sh["bg"] == "none":  # tiles
         gr = M.group(sh["items"][0])
-        base = make_seamless(im).resize(gr.px, Image.LANCZOS).convert("RGBA")
+        base = make_seamless(im, gr.px[0]).resize(gr.px, Image.LANCZOS).convert("RGBA")
         for i, v in enumerate(tile_variants(gr, base)):
             write(out_dir, gr.atlas, gr.files()[i], v)
             written += 1
@@ -359,9 +391,13 @@ def process_sheet(name, path, out_dir, icon_dir=ICON_DIR, tol=70, debug=False):
         scaled, _ = fit(c, W, H, pad, shared)
         pose = place(scaled, W, H, gr.align, pad)
         posed[key] = pose
+        if key.startswith("ui_icon_blaster_"):
+            continue  # derived from pickup_blaster_* below
         targets = M.siblings(gr) if sh["fill"] == "siblings" else [gr]
         for t in targets:
             written += write_group(out_dir, t, pose)
+    if name in ("ui_icons_b", "pickups_blasters"):
+        written += derive_blaster_icons(out_dir)
     if name == "puzzle_door" and "puzzle_door_closed" in posed and "puzzle_door_open" in posed:
         a, b = posed["puzzle_door_closed"], posed["puzzle_door_open"]
         opening = M.group("puzzle_door_opening")

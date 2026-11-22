@@ -2,7 +2,9 @@ import SwiftUI
 
 @main
 struct StrikeApp: App {
-    @State private var model = GameModel()
+    /// `-StrikeAutoStart` (launch argument) skips the title screen (UI tests, screenshots).
+    @State private var model = GameModel(
+        screen: ProcessInfo.processInfo.arguments.contains("-StrikeAutoStart") ? .game : .title)
 
     var body: some Scene {
         WindowGroup {
