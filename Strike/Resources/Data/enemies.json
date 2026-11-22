@@ -1,0 +1,280 @@
+{
+  "version": 1,
+  "enemies": [
+    {
+      "id": "boltbot",
+      "nameKey": "enemy.boltbot.name",
+      "behavior": "chaser",
+      "hp": 30,
+      "moveSpeed": 110,
+      "radius": 16,
+      "flying": false,
+      "contactDamage": 8,
+      "detectRange": 360,
+      "threatCost": 1,
+      "scoreValue": 50,
+      "lootTableId": "loot_boltbot",
+      "attack": {
+        "type": "none",
+        "damage": 0,
+        "cooldownSec": 0,
+        "telegraphSec": 0,
+        "range": 0
+      },
+      "hopChance": 0.25,
+      "hopEverySec": 2.0,
+      "hopPauseSec": 0.5,
+      "separation": 40
+    },
+    {
+      "id": "laserdrone",
+      "nameKey": "enemy.laserdrone.name",
+      "behavior": "kiter",
+      "hp": 20,
+      "moveSpeed": 140,
+      "radius": 14,
+      "flying": true,
+      "contactDamage": 0,
+      "detectRange": 420,
+      "threatCost": 2,
+      "scoreValue": 75,
+      "lootTableId": "loot_laserdrone",
+      "attack": {
+        "type": "projectile",
+        "damage": 6,
+        "cooldownSec": 1.8,
+        "telegraphSec": 0.5,
+        "range": 420,
+        "projectileSpeed": 220,
+        "projectileCount": 1,
+        "spreadDeg": 0,
+        "projectileRadius": 10
+      },
+      "keepDistance": {
+        "min": 220,
+        "max": 320
+      },
+      "retreatRange": 160,
+      "strafeSec": 1.2
+    },
+    {
+      "id": "slimemutant",
+      "nameKey": "enemy.slimemutant.name",
+      "behavior": "splitter",
+      "hp": 40,
+      "moveSpeed": 80,
+      "radius": 20,
+      "flying": false,
+      "contactDamage": 10,
+      "detectRange": 300,
+      "threatCost": 2,
+      "scoreValue": 60,
+      "lootTableId": "loot_slimemutant",
+      "attack": {
+        "type": "none",
+        "damage": 0,
+        "cooldownSec": 0,
+        "telegraphSec": 0,
+        "range": 0
+      },
+      "splitInto": {
+        "enemyId": "slimemutant_small",
+        "count": 2,
+        "spawnDelaySec": 0.3,
+        "spawnOffset": 40
+      }
+    },
+    {
+      "id": "slimemutant_small",
+      "nameKey": "enemy.slimemutant_small.name",
+      "behavior": "chaser",
+      "hp": 12,
+      "moveSpeed": 130,
+      "radius": 11,
+      "flying": false,
+      "contactDamage": 5,
+      "detectRange": 300,
+      "threatCost": 0,
+      "scoreValue": 20,
+      "lootTableId": "loot_slimemutant_small",
+      "attack": {
+        "type": "none",
+        "damage": 0,
+        "cooldownSec": 0,
+        "telegraphSec": 0,
+        "range": 0
+      }
+    },
+    {
+      "id": "shieldandroid",
+      "nameKey": "enemy.shieldandroid.name",
+      "behavior": "shielded",
+      "hp": 60,
+      "moveSpeed": 90,
+      "radius": 20,
+      "flying": false,
+      "contactDamage": 8,
+      "detectRange": 380,
+      "threatCost": 3,
+      "scoreValue": 120,
+      "lootTableId": "loot_shieldandroid",
+      "attack": {
+        "type": "dash",
+        "damage": 12,
+        "cooldownSec": 3.5,
+        "telegraphSec": 0.7,
+        "range": 260,
+        "dashDistance": 260,
+        "dashSpeed": 420
+      },
+      "shield": {
+        "arcDeg": 120,
+        "turnRateDeg": 120,
+        "dizzySec": 1.5,
+        "dizzyDamageMultiplier": 1.5
+      }
+    },
+    {
+      "id": "sporeplant",
+      "nameKey": "enemy.sporeplant.name",
+      "behavior": "turret",
+      "hp": 45,
+      "moveSpeed": 0,
+      "radius": 18,
+      "flying": false,
+      "contactDamage": 6,
+      "detectRange": 320,
+      "threatCost": 2,
+      "scoreValue": 80,
+      "lootTableId": "loot_sporeplant",
+      "attack": {
+        "type": "projectile",
+        "damage": 4,
+        "cooldownSec": 2.6,
+        "telegraphSec": 0.6,
+        "range": 320,
+        "projectileSpeed": 180,
+        "projectileCount": 3,
+        "spreadDeg": 30,
+        "projectileRadius": 12,
+        "slowMultiplier": 0.7,
+        "slowSec": 2.0
+      },
+      "shyRange": 80,
+      "shyDamageMultiplier": 0.5,
+      "shySec": 1.0
+    },
+    {
+      "id": "megamech",
+      "nameKey": "enemy.megamech.name",
+      "behavior": "boss",
+      "hp": 1200,
+      "moveSpeed": 60,
+      "radius": 72,
+      "flying": false,
+      "contactDamage": 12,
+      "detectRange": 900,
+      "threatCost": 0,
+      "scoreValue": 3000,
+      "lootTableId": "loot_megamech",
+      "phases": [
+        {
+          "id": "stomp",
+          "hpFrom": 1200,
+          "hpTo": 800,
+          "immune": false,
+          "attacks": [
+            {
+              "type": "stomp",
+              "damage": 10,
+              "cooldownSec": 3.0,
+              "telegraphSec": 0.8,
+              "range": 220,
+              "telegraphRadius": 140
+            },
+            {
+              "type": "volley",
+              "damage": 8,
+              "cooldownSec": 4.0,
+              "telegraphSec": 0.7,
+              "range": 600,
+              "projectileSpeed": 200,
+              "projectileCount": 6,
+              "spreadDeg": 70,
+              "projectileRadius": 12
+            }
+          ]
+        },
+        {
+          "id": "shield",
+          "hpFrom": 800,
+          "hpTo": 400,
+          "immune": true,
+          "attacks": [
+            {
+              "type": "laser_sweep",
+              "damage": 10,
+              "cooldownSec": 6.0,
+              "telegraphSec": 1.0,
+              "range": 700,
+              "gaps": 2,
+              "sweepDegPerSec": 45
+            }
+          ],
+          "spawn": {
+            "enemyId": "boltbot",
+            "everySec": 8.0,
+            "maxAlive": 4,
+            "carryItemFirst": "energycore",
+            "carryCount": 2
+          },
+          "unlockBy": {
+            "elementType": "machine",
+            "requiresItem": "energycore",
+            "count": 2,
+            "dizzySec": 4.0,
+            "dizzyDamageMultiplier": 2.0
+          }
+        },
+        {
+          "id": "overload",
+          "hpFrom": 400,
+          "hpTo": 0,
+          "immune": false,
+          "cooldownMultiplier": 0.75,
+          "attacks": [
+            {
+              "type": "stomp",
+              "damage": 10,
+              "cooldownSec": 3.0,
+              "telegraphSec": 0.8,
+              "range": 220,
+              "telegraphRadius": 140
+            },
+            {
+              "type": "volley",
+              "damage": 8,
+              "cooldownSec": 4.0,
+              "telegraphSec": 0.7,
+              "range": 600,
+              "projectileSpeed": 200,
+              "projectileCount": 6,
+              "spreadDeg": 70,
+              "projectileRadius": 12
+            },
+            {
+              "type": "dash",
+              "damage": 12,
+              "cooldownSec": 5.0,
+              "telegraphSec": 1.0,
+              "range": 900,
+              "dashSpeed": 520,
+              "pillarDizzySec": 2.5
+            }
+          ]
+        }
+      ],
+      "rescueResetsToPhaseTop": true
+    }
+  ]
+}

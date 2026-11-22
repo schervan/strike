@@ -1,0 +1,182 @@
+{
+  "version": 1,
+  "items": [
+    {
+      "id": "healpack",
+      "nameKey": "item.healpack.name",
+      "descKey": "item.healpack.desc",
+      "category": "heal",
+      "stackSize": 5,
+      "storesInInventory": true,
+      "usable": true,
+      "droppable": true,
+      "healAmount": 50
+    },
+    {
+      "id": "food_apple",
+      "nameKey": "item.food_apple.name",
+      "descKey": "item.food_apple.desc",
+      "category": "food",
+      "stackSize": 10,
+      "storesInInventory": true,
+      "usable": true,
+      "droppable": true,
+      "healAmount": 10
+    },
+    {
+      "id": "food_cookie",
+      "nameKey": "item.food_cookie.name",
+      "descKey": "item.food_cookie.desc",
+      "category": "food",
+      "stackSize": 10,
+      "storesInInventory": true,
+      "usable": true,
+      "droppable": true,
+      "healAmount": 15
+    },
+    {
+      "id": "food_onigiri",
+      "nameKey": "item.food_onigiri.name",
+      "descKey": "item.food_onigiri.desc",
+      "category": "food",
+      "stackSize": 10,
+      "storesInInventory": true,
+      "usable": true,
+      "droppable": true,
+      "healAmount": 25
+    },
+    {
+      "id": "ammo_starter",
+      "nameKey": "item.ammo_starter.name",
+      "descKey": "item.ammo_starter.desc",
+      "category": "ammo",
+      "stackSize": 5,
+      "storesInInventory": true,
+      "usable": true,
+      "droppable": true,
+      "ammoId": "ammo_starter",
+      "ammoAmount": 24
+    },
+    {
+      "id": "ammo_spread",
+      "nameKey": "item.ammo_spread.name",
+      "descKey": "item.ammo_spread.desc",
+      "category": "ammo",
+      "stackSize": 5,
+      "storesInInventory": true,
+      "usable": true,
+      "droppable": true,
+      "ammoId": "ammo_spread",
+      "ammoAmount": 12
+    },
+    {
+      "id": "ammo_rapid",
+      "nameKey": "item.ammo_rapid.name",
+      "descKey": "item.ammo_rapid.desc",
+      "category": "ammo",
+      "stackSize": 5,
+      "storesInInventory": true,
+      "usable": true,
+      "droppable": true,
+      "ammoId": "ammo_rapid",
+      "ammoAmount": 60
+    },
+    {
+      "id": "fuse",
+      "nameKey": "item.fuse.name",
+      "descKey": "item.fuse.desc",
+      "category": "puzzle",
+      "stackSize": 3,
+      "storesInInventory": true,
+      "usable": false,
+      "droppable": true
+    },
+    {
+      "id": "battery",
+      "nameKey": "item.battery.name",
+      "descKey": "item.battery.desc",
+      "category": "puzzle",
+      "stackSize": 3,
+      "storesInInventory": true,
+      "usable": false,
+      "droppable": true
+    },
+    {
+      "id": "keycard",
+      "nameKey": "item.keycard.name",
+      "descKey": "item.keycard.desc",
+      "category": "puzzle",
+      "stackSize": 1,
+      "storesInInventory": true,
+      "usable": false,
+      "droppable": true
+    },
+    {
+      "id": "energycore",
+      "nameKey": "item.energycore.name",
+      "descKey": "item.energycore.desc",
+      "category": "puzzle",
+      "stackSize": 3,
+      "storesInInventory": true,
+      "usable": false,
+      "droppable": true
+    },
+    {
+      "id": "bolt",
+      "nameKey": "item.bolt.name",
+      "descKey": "item.bolt.desc",
+      "category": "collectible",
+      "stackSize": 0,
+      "storesInInventory": false,
+      "usable": false,
+      "droppable": false,
+      "scoreValue": 10,
+      "magnet": true
+    },
+    {
+      "id": "datachip",
+      "nameKey": "item.datachip.name",
+      "descKey": "item.datachip.desc",
+      "category": "collectible",
+      "stackSize": 0,
+      "storesInInventory": false,
+      "usable": false,
+      "droppable": false,
+      "scoreValue": 250,
+      "magnet": false
+    },
+    {
+      "id": "blaster_starter",
+      "nameKey": "item.blaster_starter.name",
+      "descKey": "item.blaster_starter.desc",
+      "category": "weapon",
+      "stackSize": 0,
+      "storesInInventory": false,
+      "usable": false,
+      "droppable": false,
+      "weaponId": "blaster_starter"
+    },
+    {
+      "id": "blaster_spread",
+      "nameKey": "item.blaster_spread.name",
+      "descKey": "item.blaster_spread.desc",
+      "category": "weapon",
+      "stackSize": 0,
+      "storesInInventory": false,
+      "usable": false,
+      "droppable": false,
+      "weaponId": "blaster_spread"
+    },
+    {
+      "id": "blaster_rapid",
+      "nameKey": "item.blaster_rapid.name",
+      "descKey": "item.blaster_rapid.desc",
+      "category": "weapon",
+      "stackSize": 0,
+      "storesInInventory": false,
+      "usable": false,
+      "droppable": false,
+      "weaponId": "blaster_rapid"
+    }
+  ]
+}

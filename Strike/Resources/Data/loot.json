@@ -1,0 +1,283 @@
+{
+  "version": 1,
+  "modifiers": [
+    {
+      "id": "low_hp",
+      "condition": "heroHpRatioBelow",
+      "threshold": 0.3,
+      "appliesTo": "category:heal,food",
+      "weightMultiplier": 2.0
+    },
+    {
+      "id": "low_ammo",
+      "condition": "equippedAmmoRatioBelow",
+      "threshold": 0.25,
+      "appliesTo": "equippedAmmo",
+      "weightMultiplier": 2.5
+    },
+    {
+      "id": "unowned_weapon_ammo",
+      "condition": "weaponNotOwned",
+      "appliesTo": "unownedAmmo",
+      "weightMultiplier": 0.0
+    }
+  ],
+  "tables": [
+    {
+      "id": "loot_boltbot",
+      "boltsMin": 1,
+      "boltsMax": 3,
+      "dropChance": 0.35,
+      "rolls": 1,
+      "entries": [
+        {
+          "itemId": "ammo_starter",
+          "weight": 50,
+          "min": 1,
+          "max": 1
+        },
+        {
+          "itemId": "food_apple",
+          "weight": 30,
+          "min": 1,
+          "max": 1
+        },
+        {
+          "itemId": "ammo_spread",
+          "weight": 10,
+          "min": 1,
+          "max": 1
+        },
+        {
+          "itemId": "ammo_rapid",
+          "weight": 10,
+          "min": 1,
+          "max": 1
+        }
+      ],
+      "guaranteed": []
+    },
+    {
+      "id": "loot_laserdrone",
+      "boltsMin": 2,
+      "boltsMax": 4,
+      "dropChance": 0.45,
+      "rolls": 1,
+      "entries": [
+        {
+          "itemId": "ammo_starter",
+          "weight": 35,
+          "min": 1,
+          "max": 1
+        },
+        {
+          "itemId": "ammo_rapid",
+          "weight": 25,
+          "min": 1,
+          "max": 1
+        },
+        {
+          "itemId": "ammo_spread",
+          "weight": 15,
+          "min": 1,
+          "max": 1
+        },
+        {
+          "itemId": "food_cookie",
+          "weight": 25,
+          "min": 1,
+          "max": 1
+        }
+      ],
+      "guaranteed": []
+    },
+    {
+      "id": "loot_slimemutant",
+      "boltsMin": 1,
+      "boltsMax": 2,
+      "dropChance": 0.3,
+      "rolls": 1,
+      "entries": [
+        {
+          "itemId": "food_apple",
+          "weight": 40,
+          "min": 1,
+          "max": 1
+        },
+        {
+          "itemId": "food_cookie",
+          "weight": 30,
+          "min": 1,
+          "max": 1
+        },
+        {
+          "itemId": "ammo_spread",
+          "weight": 30,
+          "min": 1,
+          "max": 1
+        }
+      ],
+      "guaranteed": []
+    },
+    {
+      "id": "loot_slimemutant_small",
+      "boltsMin": 0,
+      "boltsMax": 1,
+      "dropChance": 0.15,
+      "rolls": 1,
+      "entries": [
+        {
+          "itemId": "food_apple",
+          "weight": 60,
+          "min": 1,
+          "max": 1
+        },
+        {
+          "itemId": "ammo_spread",
+          "weight": 40,
+          "min": 1,
+          "max": 1
+        }
+      ],
+      "guaranteed": []
+    },
+    {
+      "id": "loot_shieldandroid",
+      "boltsMin": 3,
+      "boltsMax": 6,
+      "dropChance": 0.8,
+      "rolls": 2,
+      "entries": [
+        {
+          "itemId": "ammo_rapid",
+          "weight": 30,
+          "min": 1,
+          "max": 1
+        },
+        {
+          "itemId": "ammo_starter",
+          "weight": 25,
+          "min": 1,
+          "max": 1
+        },
+        {
+          "itemId": "food_onigiri",
+          "weight": 20,
+          "min": 1,
+          "max": 1
+        },
+        {
+          "itemId": "healpack",
+          "weight": 10,
+          "min": 1,
+          "max": 1
+        },
+        {
+          "itemId": "ammo_spread",
+          "weight": 15,
+          "min": 1,
+          "max": 1
+        }
+      ],
+      "guaranteed": []
+    },
+    {
+      "id": "loot_sporeplant",
+      "boltsMin": 2,
+      "boltsMax": 3,
+      "dropChance": 0.5,
+      "rolls": 1,
+      "entries": [
+        {
+          "itemId": "food_apple",
+          "weight": 35,
+          "min": 1,
+          "max": 1
+        },
+        {
+          "itemId": "food_onigiri",
+          "weight": 25,
+          "min": 1,
+          "max": 1
+        },
+        {
+          "itemId": "food_cookie",
+          "weight": 25,
+          "min": 1,
+          "max": 1
+        },
+        {
+          "itemId": "healpack",
+          "weight": 15,
+          "min": 1,
+          "max": 1
+        }
+      ],
+      "guaranteed": []
+    },
+    {
+      "id": "loot_megamech",
+      "boltsMin": 40,
+      "boltsMax": 40,
+      "dropChance": 0.0,
+      "rolls": 0,
+      "entries": [],
+      "guaranteed": [
+        {
+          "itemId": "healpack",
+          "count": 2
+        },
+        {
+          "itemId": "food_onigiri",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "id": "loot_crate_small",
+      "boltsMin": 0,
+      "boltsMax": 2,
+      "dropChance": 0.7,
+      "rolls": 1,
+      "entries": [
+        {
+          "itemId": "ammo_starter",
+          "weight": 25,
+          "min": 1,
+          "max": 1
+        },
+        {
+          "itemId": "ammo_spread",
+          "weight": 15,
+          "min": 1,
+          "max": 1
+        },
+        {
+          "itemId": "ammo_rapid",
+          "weight": 20,
+          "min": 1,
+          "max": 1
+        },
+        {
+          "itemId": "food_apple",
+          "weight": 20,
+          "min": 1,
+          "max": 1
+        },
+        {
+          "itemId": "food_cookie",
+          "weight": 12,
+          "min": 1,
+          "max": 1
+        },
+        {
+          "itemId": "food_onigiri",
+          "weight": 8,
+          "min": 1,
+          "max": 1
+        }
+      ],
+      "guaranteed": []
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{"n": 1, "model": "gemini-3.1-flash-image-preview", "status": 429, "attempt": 1, "call": 1, "imageConfig": true, "error": "You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://aistudio.google.com/docs/rate-limits. To monitor your current usage, h", "ts": "2026-11-22T17:05:01"}
+{"n": 1, "model": "gemini-3.1-flash-image-preview", "status": 429, "attempt": 2, "call": 2, "imageConfig": true, "error": "You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://aistudio.google.com/docs/rate-limits. To monitor your current usage, h", "ts": "2026-11-22T17:05:06"}
+{"n": 1, "model": "gemini-3.1-flash-image-preview", "status": 429, "attempt": 3, "call": 3, "imageConfig": true, "error": "You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://aistudio.google.com/docs/rate-limits. To monitor your current usage, h", "ts": "2026-11-22T17:05:21"}
+{"n": 1, "model": "gemini-3.1-flash-image-preview", "status": 200, "attempt": 1, "call": 1, "imageConfig": true, "error": "", "ts": "2026-11-22T17:10:40"}
+{"n": 1, "model": "gemini-3.1-flash-image-preview", "status": 200, "attempt": 1, "call": 2, "imageConfig": true, "error": "", "ts": "2026-11-22T17:10:50"}
+{"n": 1, "model": "gemini-3.1-flash-image-preview", "status": 200, "attempt": 1, "call": 3, "imageConfig": true, "error": "", "ts": "2026-11-22T17:10:59"}
+{"n": 1, "model": "gemini-3.1-flash-image-preview", "status": 200, "attempt": 1, "call": 4, "imageConfig": true, "error": "", "ts": "2026-11-22T17:11:08"}
+{"n": 2, "model": "gemini-3.1-flash-image-preview", "status": 200, "attempt": 1, "call": 1, "imageConfig": true, "error": "", "ts": "2026-11-22T17:24:43"}
+{"n": 3, "model": "gemini-3.1-flash-image-preview", "status": 200, "attempt": 1, "call": 2, "imageConfig": true, "error": "", "ts": "2026-11-22T17:24:52"}
+{"n": 4, "model": "gemini-3.1-flash-image-preview", "status": 200, "attempt": 1, "call": 3, "imageConfig": true, "error": "", "ts": "2026-11-22T17:25:02"}
+{"n": 4, "result": "finishReason PROHIBITED_CONTENT", "ts": "2026-11-22T17:25:02"}
+{"n": 5, "model": "gemini-3.1-flash-image-preview", "status": 200, "attempt": 1, "call": 4, "imageConfig": true, "error": "", "ts": "2026-11-22T17:25:10"}
+{"n": 6, "model": "gemini-3.1-flash-image-preview", "status": 200, "attempt": 1, "call": 5, "imageConfig": true, "error": "", "ts": "2026-11-22T17:25:19"}
+{"n": 7, "model": "gemini-3.1-flash-image-preview", "status": 200, "attempt": 1, "call": 6, "imageConfig": true, "error": "", "ts": "2026-11-22T17:25:27"}
+{"n": 8, "model": "gemini-3.1-flash-image-preview", "status": 200, "attempt": 1, "call": 7, "imageConfig": true, "error": "", "ts": "2026-11-22T17:25:35"}
+{"n": 9, "model": "gemini-3.1-flash-image-preview", "status": 200, "attempt": 1, "call": 8, "imageConfig": true, "error": "", "ts": "2026-11-22T17:25:45"}
+{"n": 4, "model": "gemini-3.1-flash-image-preview", "status": 200, "attempt": 1, "call": 1, "imageConfig": true, "error": "", "ts": "2026-11-22T17:28:46"}
+{"n": 10, "model": "gemini-3.1-flash-image-preview", "status": 200, "attempt": 1, "call": 1, "imageConfig": true, "error": "", "ts": "2026-11-22T17:28:55"}
+{"n": 11, "model": "gemini-3.1-flash-image-preview", "status": 200, "attempt": 1, "call": 2, "imageConfig": true, "error": "", "ts": "2026-11-22T17:29:04"}
+{"n": 12, "model": "gemini-3.1-flash-image-preview", "status": 200, "attempt": 1, "call": 3, "imageConfig": true, "error": "", "ts": "2026-11-22T17:29:13"}
+{"n": 13, "model": "gemini-3.1-flash-image-preview", "status": 200, "attempt": 1, "call": 4, "imageConfig": true, "error": "", "ts": "2026-11-22T17:29:22"}
+{"n": 14, "model": "gemini-3.1-flash-image-preview", "status": 200, "attempt": 1, "call": 5, "imageConfig": true, "error": "", "ts": "2026-11-22T17:29:30"}
+{"n": 15, "model": "gemini-3.1-flash-image-preview", "status": 200, "attempt": 1, "call": 6, "imageConfig": true, "error": "", "ts": "2026-11-22T17:29:40"}
+{"n": 16, "model": "gemini-3.1-flash-image-preview", "status": 200, "attempt": 1, "call": 7, "imageConfig": true, "error": "", "ts": "2026-11-22T17:29:50"}
+{"n": 17, "model": "gemini-3.1-flash-image-preview", "status": 200, "attempt": 1, "call": 8, "imageConfig": true, "error": "", "ts": "2026-11-22T17:29:59"}
+{"n": 18, "model": "gemini-3.1-flash-image-preview", "status": 200, "attempt": 1, "call": 9, "imageConfig": true, "error": "", "ts": "2026-11-22T17:30:07"}
+{"n": 19, "model": "gemini-3.1-flash-image-preview", "status": 200, "attempt": 1, "call": 10, "imageConfig": true, "error": "", "ts": "2026-11-22T17:30:16"}
+{"n": 20, "model": "gemini-3.1-flash-image-preview", "status": 200, "attempt": 1, "call": 11, "imageConfig": true, "error": "", "ts": "2026-11-22T17:30:26"}
+{"n": 21, "model": "gemini-3.1-flash-image-preview", "status": 200, "attempt": 1, "call": 12, "imageConfig": true, "error": "", "ts": "2026-11-22T17:30:34"}
+{"n": 22, "model": "gemini-3.1-flash-image-preview", "status": 200, "attempt": 1, "call": 13, "imageConfig": true, "error": "", "ts": "2026-11-22T17:30:43"}
+{"n": 23, "model": "gemini-3.1-flash-image-preview", "status": 200, "attempt": 1, "call": 14, "imageConfig": true, "error": "", "ts": "2026-11-22T17:30:52"}
+{"n": 24, "model": "gemini-3.1-flash-image-preview", "status": 200, "attempt": 1, "call": 15, "imageConfig": true, "error": "", "ts": "2026-11-22T17:31:01"}
+{"n": 25, "model": "gemini-3.1-flash-image-preview", "status": 200, "attempt": 1, "call": 16, "imageConfig": true, "error": "", "ts": "2026-11-22T17:31:09"}
+{"n": 26, "model": "gemini-3.1-flash-image-preview", "status": 200, "attempt": 1, "call": 17, "imageConfig": true, "error": "", "ts": "2026-11-22T17:31:19"}
+{"n": 27, "model": "gemini-3.1-flash-image-preview", "status": 200, "attempt": 1, "call": 18, "imageConfig": true, "error": "", "ts": "2026-11-22T17:31:28"}
+{"n": 28, "model": "gemini-3.1-flash-image-preview", "status": 200, "attempt": 1, "call": 19, "imageConfig": true, "error": "", "ts": "2026-11-22T17:31:38"}
+{"n": 29, "model": "gemini-3.1-flash-image-preview", "status": 200, "attempt": 1, "call": 20, "imageConfig": true, "error": "", "ts": "2026-11-22T17:31:47"}
+{"n": 30, "model": "gemini-3.1-flash-image-preview", "status": 200, "attempt": 1, "call": 21, "imageConfig": true, "error": "", "ts": "2026-11-22T17:31:56"}
+{"n": 31, "model": "gemini-3.1-flash-image-preview", "status": 200, "attempt": 1, "call": 22, "imageConfig": true, "error": "", "ts": "2026-11-22T17:32:06"}
+{"n": 32, "model": "gemini-3.1-flash-image-preview", "status": 200, "attempt": 1, "call": 23, "imageConfig": true, "error": "", "ts": "2026-11-22T17:32:15"}
+{"n": 33, "model": "gemini-3.1-flash-image-preview", "status": 200, "attempt": 1, "call": 24, "imageConfig": true, "error": "", "ts": "2026-11-22T17:32:24"}
+{"n": 34, "model": "gemini-3.1-flash-image-preview", "status": 200, "attempt": 1, "call": 25, "imageConfig": true, "error": "", "ts": "2026-11-22T17:32:32"}
+{"n": 35, "model": "gemini-3.1-flash-image-preview", "status": 200, "attempt": 1, "call": 26, "imageConfig": true, "error": "", "ts": "2026-11-22T17:32:44"}
+{"n": 14, "model": "gemini-3.1-flash-image-preview", "status": 200, "attempt": 1, "call": 1, "imageConfig": true, "error": "", "ts": "2026-11-22T17:49:01"}
+{"n": 34, "model": "gemini-3.1-flash-image-preview", "status": 200, "attempt": 1, "call": 1, "imageConfig": true, "error": "", "ts": "2026-11-22T17:49:11"}
+{"n": 35, "model": "gemini-3.1-flash-image-preview", "status": 200, "attempt": 1, "call": 1, "imageConfig": true, "error": "", "ts": "2026-11-22T17:49:22"}
+{"n": 35, "model": "gemini-3.1-flash-image-preview", "status": 200, "attempt": 1, "call": 1, "imageConfig": true, "error": "", "ts": "2026-11-22T17:50:51"}

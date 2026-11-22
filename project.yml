@@ -1,0 +1,120 @@
+name: Strike
+
+options:
+  bundleIdPrefix: com.example
+  developmentLanguage: en
+  deploymentTarget:
+    iOS: "18.0"
+  createIntermediateGroups: true
+  groupSortPosition: top
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    IPHONEOS_DEPLOYMENT_TARGET: "18.0"
+    TARGETED_DEVICE_FAMILY: "2"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    LOCALIZATION_PREFERS_STRING_CATALOGS: YES
+    SWIFT_EMIT_LOC_STRINGS: YES
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    DEAD_CODE_STRIPPING: YES
+
+targets:
+  Strike:
+    type: application
+    platform: iOS
+    deploymentTarget: "18.0"
+    sources:
+      # All code, Localizable.xcstrings, Assets.xcassets and *.atlas folders
+      # (Strike/Resources/Atlases/*.atlas are compiled as SpriteKit texture atlases).
+      - path: Strike
+        excludes:
+          - "Resources/Data"
+          - "**/.DS_Store"
+          - "**/.gitkeep"
+      # Balance/level JSON owned by game-designer. Folder reference: every file
+      # added later is bundled automatically under <bundle>/Data/ without regenerating.
+      - path: Strike/Resources/Data
+        type: folder
+        buildPhase: resources
+    info:
+      path: Strike/App/Info.plist
+      properties:
+        CFBundleDisplayName: Strike
+        CFBundleDevelopmentRegion: en
+        CFBundleLocalizations: [en, de]
+        LSRequiresIPhoneOS: true
+        UILaunchScreen: {}
+        UIRequiresFullScreen: true
+        UIStatusBarHidden: true
+        UIViewControllerBasedStatusBarAppearance: false
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+        ITSAppUsesNonExemptEncryption: false
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.example.strike
+        TARGETED_DEVICE_FAMILY: "2"
+        PRODUCT_NAME: Strike
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        CODE_SIGN_STYLE: Automatic
+        ENABLE_PREVIEWS: YES
+
+  StrikeTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "18.0"
+    sources:
+      - path: StrikeTests
+    dependencies:
+      - target: Strike
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.example.strike.tests
+        TARGETED_DEVICE_FAMILY: "2"
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Strike.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Strike"
+        BUNDLE_LOADER: "$(TEST_HOST)"
+
+  StrikeUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    deploymentTarget: "18.0"
+    sources:
+      - path: StrikeUITests
+    dependencies:
+      - target: Strike
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.example.strike.uitests
+        TARGETED_DEVICE_FAMILY: "2"
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: Strike
+
+schemes:
+  Strike:
+    build:
+      targets:
+        Strike: all
+        StrikeTests: [test]
+        StrikeUITests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      gatherCoverageData: false
+      targets:
+        - name: StrikeTests
+        - name: StrikeUITests
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
