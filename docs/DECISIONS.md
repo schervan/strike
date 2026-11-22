@@ -27,3 +27,16 @@
 | 2026-11-22 | HUD positions: ART_BIBLE §7 wins; gameplay rules: GDD wins | Avoids double ownership of layout |
 | 2026-11-22 | M1 placeholders: pickups only affect score (bolt) and starter reserve (ammo_starter); at 0 HP the hero respawns at the room spawn with full HP. Inventory and Pixel rescue are M3 | Keeps M1 to one coder pass; still kid-safe (no game over) |
 | 2026-11-22 | JSON wins over ART_BIBLE for collision radii (e.g. boltbot 16 pt) | GDD rule "JSON wins for numbers" |
+| 2026-11-22 | M1 "Core loop" accepted (branch `m1-core-loop` @ 0c35868; 68 unit + 3 UI tests green) | All M1 done-when criteria met; leftovers carried into M2 |
+| 2026-11-22 | A kid can never stay out of ammo: starter safety net recharges every 0.5 s, the `ammo_rescue` loot modifier guarantees an ammo pack below one magazine, boltbot dropChance 0.45 | QA-004: kids who miss a lot were left at 0 / 0 |
+| 2026-11-22 | The camera keeps the hero below the HUD band | QA-005: the hero was hidden under the HP/ammo capsule |
+| 2026-11-22 | M2 adds `rules.json` (puzzle timings, leash, door pan, minimap) instead of constants in code | CLAUDE.md: balance numbers live in JSON |
+| 2026-11-22 | Chasers use `GKGridGraph` pathfinding on the tile grid when there is no direct line of sight | Boltbots caught on pillar corners in M1; the tile grid already exists |
+| 2026-11-22 | Puzzle items go into a minimal `PuzzleBag` behind an `ItemCarrier` protocol in M2; the M3 `Inventory` conforms to it and replaces the bag | Machines need items before the inventory exists; no throwaway API |
+| 2026-11-22 | Until M4, enemies with behaviours that are not implemented yet use the chaser AI with their own sprite and stats | All 5 levels can be generated and played in M2 |
+| 2026-11-22 | Generator step 8 (decor props) moves to Later | No prop art exists in the lite set; not needed for MVP play |
+| 2026-11-22 | M2 ends a level with a simple "Level complete" card (time, score, datachips, Continue); stars screen and level map are M5; L5 ends at the exit pad until the boss lands in M4 | Testable 5-level flow without pulling M4/M5 work forward |
+| 2026-11-22 | Checkpoint pads are placed and saved on touch in M2, and the M1 respawn uses the last checkpoint; the Pixel beam and full rescue rules stay in M3 | Generator owns placement; rescue presentation belongs to Pixel |
+| 2026-11-22 | Minimap placement is decided by visual-artist (ART_BIBLE §13), not top-centre | GDD §3.1 sketch conflicts with the top-centre zone reserved for Pixel's bubble |
+| 2026-11-22 | Weapon pickups are placed by the generator in M2 but only become usable blasters in M4 | 3 blasters are M4 scope |
+| 2026-11-22 | Debug-only overlay and launch args (`-StrikeLevel`, `-StrikeSeed`, `-StrikeTestRoom`) for QA and UI tests | Generated levels need reproducible seeds; debug code is compiled out of release builds |
