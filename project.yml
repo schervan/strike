@@ -34,6 +34,7 @@ targets:
       - path: Strike
         excludes:
           - "Resources/Data"
+          - "Resources/Audio"
           - "**/.DS_Store"
           - "**/.gitkeep"
       # Balance/level JSON owned by game-designer. Folder reference: every file
@@ -41,6 +42,12 @@ targets:
       - path: Strike/Resources/Data
         type: folder
         buildPhase: resources
+      # Music (mus_*.m4a) and SFX (sfx_*.caf) from tools/process_audio.py, bundled under
+      # <bundle>/Audio/ (docs/AUDIO_BIBLE.md). Optional until the first files land.
+      - path: Strike/Resources/Audio
+        type: folder
+        buildPhase: resources
+        optional: true
     info:
       path: Strike/App/Info.plist
       properties:

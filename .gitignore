@@ -8,3 +8,8 @@ build/
 art/raw/**/*.tmp
 __pycache__/
 tools/gemini.env
+
+# Raw audio is large (uncompressed WAV); final files live in Strike/Resources/Audio
+audio/raw/**/*.wav
+audio/raw/**/*.pcm
+audio/raw/**/*.mp3

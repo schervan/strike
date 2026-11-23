@@ -59,6 +59,8 @@ nonisolated enum GameCommand: Sendable, Equatable {
     case interact
     /// Debug overlay (DEBUG builds only).
     case debugSolveAll, debugGotoExit, debugRevealMap
+    /// Pause menu opened: drop held sticks so nothing keeps moving on resume.
+    case resetInput
 }
 
 /// Launch arguments (DECISIONS: debug launch args for QA and UI tests).
@@ -66,10 +68,13 @@ nonisolated struct LaunchOptions: Sendable, Equatable {
     var autoStart = false
     var levelId: String?
     var seed: UInt64?
+    /// `-StrikeResetSettings`: audio settings back to defaults on launch (UI tests).
+    var resetSettings = false
 
     static func parse(_ args: [String]) -> LaunchOptions {
         var o = LaunchOptions()
         o.autoStart = args.contains("-StrikeAutoStart")
+        o.resetSettings = args.contains("-StrikeResetSettings")
         func value(_ key: String) -> String? {
             guard let i = args.firstIndex(of: key), i + 1 < args.count else { return nil }
             return args[i + 1]
@@ -97,6 +102,10 @@ final class GameModel {
     var hud = HUDState()
     var minimap = MinimapSnapshot()
     var toast: ToastMessage?
+    /// Pause menu is open (the scene is frozen, music paused).
+    private(set) var isPaused = false
+    /// Settings panel on top of the title screen or the pause menu.
+    private(set) var isSettingsOpen = false
 
     @ObservationIgnored let data: GameData
     @ObservationIgnored let launch: LaunchOptions
@@ -135,8 +144,25 @@ final class GameModel {
         hud = HUDState()
         toast = nil
         minimap = MinimapSnapshot()
+        isPaused = false
+        isSettingsOpen = false
         screen = .game
     }
+
+    /// In-game pause button.
+    func pause() {
+        guard screen == .game, !isPaused else { return }
+        commandHandler?(.resetInput)
+        isPaused = true
+    }
+
+    func resume() {
+        isSettingsOpen = false
+        isPaused = false
+    }
+
+    func openSettings() { isSettingsOpen = true }
+    func closeSettings() { isSettingsOpen = false }
 
     func completeLevel(_ result: LevelResult) {
         commandHandler = nil
@@ -156,6 +182,8 @@ final class GameModel {
     func returnToTitle() {
         commandHandler = nil
         run = nil
+        isPaused = false
+        isSettingsOpen = false
         screen = .title
     }
 

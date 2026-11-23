@@ -14,6 +14,7 @@ A kid-friendly (ages 7–12) top-down 2D shooter for **iPad, landscape only**, b
 | swift-coder | opus | All Swift + Xcode project |
 | visual-artist | sonnet | Art bible, AI-image prompts, placeholders, atlases, HUD layout |
 | qa-tester | sonnet | Tests, generator fuzzing, kid-safety checks, QA report |
+| sound-designer | sonnet | Audio bible, AI Studio music/SFX prompts and generation, audio processing, audio.json |
 
 Workflow per milestone: game-manager plans → designer/artist specify → coder implements → qa-tester verifies → game-manager reviews.
 
