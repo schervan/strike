@@ -780,6 +780,998 @@
         "de": { "stringUnit": { "state": "translated", "value": "Hauptmenü" } },
         "en": { "stringUnit": { "state": "translated", "value": "Main menu" } }
       }
+    },
+    "pause.inventory": {
+      "comment": "Pause menu: open the bag (inventory)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Tasche" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Bag" } }
+      }
+    },
+    "pause.quitConfirm.title": {
+      "comment": "Pause menu: confirm before leaving the level",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Level verlassen?" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Leave the level?" } }
+      }
+    },
+    "pause.quitConfirm.message": {
+      "comment": "Pause menu: what happens when leaving (no mid-level save; bag and blasters from the last save stay)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Deine Sachen bleiben. Das Level startet dann neu." } },
+        "en": { "stringUnit": { "state": "translated", "value": "Your things stay. The level starts again next time." } }
+      }
+    },
+    "pause.quitConfirm.yes": {
+      "comment": "Pause menu confirm: leave the level",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Verlassen" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Leave" } }
+      }
+    },
+    "pause.quitConfirm.no": {
+      "comment": "Pause menu confirm: keep playing",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Bleiben" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Stay" } }
+      }
+    },
+    "title.continue": {
+      "comment": "Title screen: continue the saved game (shown only if a save exists)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Weiterspielen" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Continue" } }
+      }
+    },
+    "title.newGame": {
+      "comment": "Title screen: start a new game",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Neues Spiel" } },
+        "en": { "stringUnit": { "state": "translated", "value": "New game" } }
+      }
+    },
+    "title.newGameConfirm.title": {
+      "comment": "Title screen: confirm dialog title when a save exists",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Neues Spiel starten?" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Start a new game?" } }
+      }
+    },
+    "title.newGameConfirm.message": {
+      "comment": "Title screen: confirm dialog text when a save exists",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Dein altes Spiel ist dann weg." } },
+        "en": { "stringUnit": { "state": "translated", "value": "Your old game will be gone." } }
+      }
+    },
+    "title.newGameConfirm.yes": {
+      "comment": "Title screen confirm: overwrite the save and start new",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Neu starten" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Start new" } }
+      }
+    },
+    "title.newGameConfirm.no": {
+      "comment": "Title screen confirm: keep the saved game",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Mein Spiel behalten" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Keep my game" } }
+      }
+    },
+    "levelIntro.level": {
+      "comment": "Level intro card: small header above the level name. Arg = level number 1-5",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Level %lld" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Level %lld" } }
+      }
+    },
+    "levelIntro.tapToStart": {
+      "comment": "Level intro card: hint at the bottom",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Tippen zum Starten" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Tap to start" } }
+      }
+    },
+    "inventory.title": {
+      "comment": "Inventory screen title",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Tasche" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Bag" } }
+      }
+    },
+    "inventory.use": {
+      "comment": "Info panel: use the selected item (heal, food, ammo pack)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Benutzen" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Use" } }
+      }
+    },
+    "inventory.drop": {
+      "comment": "Info panel: drop the selected item (then choose 1 or all)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Ablegen" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Drop" } }
+      }
+    },
+    "inventory.dropOne": {
+      "comment": "Info panel: drop one of the selected item",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "1 ablegen" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Drop 1" } }
+      }
+    },
+    "inventory.dropAll": {
+      "comment": "Info panel: drop the whole stack",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Alle ablegen" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Drop all" } }
+      }
+    },
+    "inventory.assign": {
+      "comment": "Info panel: link the selected item to a quick slot",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "In Schnellplatz" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Put in quick slot" } }
+      }
+    },
+    "inventory.assignPrompt": {
+      "comment": "Inventory: shown after tapping Put in quick slot",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Tipp auf einen Schnellplatz." } },
+        "en": { "stringUnit": { "state": "translated", "value": "Tap a quick slot." } }
+      }
+    },
+    "inventory.cancel": {
+      "comment": "Inventory: cancel the drop amount or quick slot choice",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Abbrechen" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Cancel" } }
+      }
+    },
+    "inventory.tidy": {
+      "comment": "Inventory: sort the bag (puzzle, heal, food, ammo)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Aufräumen" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Tidy up" } }
+      }
+    },
+    "inventory.close": {
+      "comment": "Inventory: close and go back to the game",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Schließen" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Close" } }
+      }
+    },
+    "inventory.empty": {
+      "comment": "Inventory: shown when the bag has no items",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Deine Tasche ist leer." } },
+        "en": { "stringUnit": { "state": "translated", "value": "Your bag is empty." } }
+      }
+    },
+    "inventory.pickHint": {
+      "comment": "Info panel when nothing is selected",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Tipp auf ein Ding." } },
+        "en": { "stringUnit": { "state": "translated", "value": "Tap a thing." } }
+      }
+    },
+    "inventory.count": {
+      "comment": "Info panel: how many of this item the hero has in total. Arg = count",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Du hast %lld" } },
+        "en": { "stringUnit": { "state": "translated", "value": "You have %lld" } }
+      }
+    },
+    "inventory.puzzleHint": {
+      "comment": "Info panel for puzzle items (fuse, battery, keycard, energy core) instead of Use",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Bring es zu einer Maschine." } },
+        "en": { "stringUnit": { "state": "translated", "value": "Bring it to a machine." } }
+      }
+    },
+    "inventory.slot.accessibility": {
+      "comment": "VoiceOver for a filled bag slot. Arg 1 = item name, arg 2 = count",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "%1$@, %2$lld Stück" } },
+        "en": { "stringUnit": { "state": "translated", "value": "%1$@, %2$lld" } }
+      }
+    },
+    "inventory.emptySlot.accessibility": {
+      "comment": "VoiceOver for an empty bag slot",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Leerer Platz" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Empty slot" } }
+      }
+    },
+    "hud.inventory.accessibility": {
+      "comment": "VoiceOver for the HUD bag button",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Tasche öffnen" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Open your bag" } }
+      }
+    },
+    "hud.quickSlot.accessibility": {
+      "comment": "VoiceOver for a linked quick slot. Arg 1 = slot number 1-4, arg 2 = item name, arg 3 = count",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Schnellplatz %1$lld: %2$@, noch %3$lld" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Quick slot %1$lld: %2$@, %3$lld left" } }
+      }
+    },
+    "hud.quickSlot.empty.accessibility": {
+      "comment": "VoiceOver for an empty quick slot. Arg = slot number 1-4",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Schnellplatz %lld: leer" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Quick slot %lld: empty" } }
+      }
+    },
+    "hud.pixel.accessibility": {
+      "comment": "VoiceOver for Pixel in the game view (tap = hint)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Pixel. Tipp für Hilfe." } },
+        "en": { "stringUnit": { "state": "translated", "value": "Pixel. Tap for help." } }
+      }
+    },
+    "hud.pixelBubble.accessibility": {
+      "comment": "VoiceOver for the Pixel speech bubble. Arg = the line",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Pixel sagt: %@" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Pixel says: %@" } }
+      }
+    },
+    "ui.toast.already_full": {
+      "comment": "Toast when a heal item is used at full HP",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Schon voll!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Already full!" } }
+      }
+    },
+    "ui.toast.dropped": {
+      "comment": "Toast after dropping an item from the bag. Arg = item name",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Abgelegt: %@" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Dropped: %@" } }
+      }
+    },
+    "settings.pixelTalk": {
+      "comment": "Settings: how much Pixel talks",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Pixel redet" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Pixel talk" } }
+      }
+    },
+    "settings.pixelTalk.lots": {
+      "comment": "Settings: Pixel says everything",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Viel" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Lots" } }
+      }
+    },
+    "settings.pixelTalk.some": {
+      "comment": "Settings: Pixel says story and hints only",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Etwas" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Some" } }
+      }
+    },
+    "settings.pixelTalk.quiet": {
+      "comment": "Settings: Pixel says story only",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Leise" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Quiet" } }
+      }
+    },
+    "settings.aimAssist": {
+      "comment": "Settings: aim assist on/off",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Zielhilfe" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Aim help" } }
+      }
+    },
+    "pixel.generic.start": {
+      "comment": "Pixel line, generic: level start (skipped if the level has its own start beat). Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Los geht's! Finde alle Schalter." } },
+        "en": { "stringUnit": { "state": "translated", "value": "Let's go! Find all the switches." } }
+      }
+    },
+    "pixel.generic.first_item": {
+      "comment": "Pixel line, generic: first item stored in the bag in a level. Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Ab in die Tasche damit!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Into the bag it goes!" } }
+      }
+    },
+    "pixel.generic.bag_full": {
+      "comment": "Pixel line, generic: pickup does not fit. Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Deine Tasche ist voll!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Your bag is full!" } }
+      }
+    },
+    "pixel.generic.low_hp": {
+      "comment": "Pixel line, generic: HP at or below lowHp.threshold (once per 60 s). Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Autsch! Iss etwas!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Ouch! Eat something!" } }
+      }
+    },
+    "pixel.generic.reload": {
+      "comment": "Pixel line, generic: first time the magazine is empty. Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Tipp auf NACHLADEN!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Tap RELOAD for new shots!" } }
+      }
+    },
+    "pixel.generic.element_on": {
+      "comment": "Pixel line, generic: a required element turns on (not the last one). Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Ja! Wieder eins geschafft!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Yes! One more done!" } }
+      }
+    },
+    "pixel.generic.all_on": {
+      "comment": "Pixel line, generic: the last required element turns on. Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Alles geschafft! Die Tür geht auf!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "All done! The door opens!" } }
+      }
+    },
+    "pixel.generic.gate_open": {
+      "comment": "Pixel line, generic: a gate door opens (replaces ui.toast.gate_open). Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Das Tor ist offen. Weiter geht's!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "The gate is open. Let's go on!" } }
+      }
+    },
+    "pixel.generic.door_open": {
+      "comment": "Pixel line, generic: exit door open (skipped if the level has a doorOpen beat). Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Die Tür ist offen! Lauf auf das Leuchtfeld!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "The door is open! Step on the glowing pad!" } }
+      }
+    },
+    "pixel.generic.checkpoint": {
+      "comment": "Pixel line, generic: checkpoint touched (replaces ui.toast.checkpoint). Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Checkpoint gespeichert!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Checkpoint saved!" } }
+      }
+    },
+    "pixel.generic.rescue": {
+      "comment": "Pixel line, generic: after the rescue beam at 0 HP. Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Hab dich! Ich habe dich zurückgebeamt." } },
+        "en": { "stringUnit": { "state": "translated", "value": "Gotcha! I beamed you back." } }
+      }
+    },
+    "pixel.generic.idle": {
+      "comment": "Pixel line, generic: idle hint (no progress for hintIdleSec), said while flying. Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Brauchst du Hilfe? Tipp mich an!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Need help? Tap me!" } }
+      }
+    },
+    "pixel.generic.hint_here": {
+      "comment": "Pixel line, generic: hint target is a switch/element. Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Hier lang! Folge meinem Pfeil." } },
+        "en": { "stringUnit": { "state": "translated", "value": "This way! Follow my arrow." } }
+      }
+    },
+    "pixel.generic.hint_item": {
+      "comment": "Pixel line, generic: hint target is a puzzle item on the floor. Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Da liegt was, das wir brauchen!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Look! We need that thing over there!" } }
+      }
+    },
+    "pixel.generic.hint_machine": {
+      "comment": "Pixel line, generic: hint to a machine whose item is already in the bag. Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Du hast es! Bring es zur Maschine." } },
+        "en": { "stringUnit": { "state": "translated", "value": "You have it! Bring it to the machine." } }
+      }
+    },
+    "pixel.generic.hint_exit": {
+      "comment": "Pixel line, generic: hint target is the exit pad. Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Der Ausgang ist da drüben!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "The exit is over there!" } }
+      }
+    },
+    "pixel.generic.hint_wait": {
+      "comment": "Pixel line, generic: Pixel tapped during the hint cooldown. Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Moment! Meine Antenne kühlt ab." } },
+        "en": { "stringUnit": { "state": "translated", "value": "One sec! My antenna is cooling down." } }
+      }
+    },
+    "pixel.generic.need_fuse": {
+      "comment": "Pixel line, generic: machine needs a fuse, or the hint target needs the fuse in the bag. Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Wir brauchen eine Sicherung!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "We need a fuse!" } }
+      }
+    },
+    "pixel.generic.need_battery": {
+      "comment": "Pixel line, generic: machine needs a battery. Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Wir brauchen eine Batterie!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "We need a battery!" } }
+      }
+    },
+    "pixel.generic.need_keycard": {
+      "comment": "Pixel line, generic: card reader needs a keycard. Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Wir brauchen eine Schlüsselkarte!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "We need a keycard!" } }
+      }
+    },
+    "pixel.generic.need_energycore": {
+      "comment": "Pixel line, generic: core machine needs an energy core. Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Wir brauchen einen Energiekern!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "We need an energy core!" } }
+      }
+    },
+    "pixel.tip.boltbot": {
+      "comment": "Pixel scan tip on first sight of a boltbot. Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Boltbots rennen auf dich zu. Zapp sie!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Boltbots run at you. Zap them!" } }
+      }
+    },
+    "pixel.tip.laserdrone": {
+      "comment": "Pixel scan tip on first sight of a laser drone. Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Drohnen leuchten rot, dann schießen sie. Ausweichen!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Drones glow red, then shoot. Dodge!" } }
+      }
+    },
+    "pixel.tip.slimemutant": {
+      "comment": "Pixel scan tip on first sight of a slime. Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Schleime teilen sich in zwei!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Slimes split in two!" } }
+      }
+    },
+    "pixel.tip.slimemutant_small": {
+      "comment": "Pixel scan tip on first sight of a mini slime. Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Mini-Schleime! Die sind flott." } },
+        "en": { "stringUnit": { "state": "translated", "value": "Mini slimes! They are quick." } }
+      }
+    },
+    "pixel.tip.shieldandroid": {
+      "comment": "Pixel scan tip on first sight of a shield android. Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Großer Schild! Triff ihn von hinten!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Big shield! Hit it from behind!" } }
+      }
+    },
+    "pixel.tip.sporeplant": {
+      "comment": "Pixel scan tip on first sight of a spore plant. Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Nicht zu nah. Sie niest!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Don't get too close. It sneezes!" } }
+      }
+    },
+    "story.l1.intro.1": {
+      "comment": "L1 intro card line 1 (Pixel)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Hi! Ich bin Pixel, eine gute KI." } },
+        "en": { "stringUnit": { "state": "translated", "value": "Hi! I'm Pixel, a good AI." } }
+      }
+    },
+    "story.l1.intro.2": {
+      "comment": "L1 intro card line 2 (Pixel)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "OVERMIND will die Welt beherrschen!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "OVERMIND wants to rule the world!" } }
+      }
+    },
+    "story.l1.intro.3": {
+      "comment": "L1 intro card line 3 (Pixel)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Lass es uns zusammen stoppen!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Let's stop it together!" } }
+      }
+    },
+    "story.l1.outro.1": {
+      "comment": "L1 outro line 1 (Level complete card)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Super! Das Dach ist sicher." } },
+        "en": { "stringUnit": { "state": "translated", "value": "Great job! The roof is safe." } }
+      }
+    },
+    "story.l1.outro.2": {
+      "comment": "L1 outro line 2",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Die Roboter kommen aus einer Fabrik." } },
+        "en": { "stringUnit": { "state": "translated", "value": "The robots come from a factory." } }
+      }
+    },
+    "pixel.l1.move": {
+      "comment": "L1 beat: start. Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Lauf mit der linken Seite." } },
+        "en": { "stringUnit": { "state": "translated", "value": "Use the left side to run." } }
+      }
+    },
+    "pixel.l1.aim": {
+      "comment": "L1 beat: firstEnemy:boltbot. Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Ziel und zapp mit der rechten Seite!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Use the right side to aim and zap!" } }
+      }
+    },
+    "pixel.l1.loot": {
+      "comment": "L1 beat: firstPickup:bolt. Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Schrauben! Roboter lassen sie fallen." } },
+        "en": { "stringUnit": { "state": "translated", "value": "Bolts! Robots drop them." } }
+      }
+    },
+    "pixel.l1.button": {
+      "comment": "L1 beat: firstSeen:button. 'The hand' = the HUD interact button icon. Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Ein Knopf! Geh hin und tipp die Hand." } },
+        "en": { "stringUnit": { "state": "translated", "value": "A button! Go close and tap the hand." } }
+      }
+    },
+    "pixel.l1.lever": {
+      "comment": "L1 beat: firstSeen:lever. Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Zieh auch den Hebel!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Pull the lever, too!" } }
+      }
+    },
+    "pixel.l1.heal": {
+      "comment": "L1 beat: firstLowHp. The heart = heal pack in quick slot 1. Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Tipp auf das Herz zum Heilen." } },
+        "en": { "stringUnit": { "state": "translated", "value": "Tap the heart to heal." } }
+      }
+    },
+    "pixel.l1.door": {
+      "comment": "L1 beat: doorOpen. Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Die Tür ist offen. Los geht's!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "The door is open. Let's go!" } }
+      }
+    },
+    "story.l2.intro.1": {
+      "comment": "L2 intro card line 1",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Das ist OVERMINDs Roboterfabrik." } },
+        "en": { "stringUnit": { "state": "translated", "value": "This is OVERMIND's robot factory." } }
+      }
+    },
+    "story.l2.intro.2": {
+      "comment": "L2 intro card line 2",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Lass sie uns abschalten!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Let's switch it off!" } }
+      }
+    },
+    "story.l2.outro.1": {
+      "comment": "L2 outro line 1",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Hier kommen keine Roboter mehr!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "No more robots from here!" } }
+      }
+    },
+    "story.l2.outro.2": {
+      "comment": "L2 outro line 2",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Aber OVERMIND macht auch Monster." } },
+        "en": { "stringUnit": { "state": "translated", "value": "But OVERMIND makes monsters, too." } }
+      }
+    },
+    "story.l2.outro.3": {
+      "comment": "L2 outro line 3",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Sie wachsen in einem Gewächshaus." } },
+        "en": { "stringUnit": { "state": "translated", "value": "They grow in a big greenhouse." } }
+      }
+    },
+    "pixel.l2.spread": {
+      "comment": "L2 beat: firstPickup:blaster_spread (M4). Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Ein Blasen-Blaster! Toll gegen Gruppen." } },
+        "en": { "stringUnit": { "state": "translated", "value": "A bubble blaster! Great for groups." } }
+      }
+    },
+    "pixel.l2.swap": {
+      "comment": "L2 beat: firstPickup:blaster_spread, second line (M4). Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Tipp auf WECHSELN für andere Blaster." } },
+        "en": { "stringUnit": { "state": "translated", "value": "Tap SWAP to change blasters." } }
+      }
+    },
+    "pixel.l2.gate": {
+      "comment": "L2 beat: firstSeen:gate. Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Das Tor ist zu. Finde einen Knopf!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "This gate is locked. Find a button!" } }
+      }
+    },
+    "pixel.l2.zone2": {
+      "comment": "L2 beat: zone:2. Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Vorsicht! Neue Roboter vorne." } },
+        "en": { "stringUnit": { "state": "translated", "value": "Careful! New robots ahead." } }
+      }
+    },
+    "pixel.l2.fuse": {
+      "comment": "L2 beat: firstPickup:fuse. Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Eine Sicherung! Eine Maschine braucht sie." } },
+        "en": { "stringUnit": { "state": "translated", "value": "A fuse! A machine needs it." } }
+      }
+    },
+    "pixel.l2.machine": {
+      "comment": "L2 beat: firstSeen:machine. Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Bring eine Sicherung zu dieser Maschine." } },
+        "en": { "stringUnit": { "state": "translated", "value": "Bring a fuse to this machine." } }
+      }
+    },
+    "pixel.l2.door": {
+      "comment": "L2 beat: doorOpen. Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Fabrik aus! Lauf zum Ausgang!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Factory off! Run to the exit!" } }
+      }
+    },
+    "story.l3.intro.1": {
+      "comment": "L3 intro card line 1",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Igitt, hier ist alles klebrig!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Eww, it is so sticky here!" } }
+      }
+    },
+    "story.l3.intro.2": {
+      "comment": "L3 intro card line 2",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "OVERMIND züchtet hier Monster." } },
+        "en": { "stringUnit": { "state": "translated", "value": "OVERMIND grows monsters in this lab." } }
+      }
+    },
+    "story.l3.outro.1": {
+      "comment": "L3 outro line 1",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Die Monster sind jetzt nur müde." } },
+        "en": { "stringUnit": { "state": "translated", "value": "The monsters are just sleepy now." } }
+      }
+    },
+    "story.l3.outro.2": {
+      "comment": "L3 outro line 2",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Ich habe OVERMINDs Server-Festung gefunden!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "I found OVERMIND's server fortress!" } }
+      }
+    },
+    "pixel.l3.rapid": {
+      "comment": "L3 beat: firstPickup:blaster_rapid (M4). Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Ein Schaum-Blaster! Er schießt super schnell." } },
+        "en": { "stringUnit": { "state": "translated", "value": "A foam blaster! It shoots super fast." } }
+      }
+    },
+    "pixel.l3.plate": {
+      "comment": "L3 beat: firstSeen:pressureplate. Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Bleib kurz auf der Platte stehen." } },
+        "en": { "stringUnit": { "state": "translated", "value": "Stand on the plate for a moment." } }
+      }
+    },
+    "pixel.l3.battery": {
+      "comment": "L3 beat: firstPickup:battery. Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Eine Batterie! Heb sie für später auf." } },
+        "en": { "stringUnit": { "state": "translated", "value": "A battery! Keep it for later." } }
+      }
+    },
+    "pixel.l3.zone2": {
+      "comment": "L3 beat: zone:2. Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Die große Maschine ist bestimmt nah." } },
+        "en": { "stringUnit": { "state": "translated", "value": "The big machine must be close." } }
+      }
+    },
+    "pixel.l3.door": {
+      "comment": "L3 beat: doorOpen. Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Das Labor ist aus! Gut gemacht!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "The lab is off! Good job!" } }
+      }
+    },
+    "story.l4.intro.1": {
+      "comment": "L4 intro card line 1",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Hier denkt OVERMIND." } },
+        "en": { "stringUnit": { "state": "translated", "value": "This is where OVERMIND thinks." } }
+      }
+    },
+    "story.l4.intro.2": {
+      "comment": "L4 intro card line 2",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Lass uns seine Server ausschalten!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Let's turn off its servers!" } }
+      }
+    },
+    "story.l4.outro.1": {
+      "comment": "L4 outro line 1",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "OVERMIND ist jetzt sehr wütend." } },
+        "en": { "stringUnit": { "state": "translated", "value": "OVERMIND is very angry now." } }
+      }
+    },
+    "story.l4.outro.2": {
+      "comment": "L4 outro line 2",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Es versteckt sich in seinem Kern. Los!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "It hides in its core. Let's go!" } }
+      }
+    },
+    "pixel.l4.overmind": {
+      "comment": "L4 beat: start. OVERMIND speaks through Pixel's bubble. Gender-neutral in DE. Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "OVERMIND: „Geh nach Hause, du Winzling!“" } },
+        "en": { "stringUnit": { "state": "translated", "value": "OVERMIND: “Go home, tiny hero!”" } }
+      }
+    },
+    "pixel.l4.keycard": {
+      "comment": "L4 beat: firstPickup:keycard. Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Eine Schlüsselkarte! Sie öffnet das nächste Tor." } },
+        "en": { "stringUnit": { "state": "translated", "value": "A keycard! It opens the next gate." } }
+      }
+    },
+    "pixel.l4.zone3": {
+      "comment": "L4 beat: zone:3. Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Fast geschafft. Bleib stark!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Almost there. Stay strong!" } }
+      }
+    },
+    "pixel.l4.door": {
+      "comment": "L4 beat: doorOpen. Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Die Server sind aus!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "The servers are off!" } }
+      }
+    },
+    "story.l5.intro.1": {
+      "comment": "L5 intro card line 1",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Das ist OVERMINDs Kern." } },
+        "en": { "stringUnit": { "state": "translated", "value": "This is OVERMIND's core." } }
+      }
+    },
+    "story.l5.intro.2": {
+      "comment": "L5 intro card line 2",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Letzter Halt. Wir schaffen das!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Last stop. We can do it!" } }
+      }
+    },
+    "story.l5.outro.1": {
+      "comment": "L5 outro line 1",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Du hast es geschafft! OVERMIND ist aus!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "You did it! OVERMIND is off!" } }
+      }
+    },
+    "story.l5.outro.2": {
+      "comment": "L5 outro line 2",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Die Roboter können jetzt Menschen helfen." } },
+        "en": { "stringUnit": { "state": "translated", "value": "The robots can help people now." } }
+      }
+    },
+    "story.l5.outro.3": {
+      "comment": "L5 outro line 3. Gender-neutral (hero name/gender still open)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Danke! Wir zwei sind das beste Team!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Thank you! We are the best team ever!" } }
+      }
+    },
+    "story.l5.outro.4": {
+      "comment": "L5 outro line 4: soft Season 2 teaser",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "...Moment. Hast du das Piepen gehört?" } },
+        "en": { "stringUnit": { "state": "translated", "value": "...Wait. Did you hear that beep?" } }
+      }
+    },
+    "pixel.l5.core": {
+      "comment": "L5 beat: firstPickup:energycore. Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Ein Energiekern! Bring ihn zu einer Maschine." } },
+        "en": { "stringUnit": { "state": "translated", "value": "An energy core! Bring it to a machine." } }
+      }
+    },
+    "pixel.l5.door": {
+      "comment": "L5 beat: doorOpen. Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Die große Tür ist offen. Mach dich bereit!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "The big door is open. Get ready!" } }
+      }
+    },
+    "boss.megamech.intro.1": {
+      "comment": "L5 boss beat: bossPhase:1, OVERMIND speaks (M4). Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "OVERMIND: „Hier ist MEGA-MECH Einheit Null!“" } },
+        "en": { "stringUnit": { "state": "translated", "value": "OVERMIND: “Meet MEGA-MECH Unit Zero!”" } }
+      }
+    },
+    "boss.megamech.intro.2": {
+      "comment": "L5 boss beat: bossPhase:1, Pixel (M4). Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Pixel: Pass auf die roten Ringe auf. Geh raus!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Pixel: Watch the red rings. Step out!" } }
+      }
+    },
+    "boss.megamech.phase2.1": {
+      "comment": "L5 boss beat: bossPhase:2, OVERMIND (M4). Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "OVERMIND: „Ha! Mein Schild ist zu stark!“" } },
+        "en": { "stringUnit": { "state": "translated", "value": "OVERMIND: “Ha! My shield is too strong!”" } }
+      }
+    },
+    "boss.megamech.phase2.2": {
+      "comment": "L5 boss beat: bossPhase:2, Pixel (M4). Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Pixel: Steck Kerne in beide Maschinen!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Pixel: Put cores in both machines!" } }
+      }
+    },
+    "boss.megamech.phase3.1": {
+      "comment": "L5 boss beat: bossPhase:3, OVERMIND (M4). Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "OVERMIND: „Piep! Fehler! Zu viel Spaß!“" } },
+        "en": { "stringUnit": { "state": "translated", "value": "OVERMIND: “Beep! Error! Too much fun!”" } }
+      }
+    },
+    "boss.megamech.phase3.2": {
+      "comment": "L5 boss beat: bossPhase:3, Pixel (M4). Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Pixel: Es knallt gegen Säulen. Nutz sie!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Pixel: It bonks into pillars. Use them!" } }
+      }
+    },
+    "boss.megamech.defeated.1": {
+      "comment": "L5 boss beat: bossDefeated, OVERMIND (M4). Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "OVERMIND: „Das ist unfair! ... Okay, es ist fair.“" } },
+        "en": { "stringUnit": { "state": "translated", "value": "OVERMIND: “This is not fair! ... Okay, it is fair.”" } }
+      }
     }
   },
   "version": "1.0"

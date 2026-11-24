@@ -48,8 +48,8 @@ struct StrikeSmokeTests {
         #expect(scene.enemies.count == scene.level.enemySpawns.count)
         #expect(scene.built.interactables.count == scene.level.elements.count)
         #expect(scene.camera === scene.cameraNode)
-        #expect(scene.hero.weapon.magazine == 12)
-        #expect(scene.hero.weapon.reserve == 48)
+        #expect(scene.hero.magazine == 12)
+        #expect(scene.hero.reserve == 48)
         #expect(scene.level.grid.cell(at: scene.hero.position) == scene.level.heroStart)
     }
 
@@ -191,13 +191,13 @@ struct StrikeSmokeTests {
             scene.hero.position = scene.level.grid.world(fuse.cell)
             scene.step(dt: 1.0 / 60)
         }
-        #expect(scene.bag.count(of: "fuse") == 1)
+        #expect(scene.inventory.count(of: "fuse") == 1)
         #expect(model.hud.carried["fuse"] == 1)
         scene.hero.position = CGPoint(x: machine.position.x - 90, y: machine.position.y)
         scene.step(dt: 1.0 / 60)
         scene.handle(.interact)
         #expect(scene.puzzle.isOn(machine.id))
-        #expect(scene.bag.count(of: "fuse") == 0)
+        #expect(scene.inventory.count(of: "fuse") == 0)
     }
 
     @Test func solveAllOpensDoorsAndTheExitPadEndsTheLevel() throws {

@@ -398,7 +398,7 @@ Accessibility ids (new): `hud.quickSlot.0…3`, `hud.inventoryButton`, `hud.paus
     - **poof v2 (QA-009)**: bigger, colourful, ≥ 0.6 s, a burst of stars + bolts, readable on all 5 floors and still kid-safe (no red splats)
   - Done when: every value is a concrete number or hex; nothing contradicts §7 / §13 or the GDD
 
-- [ ] **M3-3 swift-coder (pass A) — Inventory, ammo, pickups, run state, save**
+- [x] **M3-3 swift-coder (pass A) — Inventory, ammo, pickups, run state, save**
   - Outputs: `ItemStack`, `Inventory` (`PuzzleBag` removed, its callers moved over), `ItemUse`, `AmmoBank`, `Loadout`, `WeaponState` refactor, `PickupResolver`, `RunState`, `SaveGame`, `SaveStore`. Tests in `InventoryTests.swift`, `ItemUseTests.swift`, `AmmoBankTests.swift`, `PickupResolverTests.swift`, `SaveStoreTests.swift`; existing `WeaponStateTests` and `LootRollerTests` stay green.
   - Done when (each is a test):
     - **Inventory storage:**
@@ -423,7 +423,7 @@ Accessibility ids (new): `hud.quickSlot.0…3`, `hud.inventoryButton`, `hud.paus
       - a corrupt file or a version mismatch gives `nil` plus a `.bak` file and does not crash
     - **Start gift:** the L1 `startGift` is applied once on a new game (not again on replay if already owned)
 
-- [ ] **M3-4 swift-coder (pass A) — Rescue rules, Pixel brain, hints, story**
+- [x] **M3-4 swift-coder (pass A) — Rescue rules, Pixel brain, hints, story**
   - Outputs: `RescueRules`, `SpeechQueue`, `StoryDirector`, `HintPlanner`. Tests in `RescueRulesTests.swift`, `SpeechQueueTests.swift`, `StoryDirectorTests.swift`, `HintPlannerTests.swift`.
   - Done when (each is a test):
     - **Rescue:**

@@ -1,25 +1,27 @@
 import Foundation
 
-/// Magazine/reserve/cooldown/reload state of one blaster (GDD §5.1). Pure value type.
+/// Cooldown, reload and safety-net timers of the equipped blaster (GDD §5.1). Magazine and
+/// reserve live in `Loadout`; every method that moves ammo takes it `inout`. Pure value type.
 nonisolated struct WeaponState: Sendable, Equatable {
-    let def: WeaponDef
-    private(set) var magazine: Int
-    private(set) var reserve: Int
+    /// Equipped blaster.
+    private(set) var def: WeaponDef
     /// Seconds until the next shot is allowed.
     private(set) var cooldown: Double = 0
     /// Remaining reload time, `nil` when not reloading.
     private(set) var reloadRemaining: Double?
-    /// Starter safety net (only set for the starter blaster).
+    /// Starter safety net, applied to `safetyNetWeapon` whether or not it is equipped.
     let safetyNet: SafetyNetDef?
+    let safetyNetWeapon: WeaponDef?
     private(set) var safetyNetActive = false
     private var safetyNetTimer: Double = 0
+    /// Net blaster's mag + reserve after the last tick/shot; a rise means ammo was picked up.
+    private var lastNetTotal: Int?
 
-    init(def: WeaponDef, magazine: Int, reserve: Int, safetyNet: SafetyNetDef? = nil) {
+    /// `safetyNetWeapon` defaults to `def` when a net is given (the starter).
+    init(def: WeaponDef, safetyNet: SafetyNetDef? = nil, safetyNetWeapon: WeaponDef? = nil) {
         self.def = def
-        self.magazine = min(max(0, magazine), def.magazineSize)
-        self.reserve = min(max(0, reserve), def.reserveMax)
         self.safetyNet = safetyNet
-        updateSafetyNetActivation()
+        self.safetyNetWeapon = safetyNet == nil ? nil : (safetyNetWeapon ?? def)
     }
 
     var isReloading: Bool { reloadRemaining != nil }
@@ -32,45 +34,58 @@ nonisolated struct WeaponState: Sendable, Equatable {
 
     var fireInterval: Double { def.fireRate > 0 ? 1 / def.fireRate : .infinity }
 
+    func magazine(in loadout: Loadout) -> Int { loadout.magazine(def.id) }
+    func reserve(in loadout: Loadout) -> Int { loadout.reserve(for: def) }
+    func totalAmmo(in loadout: Loadout) -> Int { loadout.totalAmmo(def) }
+
     /// True when a reload would move ammo.
-    var canReload: Bool { !isReloading && magazine < def.magazineSize && reserve > 0 }
+    func canReload(in loadout: Loadout) -> Bool {
+        !isReloading && magazine(in: loadout) < def.magazineSize && reserve(in: loadout) > 0
+    }
 
-    var totalAmmo: Int { magazine + reserve }
+    /// Switches the equipped blaster (M4 swap). A running reload is cancelled; nothing is lost.
+    mutating func equip(_ weapon: WeaponDef) {
+        guard weapon.id != def.id else { return }
+        def = weapon
+        reloadRemaining = nil
+        cooldown = 0
+    }
 
-    mutating func tick(dt: Double) {
+    mutating func tick(dt: Double, loadout: inout Loadout) {
         guard dt > 0 else { return }
         cooldown = max(0, cooldown - dt)
         if let r = reloadRemaining {
             let left = r - dt
             if left <= 0 {
-                let moved = min(def.magazineSize - magazine, reserve)
-                magazine += moved
-                reserve -= moved
+                loadout.completeReload(def)
                 reloadRemaining = nil
             } else {
                 reloadRemaining = left
             }
         }
-        tickSafetyNet(dt: dt)
+        tickSafetyNet(dt: dt, loadout: &loadout)
     }
 
     /// Fires one shot if the trigger is held and the blaster is ready. Starts an auto-reload
     /// when the magazine is empty and the trigger is held.
-    mutating func tryFire(triggerHeld: Bool) -> Bool {
+    mutating func tryFire(triggerHeld: Bool, loadout: inout Loadout) -> Bool {
         guard triggerHeld, !isReloading, cooldown <= 0 else { return false }
-        guard magazine > 0 else {
-            _ = startReload()
+        guard loadout.consumeRound(def) else {
+            _ = startReload(loadout: loadout)
             return false
         }
-        magazine -= 1
         cooldown = fireInterval
-        updateSafetyNetActivation()
+        if let w = safetyNetWeapon, w.id == def.id {
+            let total = loadout.totalAmmo(w)
+            lastNetTotal = total
+            if total == 0, !safetyNetActive { safetyNetActive = true; safetyNetTimer = 0 }
+        }
         return true
     }
 
     @discardableResult
-    mutating func startReload() -> Bool {
-        guard canReload else { return false }
+    mutating func startReload(loadout: Loadout) -> Bool {
+        guard canReload(in: loadout) else { return false }
         reloadRemaining = def.reloadSec
         return true
     }
@@ -80,39 +95,32 @@ nonisolated struct WeaponState: Sendable, Equatable {
         reloadRemaining = nil
     }
 
-    /// Adds ammo to the reserve, capped at `reserveMax`. Returns the overflow that did not fit.
-    @discardableResult
-    mutating func addReserve(_ amount: Int) -> Int {
-        guard amount > 0 else { return 0 }
-        let fits = min(amount, def.reserveMax - reserve)
-        reserve += fits
-        if fits > 0 { safetyNetActive = false; safetyNetTimer = 0 }
-        updateSafetyNetActivation()
-        return amount - fits
-    }
-
     // MARK: Safety net (starter only): when mag + reserve = 0, +1 reserve per interval up to `rechargeTo`.
 
-    private mutating func updateSafetyNetActivation() {
-        guard safetyNet != nil else { return }
-        if totalAmmo == 0, !safetyNetActive {
-            safetyNetActive = true
-            safetyNetTimer = 0
-        }
-    }
-
-    private mutating func tickSafetyNet(dt: Double) {
-        guard let net = safetyNet, net.rechargeEverySec > 0 else { return }
-        updateSafetyNetActivation()
-        guard safetyNetActive else { return }
-        safetyNetTimer += dt
-        while safetyNetTimer >= net.rechargeEverySec, totalAmmo < net.rechargeTo, reserve < def.reserveMax {
-            safetyNetTimer -= net.rechargeEverySec
-            reserve += 1
-        }
-        if totalAmmo >= net.rechargeTo || reserve >= def.reserveMax {
+    private mutating func tickSafetyNet(dt: Double, loadout: inout Loadout) {
+        guard let net = safetyNet, let w = safetyNetWeapon else { return }
+        var total = loadout.totalAmmo(w)
+        // Ammo picked up while the net runs ends it (it restarts at the next 0 / 0).
+        if safetyNetActive, let last = lastNetTotal, total > last {
             safetyNetActive = false
             safetyNetTimer = 0
         }
+        if total == 0, !safetyNetActive {
+            safetyNetActive = true
+            safetyNetTimer = 0
+        }
+        if safetyNetActive, net.rechargeEverySec > 0 {
+            safetyNetTimer += dt
+            while safetyNetTimer >= net.rechargeEverySec, total < net.rechargeTo, !loadout.ammo.isFull(w.ammoId) {
+                safetyNetTimer -= net.rechargeEverySec
+                loadout.ammo.add(w.ammoId, amount: 1)
+                total += 1
+            }
+            if total >= net.rechargeTo || loadout.ammo.isFull(w.ammoId) {
+                safetyNetActive = false
+                safetyNetTimer = 0
+            }
+        }
+        lastNetTotal = total
     }
 }

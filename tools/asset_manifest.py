@@ -97,6 +97,7 @@ def _build():
         ("icon_heart", 32, 32), ("icon_ammo", 32, 32), ("icon_star", 32, 32),
         ("icon_blaster_starter", 32, 32), ("icon_blaster_spread", 32, 32),
         ("icon_blaster_rapid", 32, 32), ("icon_pixel", 32, 32),
+        ("btn_settings", 72, 72),
     ]
     for name, w, h in ui:
         A(Group("ui", "ui", name, None, 1, w, h, "ui_" + name))
@@ -163,6 +164,7 @@ def _sheets():
                        "ui_icon_blaster_spread", "ui_icon_blaster_rapid", "ui_icon_pixel"],
         layout="grid4x2", shape="wide")
     add("appicon", ["@appicon"], bg="none")
+    add("ui_icon_gear", ["ui_btn_settings"])
     return S
 
 

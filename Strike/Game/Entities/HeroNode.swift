@@ -7,19 +7,25 @@ final class HeroNode: SKNode {
     let def: HeroDef
     let animator: PoseAnimator
     var health: Health
+    /// Owned blasters, magazines and ammo reserves (carries over; M3 pass B feeds it from `RunState`).
+    var loadout: Loadout
+    /// Timers of the equipped blaster.
     var weapon: WeaponState
 
     private var knockbackVelocity = CGVector.zero
     private var knockbackRemaining: Double = 0
 
-    init(def: HeroDef, weapon: WeaponDef) {
+    init(def: HeroDef, weapons: [String: WeaponDef], loadout: Loadout? = nil) {
         self.def = def
         animator = PoseAnimator(textureName: "hero_idle_01", atlas: .hero, style: .hero)
         health = Health(max: def.maxHp, invulnerableSec: def.invulnerableSec)
-        let isStarter = weapon.id == def.startLoadout.weaponId
-        self.weapon = WeaponState(def: weapon, magazine: def.startLoadout.magazine,
-                                  reserve: def.startLoadout.reserve,
-                                  safetyNet: isStarter ? def.starterSafetyNet : nil)
+        let loadout = loadout ?? Loadout(start: def.startLoadout, weapons: weapons)
+        guard let equipped = weapons[loadout.equipped] ?? weapons[def.startLoadout.weaponId] else {
+            fatalError("hero.json startLoadout.weaponId \(def.startLoadout.weaponId) not in weapons.json")
+        }
+        self.loadout = loadout
+        self.weapon = WeaponState(def: equipped, safetyNet: def.starterSafetyNet,
+                                  safetyNetWeapon: weapons[def.startLoadout.weaponId])
         super.init()
         name = "hero"
         animator.root.position = CGPoint(x: 0, y: -CGFloat(def.radius))
@@ -41,6 +47,18 @@ final class HeroNode: SKNode {
     required init?(coder aDecoder: NSCoder) { fatalError("init(coder:) is not supported") }
 
     var radius: CGFloat { CGFloat(def.radius) }
+
+    // MARK: Equipped blaster (magazine/reserve through the loadout)
+
+    var magazine: Int { weapon.magazine(in: loadout) }
+    var reserve: Int { weapon.reserve(in: loadout) }
+    var totalAmmo: Int { weapon.totalAmmo(in: loadout) }
+    var canReload: Bool { weapon.canReload(in: loadout) }
+
+    func tryFire(triggerHeld: Bool) -> Bool { weapon.tryFire(triggerHeld: triggerHeld, loadout: &loadout) }
+
+    @discardableResult
+    func startReload() -> Bool { weapon.startReload(loadout: loadout) }
 
     /// Where shots leave the blaster (in the parent's coordinates).
     func muzzlePoint(angle: CGFloat) -> CGPoint {
@@ -78,7 +96,7 @@ final class HeroNode: SKNode {
 
     func tick(dt: Double) {
         health.tick(dt: dt)
-        weapon.tick(dt: dt)
+        weapon.tick(dt: dt, loadout: &loadout)
         animator.setBlinking(health.isInvulnerable)
         animator.update(dt: dt)
     }

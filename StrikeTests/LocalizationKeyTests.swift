@@ -60,10 +60,15 @@ struct LocalizationKeyTests {
     }
 
     @Test func noDeathOrGoreWordingInStrings() throws {
-        let banned = try Regex(#"\b(blood|bloody|kill|kills|killed|die|dies|dead|death|gore|gun|guns|murder|tot|töten|sterben|stirbt|Blut|Waffe)\b"#).ignoresCase()
+        // Per language: the German article "die" is not the English verb.
+        let banned = [
+            "en": try Regex(#"\b(blood|bloody|kill|kills|killed|die|dies|dead|death|gore|gun|guns|murder)\b"#).ignoresCase(),
+            "de": try Regex(#"\b(blood|kill|gore|tot|tod|töten|tötet|sterben|stirbt|blut|blutig|waffe|waffen|mord)\b"#).ignoresCase(),
+        ]
         for lang in ["de", "en"] {
+            let rx = banned[lang]!
             for (k, v) in try Self.table(lang) {
-                #expect(v.firstMatch(of: banned) == nil, "\(lang) \(k): '\(v)' has violent wording")
+                #expect(v.firstMatch(of: rx) == nil, "\(lang) \(k): '\(v)' has violent wording")
             }
         }
     }

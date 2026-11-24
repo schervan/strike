@@ -23,8 +23,9 @@ struct PuzzleStateTests {
             rules: rules)
     }
 
-    static func bag(fuses: Int = 0) -> PuzzleBag {
-        var b = PuzzleBag(capacity: ["fuse": 3, "battery": 3])
+    /// M3: the `Inventory` is the puzzle's `ItemCarrier` (it replaced the M2 `PuzzleBag`).
+    static func bag(fuses: Int = 0) -> Inventory {
+        var b = Inventory(items: GeneratedCorpus.data.items, rules: GeneratedCorpus.data.rules.inventory)
         _ = b.add("fuse", count: fuses)
         return b
     }
@@ -125,25 +126,23 @@ struct PuzzleStateTests {
         let l = LevelGenerator.generate(def, seed: 5, catalog: GeneratedCorpus.catalog)
         var s = PuzzleState(level: l, rules: GeneratedCorpus.data.rules.puzzle)
         #expect(s.requiredProgress.total == def.puzzle.elements.filter(\.required).reduce(0) { $0 + $1.count })
-        var bag = PuzzleBag(items: GeneratedCorpus.data.items)
+        var bag = Inventory(items: GeneratedCorpus.data.items, rules: GeneratedCorpus.data.rules.inventory)
         for i in l.itemPlacements { let v = bag.add(i.itemId, count: 1); #expect(v == 0) }
         for e in l.elements where e.type != .pressureplate { _ = s.interact(e.id, carrier: &bag) }
         for e in l.elements where e.type == .pressureplate { _ = s.updatePlate(e.id, occupied: true, dt: 5) }
         #expect(l.gates.allSatisfy { s.isGateOpen($0.id) })
         #expect(s.isExitOpen)
-        #expect(bag.carried.isEmpty)
+        #expect(bag.isEmpty)
     }
 
-    @Test func puzzleBagOverflowAndRemove() {
-        var b = PuzzleBag(capacity: ["fuse": 2])
-        do { let v = b.add("fuse", count: 3); #expect(v == 1) }
-        #expect(b.count(of: "fuse") == 2)
-        do { let v = b.add("keycard", count: 1); #expect(v == 1) }  // not storable
+    /// Former `puzzleBagOverflowAndRemove`, on the `Inventory`: remove is all or nothing, and
+    /// every puzzle item from items.json can be carried.
+    @Test func carrierRemoveIsAllOrNothing() {
+        var b = Self.bag(fuses: 2)
         do { let v = b.remove("fuse", count: 3); #expect(!v) }
         #expect(b.count(of: "fuse") == 2)
         do { let v = b.remove("fuse", count: 2); #expect(v) }
-        #expect(b.carried.isEmpty)
-        let fromItems = PuzzleBag(items: GeneratedCorpus.data.items)
-        #expect(Set(fromItems.capacity.keys) == ["fuse", "battery", "keycard", "energycore"])
+        #expect(b.isEmpty)
+        for id in ["fuse", "battery", "keycard", "energycore"] { #expect(b.canStore(id)) }
     }
 }

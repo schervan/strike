@@ -34,7 +34,8 @@ final class GameScene: SKScene, @preconcurrency SKPhysicsContactDelegate, EnemyW
     private(set) var enemies: [EnemyNode] = []
     private(set) var pickups: [PickupNode] = []
     private(set) var puzzle: PuzzleState
-    private(set) var bag: PuzzleBag
+    /// The hero's bag (M3 pass B feeds it from `RunState`).
+    private(set) var inventory: Inventory
     private(set) var session: LevelSession
     /// Items picked up that have no effect before M3 (inventory) / M4 (weapons).
     private(set) var collectedCounts: [String: Int] = [:]
@@ -109,12 +110,12 @@ final class GameScene: SKScene, @preconcurrency SKPhysicsContactDelegate, EnemyW
         solidGrid = level.gridAllDoorsClosed
         pathfinder = Pathfinder(grid: solidGrid)
         puzzle = PuzzleState(level: level, rules: data.rules.puzzle)
-        bag = PuzzleBag(items: data.items)
+        inventory = Inventory(items: data.items, rules: data.rules.inventory)
         session = LevelSession(level: level)
         guard let weapon = data.weapons[data.hero.startLoadout.weaponId] else {
             fatalError("hero.json startLoadout.weaponId \(data.hero.startLoadout.weaponId) not in weapons.json")
         }
-        hero = HeroNode(def: data.hero, weapon: weapon)
+        hero = HeroNode(def: data.hero, weapons: data.weapons)
         pool = ProjectilePool(capacity: Self.projectileCapacity, bodyRadius: CGFloat(weapon.projectileRadius))
         super.init(size: size)
         scaleMode = .aspectFill
@@ -210,7 +211,7 @@ final class GameScene: SKScene, @preconcurrency SKPhysicsContactDelegate, EnemyW
     func handle(_ command: GameCommand) {
         switch command {
         case .reload:
-            hero.weapon.startReload()
+            hero.startReload()
         case .interact:
             interact()
         case .debugSolveAll:
@@ -324,9 +325,9 @@ final class GameScene: SKScene, @preconcurrency SKPhysicsContactDelegate, EnemyW
         let held = sticks.fireHeld
         let pressed = held && !wasTriggerHeld
         wasTriggerHeld = held
-        if hero.weapon.tryFire(triggerHeld: held) {
+        if hero.tryFire(triggerHeld: held) {
             fire()
-        } else if pressed, hero.weapon.magazine == 0, !hero.weapon.isReloading {
+        } else if pressed, hero.magazine == 0, !hero.weapon.isReloading {
             // Trigger pulled with nothing to fire and nothing to reload.
             audio?.play(.emptyClick)
         }
@@ -445,9 +446,9 @@ final class GameScene: SKScene, @preconcurrency SKPhysicsContactDelegate, EnemyW
         let cap = max(1, w.def.magazineSize + w.def.reserveMax)
         return LootContext(level: levelDef.index, heroHpRatio: hero.health.ratio,
                            equippedWeaponId: w.def.id,
-                           equippedAmmoRatio: Double(w.totalAmmo) / Double(cap),
-                           equippedAmmoTotal: w.totalAmmo,
-                           ownedWeaponIds: [data.hero.startLoadout.weaponId])
+                           equippedAmmoRatio: Double(hero.totalAmmo) / Double(cap),
+                           equippedAmmoTotal: hero.totalAmmo,
+                           ownedWeaponIds: Set(hero.loadout.owned))
     }
 
     // MARK: Loot
@@ -514,16 +515,16 @@ final class GameScene: SKScene, @preconcurrency SKPhysicsContactDelegate, EnemyW
             }
             return true
         case .puzzle:
-            guard bag.add(item.id, count: 1) == 0 else {
+            guard inventory.add(item.id, count: 1) == 0 else {
                 showToast("ui.toast.bag_full")
                 return false
             }
             showToast("ui.toast.got_item", arg: itemName(item.id), key: "ui.toast.got_item.\(item.id)")
             return true
         case .ammo:
-            if item.ammoId == hero.weapon.def.ammoId, let amount = item.ammoAmount {
-                let overflow = hero.weapon.addReserve(amount)
-                return overflow != amount // reserve full: leave it (no inventory until M3)
+            if let ammoId = item.ammoId, let amount = item.ammoAmount {
+                let overflow = hero.loadout.ammo.add(ammoId, amount: amount)
+                return overflow != amount // reserve full: leave it (pass B: PickupResolver, overflow packs)
             }
             collectedCounts[item.id, default: 0] += 1
             return true
@@ -572,14 +573,14 @@ final class GameScene: SKScene, @preconcurrency SKPhysicsContactDelegate, EnemyW
         switch e.type {
         case .button: return !e.isOn
         case .lever: return e.pullRemaining <= 0
-        case .machine: return !e.isOn && (e.requiresItem.map { bag.count(of: $0) > 0 } ?? true)
+        case .machine: return !e.isOn && (e.requiresItem.map { inventory.count(of: $0) > 0 } ?? true)
         case .pressureplate: return false
         }
     }
 
     private func interact() {
         guard pan == nil, let id = focusedId, let node = built.interactables[id] else { return }
-        let result = puzzle.interact(id, carrier: &bag)
+        let result = puzzle.interact(id, carrier: &inventory)
         switch result {
         case .activated:
             lightHaptic.impactOccurred()
@@ -896,11 +897,11 @@ final class GameScene: SKScene, @preconcurrency SKPhysicsContactDelegate, EnemyW
         }
         return HUDState(
             hp: hero.health.current, maxHp: hero.health.max,
-            magazine: w.magazine, reserve: w.reserve, magazineSize: w.def.magazineSize,
+            magazine: hero.magazine, reserve: hero.reserve, magazineSize: w.def.magazineSize,
             isReloading: w.isReloading,
             reloadProgress: (w.reloadProgress * 20).rounded(.down) / 20,
-            canReload: w.canReload, score: session.score, weaponId: w.def.id,
-            interact: interact, carried: bag.counts)
+            canReload: hero.canReload, score: session.score, weaponId: w.def.id,
+            interact: interact, carried: inventory.totals(in: .puzzle))
     }
 
     private func pushHUD() {

@@ -4,7 +4,10 @@
     "leverPullSec": 0.4,
     "plateHoldSec": 1.0,
     "doorPanSec": 1.0,
-    "doorMaxLights": 8
+    "doorMaxLights": 8,
+    "plateRingFadeSec": 0.1,
+    "doorStaggerSec": 0.04,
+    "doorFrameSec": 0.07
   },
   "leash": {
     "rangeFactor": 2.0,
@@ -12,7 +15,10 @@
   },
   "minimap": {
     "revealOnEnter": true,
-    "updateHz": 10
+    "updateHz": 10,
+    "corridorRevealRadius": 3,
+    "heroPulseSec": 1.0,
+    "exitPulseSec": 1.2
   },
   "crate": {
     "hp": 20
@@ -20,5 +26,44 @@
   "toast": {
     "showSec": 2.5,
     "repeatCooldownSec": 3.0
+  },
+  "inventory": {
+    "slots": 25,
+    "quickSlots": 4,
+    "useCooldownSec": 0.5,
+    "dropScatter": 24
+  },
+  "rescue": {
+    "slowMoScale": 0.3,
+    "slowMoSec": 0.6,
+    "beamSec": 0.8,
+    "starterMinMagazine": 12
+  },
+  "pixel": {
+    "followOffset": {
+      "x": -40,
+      "y": 40
+    },
+    "bobAmplitude": 4,
+    "bobHz": 1.5,
+    "followLerpSec": 0.15,
+    "tapRadius": 80,
+    "tapMaxSec": 0.25,
+    "tapMaxMovePt": 12,
+    "bubbleBaseSec": 3.0,
+    "bubblePerCharSec": 0.04,
+    "maxChars": 60,
+    "queueMax": 2,
+    "repeatCooldownSec": 10
+  },
+  "hints": {
+    "flySec": 2,
+    "arrowSec": 6,
+    "cooldownSec": 10,
+    "pointerAfterSec": 60
+  },
+  "lowHp": {
+    "threshold": 25,
+    "lineCooldownSec": 60
   }
 }
