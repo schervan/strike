@@ -1341,6 +1341,30 @@
         "en": { "stringUnit": { "state": "translated", "value": "New blaster! Tap the two arrows to swap." } }
       }
     },
+    "pixel.boss.shield": {
+      "comment": "Pixel line (optional, M4): the boss raises its bubble shield at the start of phase 2. Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Ein Blasenschild! Jetzt prallen Schüsse ab." } },
+        "en": { "stringUnit": { "state": "translated", "value": "A bubble shield! Our shots bounce off now." } }
+      }
+    },
+    "pixel.boss.core_needed": {
+      "comment": "Pixel line (optional, M4): hint in phase 2 to get a core from a carrier boltbot and put it in a socket. Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Zapp einen Roboter mit Kern. Steck ihn ein!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Zap a robot with a core. Put it in a socket!" } }
+      }
+    },
+    "pixel.generic.slow": {
+      "comment": "Pixel line (optional, M4): the hero is slowed by sporeplant spores. Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Hatschi! Sporen machen dich langsam. Weiter!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Achoo! Spores make you slow. Keep moving!" } }
+      }
+    },
     "story.l1.intro.1": {
       "comment": "L1 intro card line 1 (Pixel)",
       "extractionState": "manual",

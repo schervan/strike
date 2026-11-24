@@ -181,3 +181,67 @@ xcodebuild -project Strike.xcodeproj -scheme Strike -destination 'platform=iOS S
 
 ### M3-7 verdict
 Green: 243/243 unit tests, 16/16 UI cases, inventory fuzz 10,000/10,000 clean, leash, rescue, save/Continue, quick slots and Pixel hint verified, de and en lines fit. No blockers; QA-011 and QA-012 should be handled before M4 content lands.
+
+## M4 - Content (2026-11-24, branch m4-content, pass B committed; QA tests uncommitted)
+
+### Commands
+Dedicated simulator "QA iPad" and `-derivedDataPath build/DerivedDataQA` (CLAUDE.md parallel-agent rule):
+```
+xcodebuild -project Strike.xcodeproj -scheme Strike -destination 'platform=iOS Simulator,id=<QA iPad>' -derivedDataPath build/DerivedDataQA test
+```
+
+### Results: TEST SUCCEEDED
+- Swift Testing: 325 tests in 57 suites passed (316 at the start of M4-7, +9 from QA), 0 failed.
+- XCTest (UI): 22 cases, 0 failures (about 11 minutes). No warnings in the test targets.
+- Early in the session one run had 3 failures in `everyKeyLiteralInSourcesExists` (`pixel.boss.shield`, `pixel.boss.core_needed`, `pixel.generic.slow`). They were strings the designer was adding to `Localizable.xcstrings` while the test built; the final run is green.
+- New tests:
+  - `StrikeTests/BossFuzzTests.swift`: 10,000 random sequences (80 chaos actions each) through the real `BossBrain`, checked against QA's own model of GDD §9: HP and phase after every action, shield immunity (a shielded boss never loses HP: 36,020 immune hits), no attack while dizzy or while another attack runs, no second attack in one tick, `defeated` exactly once, and the core supply rule (inserted + bag + floor + in flight + carried never below the 2 needed while the puzzle is open). Chaos includes rescues (64,380), core losses (5,917), debug phase skips (10,691), pillar dizzies (4,935), shield pops (7,050) and 996 fights that ended inside the chaos part. After the chaos a competent hero must finish the boss within 900 s of game time: 0 soft-locks in 10,000 sequences. Coverage numbers are asserted so the fuzz cannot go quiet.
+  - `StrikeTests/BalanceSmokeTests.swift`: GDD §8.3 recomputed from the JSON two ways (details below).
+  - `StrikeTests/M4ScenarioTests.swift`: boss fight on a real arena `GameScene` with a MORTAL hero bot (real blaster cadence and ammo, real shot resolution, pillar ammo, carriers, cores, INTERACT, real rescues).
+  - `StrikeUITests/StrikeM4PassUITests.swift`: every enemy type, the boss arena through its phases, FPS and node log.
+  - `M3SceneTests.poofV2IsVisibleOnAllFloors`: hardened (up to 8 sampled frames, stops early at 8 %).
+  - Generator re-fuzz with the new `levels.json` (default 400 seeds per level): 0 failing seeds on all 5 levels, no fallbacks, max 4 attempts, 8 to 29 ms per seed.
+
+### Balance smoke (GDD §8.3)
+- Closed formula from the JSON vs the doc table: every enemy x blaster within +-10 %; slime family totals 3.86 / 3.10 / 3.39 within 10 %; every blaster powers down every enemy under 6 s; worst blaster costs at most 2.6x the best; boss damage-only totals 93 / 72 / 80 s within 10 %.
+- Measured in a scripted scene (real `WeaponFire` pellet fan, real `DamageModel`, kid accuracy 0.6 / 0.85, real magazine and reload, random start inside the magazine and the shield cycle, 3,000 trials each): within +-25 % of the doc everywhere except the 12 HP mini slime with the starter (+37 %, tolerance 40 % because whole 10-damage hits overshoot 12 HP, see QA-017).
+```
+boltbot   starter 1.48 (doc 1.67, -11%) spread 1.51 (1.31, +16%) rapid 1.37 (1.45, -6%)
+drone     starter 0.92 (1.11, -17%)     spread 2.57 (2.62, -2%)  rapid 1.55 (1.69, -8%)
+shield    starter 4.68 (4.44, +5%)      spread 3.32 (3.50, -5%)  rapid 3.80 (3.87, -2%)
+slime     starter 2.02 (2.22, -9%)      spread 1.51 (1.75, -14%) rapid 1.82 (1.93, -6%)
+mini      starter 0.92 (0.67, +37%)     spread 0.47 (0.52, -10%) rapid 0.64 (0.58, +9%)
+spore     starter 2.57 (2.50, +3%)      spread 5.74 (5.90, -3%)  rapid 2.22 (2.32, -4%)
+```
+
+### Boss fight with a mortal hero (scene level, no invulnerability, no debug buttons)
+The bot fires with `hero.tryFire`, resolves real pellet hits, collects pillar ammo, swaps to the starter when dry, kills the carrier boltbots, carries the cores to the two machines with INTERACT, and sidesteps attacks with a given skill (laser sweep: walks with a gap). Rescues happen for real.
+- 75 % dodge skill, 3 seeds per blaster: 9 of 9 fights won. Starter 172 to 355 s with 5 to 14 rescues; spread 87 to 316 s with 2 to 12 rescues; rapid 63 to 396 s with 1 to 19 rescues. Phase 1 takes 11 to 27 s, the core puzzle finishes 20 to 36 s into phase 2 every time (2 carriers, 2 machines), phase 2 afterwards 17 to 322 s, phase 3 26 to 106 s.
+- Skill sweep with the starter (4 seeds, 600 s limit): 0 % dodge 0/4 wins (26 rescues in 600 s, never clears phase 1), 25 % 3/4, 50 % 3/4, 75 % 4/4, 90 % 3/4 (the curve is not monotonic: bot noise). Not asserted except 75 %.
+- Pure logic check: the boss always ends (fuzz above); no soft-lock found in the scene either (every DNF was a bot that kept dying, ammo and carriers were always available).
+
+### Manual simulator pass (screenshots `qa_m4r_*.png` in the scratchpad, rotated 270 to read)
+- Every enemy type spawned with the debug buttons and fought with real touch input: boltbot, laser drone (purple, glow telegraph), slime (green, splits), shield android (bubble shield, dizzy stars), spore plant (pink aura on the hero, "slow" line). All behave and read as friendly; HP loss 6 to 72 per 4 s of fight, fps 57 to 60 (`qa_m4r_enemy_*`).
+- Boss arena (`-StrikeLevel l5 -StrikeBossArena`): boss bar with 2 notches, Pixel's "A giant robot! Hide behind the pillars.", stomp and firework volley, phase 2 shield bubble with the teal bar and 2 hollow core circles, laser sweep as soft red wedge lines, carriers walking in, phase 3, defeat with a smiley face and stars (no explosion), Season complete card (`qa_m4r_boss_*`, `qa_m4r_season_complete.png`). The debug buttons only moved between phases in the UI pass; the fight without them is the scripted bot above.
+- Poof v2 (QA-009 close-out): colourful stars, grey chips, a white ring and a green star core, clearly visible on all 5 floors (`qa_m3_poof_l1..l5.png`); 8 to 10 % of pixels change in 8 repeated test runs (threshold 5 %). QA-009 closed.
+
+### FPS and node counts (simulator, debug build)
+- Single enemy fights on L1: 132 to 154 nodes, 57 to 60 fps.
+- Boss arena: 80 to 145 nodes, 58 to 60 fps through all phases.
+- L5 with all 5 enemy types plus the 12-bot crowd: 349 to 367 nodes, 60 fps. Real iPad numbers are still an owner question.
+
+### Kid-safety pass (M4 strings and visuals)
+- No violent wording (per-language banned lists, test green). I read all new strings in en and de (tips, boss lines, season card): playful ("It sneezes!", "Too much fun!", "Okay, it is fair"). Defeat shows a smiley and stars, no explosion. Red appears as the soft telegraph wedge and rings.
+- Exception, see QA-018: the spore plant shot and the boss firework rockets are drawn as solid red or crimson glossy discs.
+
+### Open bugs / findings (IDs from QA-016)
+- QA-016 (medium, balance): a rescue resets the boss to the TOP of its current phase, so a player must clear a whole phase on one life. Damage time per phase is 17 to 37 s (GDD §8.3) plus dodging, and the bot dies every 11 to 25 s when it does not dodge; at 0 % dodge it never clears phase 1 in 600 s (26 rescues), at 75 % it wins but needs 2.5 to 8.6 minutes and 5 to 23 rescues (the GDD expects about 2 minutes). Steps: scripted fight in `M4ScenarioTests.dodgeSkillSweepIsLogged`. Suggest a designer decision: reset to the nearest quarter of the phase, or keep damage dealt inside a phase, or more healing at the pillars. Suspected: `BossBrain.rescueReset` and `levels.json -> l5.pickups.fixed`.
+- QA-017 (low, balance doc): the GDD §8.3 formula is continuous and ignores whole hits. Measured: 12 HP mini slime x starter 0.92 s vs 0.67 s (+37 %, needs two 10-damage hits); boltbot x spread 1.51 s vs 1.31 s (+16 %: a 3-pellet volley does 24 of 30 HP, so two volleys). The doc says spread is best vs boltbot; measured, rapid (1.37 s) and starter (1.48 s) are as fast. No gameplay problem (all under 1.6 s), the table text should be corrected.
+- QA-018 (medium, kid-safety / art): the spore plant shot and the boss firework volley render as solid, glossy crimson-red discs with a dark outline (`qa_m4_crop_spore.png`, `qa_m4_crop_volley.png`). They can read as blood cells, against the hard rule "red only as soft glow" and the "colourful enemy shots" goal. Suggest pink or yellow stars and a pink spore puff. Suspected: `Strike/Game/Entities/EnemyProjectileNode.swift`, `Strike/Game/Entities/AI/EnemyFX.swift` colours (`warnRed`), `Palette`.
+- QA-019 (info, balance): the arena pillar pickups are healpacks, rapid ammo and spread ammo only; there is no starter ammo. A player who never swaps blasters lives on the starter safety net (+1 round every 0.5 s while empty). It works (the bot with the starter won), but the GDD sentence "can still win from the pillars alone" needs the swap.
+- QA-020 (low, visual): in the defeat frame two Pixel lines overlap in the bubble ("The exit is over there!" over "Pixel: It bonks into pillars. Use them!") and the defeated boss stands on top of the hero, hiding it (`qa_m4r_boss_4_defeat_a.png`). The first may be a cross-fade frame; the second contradicts "the boss never stands on the kid" (`walkStopDistance` 150). Suspected: `PixelBubbleView`, `BossDirector.walk` / depth sort.
+- QA-021 (info): `BossBrain.coresInserted` is never reset on a phase change. Harmless (only phase 2 uses it and phases never repeat); noted for any future boss with a second shield.
+- Still open from before: QA-003 (real-iPad touch check), QA-004 (ammo starvation, fine in the boss bot runs), QA-012, QA-013 (orientations, owner question). Closed: QA-009 (poof v2), QA-011 (megamech tip exists, tested), QA-014/QA-015 not re-checked.
+
+### M4-7 verdict
+Green: 325 unit tests and 22 UI cases pass; boss fuzz 10,000 sequences with no soft-lock; balance within tolerance (QA-017 notes the doc, not the game); generator re-fuzz clean. No blockers. QA-016 (retry rule vs fight length) and QA-018 (red shots) should be decided before M5.

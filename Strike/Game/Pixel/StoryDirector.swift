@@ -76,6 +76,12 @@ nonisolated struct StoryDirector: Sendable, Equatable {
         static let rescue = "pixel.generic.rescue"
         /// `firstSwapVisible` when the level has no beat for it (QA-012).
         static let swap = "pixel.generic.swap"
+        /// First spore slow of the level (ART_BIBLE §15.4).
+        static let slow = "pixel.generic.slow"
+        /// First shot on the boss's bubble shield (§15.9).
+        static let bossShield = "pixel.boss.shield"
+        /// A core machine used without a core (§15.10).
+        static let coreNeeded = "pixel.boss.core_needed"
         static let idle = "pixel.generic.idle"
         static let hintHere = "pixel.generic.hint_here"
         static let hintItem = "pixel.generic.hint_item"

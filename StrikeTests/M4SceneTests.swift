@@ -283,6 +283,40 @@ struct M4SceneTests {
         #expect(model.screen == .game)
     }
 
+    static func said(_ s: GameScene) -> [String] {
+        [s.pixelBrain.speech.current?.key].compactMap { $0 } + s.pixelBrain.speech.pending.map(\.key)
+    }
+
+    /// The 3 designer lines (GDD §16.7): bubble shield (story, once), core needed (hint), slow (once).
+    @Test func bossShieldCoreNeededAndSlowLines() throws {
+        for key in [StoryDirector.Key.bossShield, StoryDirector.Key.coreNeeded, StoryDirector.Key.slow] {
+            #expect(String(localized: String.LocalizationValue(key)) != key, "\(key) has a string")
+        }
+        var run = RunState.newGame(data: Self.data)
+        run.arena = ArenaProgress(levelId: "l5")
+        let s = Self.scene("l5", run: run, stage: .bossArena, clearEnemies: false)
+        let boss = try #require(s.boss)
+        boss.debugNextPhase()
+        for _ in 0..<30 { s.step(dt: 1.0 / 30) }
+        s.pixelBrain.dismiss(); s.pixelBrain.dismiss(); s.pixelBrain.dismiss()
+        ScenePlaythroughTests.shoot(s, at: boss.node)
+        #expect(Self.said(s).contains(StoryDirector.Key.bossShield))
+        // A core machine without a core.
+        let m = try #require(s.level.elements.first { $0.type == .machine })
+        s.hero.position = s.level.grid.world(GridPoint(m.cell.x + 2, m.cell.y))
+        s.step(dt: 1.0 / 30)
+        #expect(s.focusedId == m.id)
+        s.handle(.interact)
+        #expect(Self.said(s).contains(StoryDirector.Key.coreNeeded))
+        // Spore slow line, once per level.
+        let l1 = Self.scene()
+        l1.hero.health.reset(invulnerableFor: 0)
+        l1.combat.spawnEnemyShot(kind: .spore, at: l1.hero.position, angle: 0, speed: 10, radius: 12, damage: 1, range: 100,
+                                 slowMultiplier: 0.7, slowSec: 2)
+        l1.step(dt: 1.0 / 30)
+        #expect(l1.hero.status.isSlowed && Self.said(l1).contains(StoryDirector.Key.slow))
+    }
+
     // MARK: Leftovers
 
     @Test func hudAvoidanceNudgesAnObjectOutOfTheRightColumn() {

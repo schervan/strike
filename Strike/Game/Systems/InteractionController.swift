@@ -251,7 +251,12 @@ final class InteractionController {
         case .needsItem(let item):
             (node as? MachineNode)?.showNeedsItem()
             // GDD §13: Pixel's `need_*` line replaces the toast when the talk level lets it through.
-            if scene.pixelBrain.say(StoryDirector.Key.need(item), kind: .hint) == .filtered {
+            // Arena core sockets use the boss line (ART_BIBLE §15.10).
+            if let boss = scene.bossDirector, item == boss.coreItemId {
+                if !boss.coreNeeded() {
+                    scene.hud.showToast("ui.toast.need_item", arg: scene.hud.itemName(item), key: "ui.toast.need_item.\(item)")
+                }
+            } else if scene.pixelBrain.say(StoryDirector.Key.need(item), kind: .hint) == .filtered {
                 scene.hud.showToast("ui.toast.need_item", arg: scene.hud.itemName(item), key: "ui.toast.need_item.\(item)")
             }
         case .alreadyOn, .notReady:

@@ -35,6 +35,11 @@ final class BossDirector {
     private var lootDropped = false
     private let fixedRespawn: [String: Bool]
     private var sockets: [String: SKNode] = [:]
+    private var saidShield = false
+    private var coreNeededAt = -Double.infinity
+
+    /// `pixel.boss.core_needed` repeats at most this often (ART_BIBLE §15.10).
+    static let coreNeededCooldownSec = 20.0
 
     /// Phase change pause (ART_BIBLE §15.11). Feel timing, not balance.
     static let phaseLockSec = 0.8
@@ -169,6 +174,10 @@ final class BossDirector {
         guard defeatT == nil else { return }
         if phaseLock > 0 || brain.isImmune {
             scene.worldNode.addChild(node.bubbleRipple(at: shot.position))
+            if brain.isImmune, !saidShield {
+                saidShield = true
+                scene.pixelBrain.say(StoryDirector.Key.bossShield, kind: .story)
+            }
             return
         }
         let r = brain.takeDamage(shot.damage)
@@ -193,6 +202,15 @@ final class BossDirector {
     func coreInserted() {
         scene.audio?.play(.machineOn)
         handle(brain.coreInserted())
+    }
+
+    /// A core machine was used without a core. False when Pixel did not say it (cooldown or the
+    /// talk filter): the caller shows the usual toast instead.
+    func coreNeeded() -> Bool {
+        guard scene.clock - coreNeededAt >= Self.coreNeededCooldownSec else { return true }
+        guard scene.pixelBrain.say(StoryDirector.Key.coreNeeded, kind: .hint) != .filtered else { return false }
+        coreNeededAt = scene.clock
+        return true
     }
 
     func spawnPoweredDown(_ e: EnemyNode) {

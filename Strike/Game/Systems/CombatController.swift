@@ -274,6 +274,7 @@ final class CombatController {
             guard d < hero.radius + s.radius, scene.rescue == nil else { return }
             if hurtHero(s.damage, from: s.position), let m = s.slowMultiplier, let sec = s.slowSec {
                 hero.applySlow(multiplier: m, sec: sec)
+                scene.pixelDirector.heroSlowed()
             }
             done.append((s, true))
         }

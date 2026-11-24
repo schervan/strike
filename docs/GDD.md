@@ -1004,6 +1004,9 @@ the same font size as "Benutzen" / "Ablegen" (QA-014; was "In Schnellplatz", whi
 | `pixel.l3.wheel` | – | Hold the two arrows to pick any blaster. | Halte die zwei Pfeile für alle Blaster! |
 | `pixel.generic.swap` | – | New blaster! Tap the two arrows to swap. | Neuer Blaster! Tipp auf die zwei Pfeile. |
 | `pixel.tip.megamech` | – | A giant robot! Hide behind the pillars. | Ein Riesenroboter! Versteck dich hinter Säulen. |
+| `pixel.boss.shield` (optional) | – | A bubble shield! Our shots bounce off now. | Ein Blasenschild! Jetzt prallen Schüsse ab. |
+| `pixel.boss.core_needed` (optional) | – | Zap a robot with a core. Put it in a socket! | Zapp einen Roboter mit Kern. Steck ihn ein! |
+| `pixel.generic.slow` (optional) | – | Achoo! Spores make you slow. Keep moving! | Hatschi! Sporen machen dich langsam. Weiter! |
 | `inventory.assign` (changed DE) | – | Put in quick slot | Schnellplatz |
 | `settings.aimAssist.on` / `.off` | – | On / Off | An / Aus |
 | `settings.aimAssist.hint` | – | Helps your shots hit. | Hilft dir beim Treffen. |
@@ -1312,6 +1315,7 @@ Details: `docs/levels/L1.md` … `L5.md`.
 | 2026-11-24 | M4-1 laser_sweep `sweepDegPerSec` | 45 → 30 °/s | Coder check: at 45 °/s a gap outruns the hero (220 pt/s) beyond 280 pt from the boss, which is most of the arena. At 30 °/s the hero can keep up within 420 pt |
 | 2026-11-24 | M4-1 laser_sweep `gapDeg` | 50 → 60 | More room for kid steering while walking with the gap (a gap is 210 pt wide at 200 pt). 2 × 60° safe out of 360° |
 | 2026-11-24 | §8 cooldown rule | "≥ telegraph + attack + recovery" → "≥ telegraph + active part; dizzy pauses the scheduler" | Phase 3 dash: 3.75 s < 5.2 s with the pillar dizzy; the brain already never attacks while dizzy, so the rule now says what the code does |
+| 2026-11-24 | M4-1 3 optional Pixel lines | – → `pixel.boss.shield`, `pixel.boss.core_needed`, `pixel.generic.slow` (de + en, ≤ 60 chars) | coder-m4 hooks: phase 2 shield up, core hint, spore slow |
 | 2026-11-24 | M4-1 `loot.json`, threat costs, other enemies | unchanged | §8.3: floor ammo alone covers each level ≈ 2 × at 60 % accuracy; threat costs match the power-down times |
 | 2026-11-24 | §16.7 keys, xcstrings | 90 keys → 214 (+56 story/level-beat/boss keys from `levels.json`, +21 `pixel.generic.*`, +6 `pixel.tip.*`, +41 UI: 16 inventory, 5 hud, 5 pause, 6 title, 2 levelIntro, 2 ui.toast, 5 settings) | M3-1; M2 leftover 9 |
 | 2026-11-24 | `pixel.l1.heal` | "Tap the heart to heal." / „Tipp auf das Herz zum Heilen." → "Tap the heal pack or apple below to heal!" / „Tipp unten auf Heilpaket oder Apfel zum Heilen!" | The HUD heart can't be tapped; healing is a quick slot (ART_BIBLE §14.1). L1 start gift puts a heal pack in Q1 and apples in Q2, so both words match what the kid sees |

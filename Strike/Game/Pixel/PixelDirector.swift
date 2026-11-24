@@ -69,6 +69,15 @@ final class PixelDirector {
         if !scene.isArena { scene.pixelBrain.handle(.levelStart) }
     }
 
+    private var saidSlow = false
+
+    /// The first spore slow of the level: Pixel's line (chatter, once).
+    func heroSlowed() {
+        guard !saidSlow else { return }
+        saidSlow = true
+        scene.pixelBrain.say(StoryDirector.Key.slow, kind: .chatter)
+    }
+
     /// An element turned on: a hint that pointed at it ends.
     func elementTurnedOn(_ id: String) {
         if hint?.elementId == id { endHint() }

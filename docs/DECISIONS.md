@@ -63,3 +63,5 @@
 | 2026-11-24 | SWAP button appears once 2 or more blasters are owned; Pixel's swap line plays only then | QA-012: never point kids at a button that is not there |
 | 2026-11-24 | QA-013 (orientations) goes to the owner with a recommendation: support all orientations and window sizes with a "Turn me sideways" pause card, scheduled in M5 | Platform requirement ahead of the M6 submission; product choice belongs to the owner |
 | 2026-11-24 | QA-013 orientation: support all orientations and window sizes; in portrait the game pauses and Pixel shows a "Turn me sideways!" card; gameplay stays landscape. Scheduled in M5 | Owner choice; App Store compliance before M6 TestFlight |
+| 2026-11-24 | QA-016: a rescue in the boss arena keeps the boss's damage; only attack timing resets (inserted cores stay) | Owner choice; every try makes progress, no frustration for kids |
+| 2026-11-24 | QA-018: no glossy red projectiles; spore shots and boss rockets get non-red kid-safe colours | Kid safety ("red only as soft glow") |

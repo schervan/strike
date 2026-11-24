@@ -673,7 +673,7 @@ Accessibility ids (new): `hud.swapButton`, `hud.weaponWheel`, `hud.weaponWheel.s
     - UI test: `-StrikeLevel l5 -StrikeBossArena -StrikeSeed 1` → `hud.bossBar` exists, `debug.bossNextPhase` ×3 → `seasonComplete.view`
     - full `xcodegen generate` + test run green (own derivedDataPath + simulator)
 
-- [ ] **M4-7 qa-tester — M4 verification**
+- [x] **M4-7 qa-tester — M4 verification**
   - Outputs: `docs/QA_REPORT.md` M4 section; `StrikeTests/BossFuzzTests.swift` (QA's own boss-state model: random hero damage, rescues, core losses, phase skips, always winnable); `StrikeTests/BalanceSmokeTests.swift` (time-to-power-down per enemy × blaster from JSON matches the designer's GDD table ±10 %)
   - Done when:
     - suite green with no new warnings
