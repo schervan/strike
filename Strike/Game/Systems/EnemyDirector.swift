@@ -32,6 +32,10 @@ final class EnemyDirector: EnemyWorld {
         scene.audio?.play(.enemyAlert)
     }
 
+    func enemyFire(_ enemy: EnemyNode, angles: [CGFloat], attack: EnemyAttackDef) {
+        scene.combat.fireEnemyShots(from: enemy, angles: angles, attack: attack)
+    }
+
     // MARK: Life cycle
 
     /// Level start: one enemy per generated spawn.
@@ -44,8 +48,53 @@ final class EnemyDirector: EnemyWorld {
     }
 
     func add(_ enemy: EnemyNode) {
+        enemy.darkFloor = scene.darkFloor
         enemies.append(enemy)
         scene.worldNode.addChild(enemy)
+    }
+
+    /// One `enemyId` at `p` (boss spawns, splits, debug). `aware` skips Idle (straight to the "!").
+    @discardableResult
+    func spawn(_ enemyId: String, at p: CGPoint, aware: Bool = false) -> EnemyNode? {
+        guard let def = scene.data.enemies[enemyId] else { return nil }
+        let cell = scene.level.grid.cell(at: p)
+        let e = EnemyNode(def: def, at: p, world: self, homeRoomId: scene.level.room(at: cell)?.id, leash: scene.data.rules.leash)
+        add(e)
+        if aware { e.brain.enter(AlertState.self) }
+        return e
+    }
+
+    /// Slime split (GDD §8.1): `splitInto` children pop out of the parent's body, never in a wall.
+    func split(_ parent: EnemyNode) {
+        guard let s = parent.def.splitInto, let child = scene.data.enemies[s.enemyId] else { return }
+        let grid = scene.solidGrid
+        let kids = SplitterPolicy.spawns(for: parent.def, childRadius: CGFloat(child.radius), at: parent.position,
+                                         isFree: { !grid.isBlocked($0, radius: $1) })
+        for k in kids {
+            guard let e = spawn(k.enemyId, at: k.position) else { continue }
+            e.beginPopOut(from: parent.position, delaySec: k.delaySec)
+        }
+        if !kids.isEmpty {
+            let ring = SKShapeNode(circleOfRadius: 20)
+            ring.strokeColor = Palette.hex(0x8CF07F)
+            ring.lineWidth = 2
+            ring.position = parent.position
+            ring.zPosition = Particles.zPosition
+            ring.run(.sequence([.group([.scale(to: 3, duration: 0.25), .fadeOut(withDuration: 0.25)]), .removeFromParent()]))
+            scene.worldNode.addChild(ring)
+        }
+    }
+
+    /// `debug.spawn.<enemyId>`: one enemy two tiles in front of the hero (or the nearest free spot).
+    func debugSpawn(_ enemyId: String) {
+        let h = scene.hero.position, grid = scene.solidGrid
+        for d in [192, 160, 128, 96] as [CGFloat] {
+            for k in 0..<8 {
+                let a = CGFloat(k) * .pi / 4
+                let p = CGPoint(x: h.x + cos(a) * d, y: h.y + sin(a) * d)
+                if !grid.isBlocked(p, radius: 24), grid.hasLineOfSight(from: h, to: p) { spawn(enemyId, at: p); return }
+            }
+        }
     }
 
     func remove(_ enemy: EnemyNode) {
@@ -71,7 +120,8 @@ final class EnemyDirector: EnemyWorld {
     }
 
     var rescueEnemies: [RescueEnemy] {
-        enemies.map { RescueEnemy(id: Self.rescueId($0), isPoweredDown: $0.isPoweredDown) }
+        // The boss resets through its own brain (GDD §9 phase top), not to full HP.
+        enemies.filter { !$0.isBoss }.map { RescueEnemy(id: Self.rescueId($0), isPoweredDown: $0.isPoweredDown) }
     }
 
     private static func rescueId(_ e: EnemyNode) -> String { ObjectIdentifier(e).debugDescription }

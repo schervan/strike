@@ -45,6 +45,8 @@ final class RescueController {
         hero.position = respawnPoint
         hero.animator.reset()
         scene.enemyDirector.resetForRescue(Set(outcome.enemiesToReset))
+        hero.clearStatus()
+        scene.bossDirector?.heroRescued()
         scene.worldNode.addChild(Particles.teleport(at: hero.position))
         scene.pixel.snap(to: hero.position)
         scene.snapCamera()
@@ -59,6 +61,9 @@ final class RescueController {
         hero.drive(direction: .zero, magnitude: 0, dt: 0)
         scene.pixel.setRescue(true)
         scene.pixelDirector.endHint()
+        // GDD §12 / M4: every enemy shot pops when the beam starts.
+        scene.enemyShots.recycleAll(popInto: scene.worldNode)
+        scene.bossDirector?.cancelAttack()
         var r = Run()
         let tint = SKSpriteNode(color: Palette.pixelLight, size: CGSize(width: 4000, height: 4000))
         tint.name = "rescue_tint"
@@ -78,6 +83,7 @@ final class RescueController {
         // The world keeps running (slowed); the hero takes no input and no damage.
         scene.enemyDirector.tick(dt: world)
         scene.combat.updateProjectiles(dt: world)
+        scene.bossDirector?.tickDuringRescue(dt: world)
         hero.drive(direction: .zero, magnitude: 0, dt: world)
         hero.animator.update(dt: world)
         let half = rules.beamSec / 2

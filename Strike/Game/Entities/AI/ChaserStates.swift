@@ -20,16 +20,28 @@ class EnemyState: GKState, @unchecked Sendable {
         MainActor.assumeIsolated { tick(dt: seconds) }
     }
 
+    override func willExit(to nextState: GKState) {
+        MainActor.assumeIsolated { exit() }
+    }
+
     override func isValidNextState(_ stateClass: AnyClass) -> Bool {
         ObjectIdentifier(stateClass) != ObjectIdentifier(type(of: self))
     }
 
     @MainActor func enter() {}
     @MainActor func tick(dt: Double) {}
+    @MainActor func exit() {}
 
     @MainActor var distanceToHero: CGFloat {
         guard let w = enemy.world else { return .infinity }
         return hypot(w.heroPosition.x - enemy.position.x, w.heroPosition.y - enemy.position.y)
+    }
+
+    /// Leash check for active states: true when the enemy was sent home.
+    @MainActor func leashSendsHome(dt: Double) -> Bool {
+        guard enemy.leash.update(dt: dt, distanceToHero: Double(distanceToHero), detectRange: enemy.def.detectRange) else { return false }
+        stateMachine?.enter(ReturnHomeState.self)
+        return true
     }
 
     @MainActor var canSeeHero: Bool {
@@ -52,7 +64,7 @@ final class IdleState: EnemyState, @unchecked Sendable {
     }
 }
 
-/// Shows "!" for `alertSec` (GDD §8 fairness) before chasing.
+/// Shows "!" for `alertSec` (GDD §8 fairness) before the behaviour's active state.
 final class AlertState: EnemyState, @unchecked Sendable {
     private var remaining: Double = 0
 
@@ -69,7 +81,7 @@ final class AlertState: EnemyState, @unchecked Sendable {
     @MainActor override func tick(dt: Double) {
         enemy.desiredVelocity = .zero
         remaining -= dt
-        if remaining <= 0 { stateMachine?.enter(ChaseState.self) }
+        if remaining <= 0 { stateMachine?.enter(enemy.activeState) }
     }
 }
 
@@ -84,10 +96,7 @@ final class ChaseState: EnemyState, @unchecked Sendable {
 
     @MainActor override func tick(dt: Double) {
         guard let w = enemy.world else { return }
-        if enemy.leash.update(dt: dt, distanceToHero: Double(distanceToHero), detectRange: enemy.def.detectRange) {
-            stateMachine?.enter(ReturnHomeState.self)
-            return
-        }
+        if leashSendsHome(dt: dt) { return }
         enemy.moveToward(w.heroPosition, dt: dt)
         if hop.tick(dt: dt, every: enemy.def.hopEverySec, chance: enemy.def.hopChance,
                     roll: { Double(w.random.nextUniform()) }) {

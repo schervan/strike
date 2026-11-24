@@ -11,6 +11,13 @@ final class CameraController {
     var bounds: CGRect
     /// Fraction of the visible height covered by the HUD at the top.
     let hudBand: CGFloat
+    /// Extra offset (QA-015 HUD avoidance). It is eased in with the normal smoothing and applied on
+    /// top of the clamped position, so it also works at the map edge (max `HUDAvoidance.maxShift`).
+    var nudge = CGVector.zero
+    private(set) var appliedNudge = CGVector.zero
+
+    /// Camera centre without the HUD nudge (what HUD avoidance measures against).
+    var basePosition: CGPoint { CGPoint(x: camera.position.x - appliedNudge.dx, y: camera.position.y - appliedNudge.dy) }
 
     init(camera: SKCameraNode, def: CameraDef, bounds: CGRect, hudBand: CGFloat = 0) {
         self.camera = camera
@@ -41,6 +48,7 @@ final class CameraController {
     }
 
     func snap(to target: CGPoint, visibleSize: CGSize) {
+        appliedNudge = .zero
         camera.position = clamped(framing(target, visibleSize: visibleSize), visibleSize: visibleSize)
     }
 
@@ -53,8 +61,10 @@ final class CameraController {
         }
         goal = clamped(goal, visibleSize: visibleSize)
         let k = def.smoothingSec > 0 ? CGFloat(1 - exp(-dt / def.smoothingSec)) : 1
-        let p = camera.position
-        camera.position = clamped(CGPoint(x: p.x + (goal.x - p.x) * k, y: p.y + (goal.y - p.y) * k),
-                                  visibleSize: visibleSize)
+        let p = basePosition
+        let base = clamped(CGPoint(x: p.x + (goal.x - p.x) * k, y: p.y + (goal.y - p.y) * k), visibleSize: visibleSize)
+        appliedNudge = CGVector(dx: appliedNudge.dx + (nudge.dx - appliedNudge.dx) * k,
+                                dy: appliedNudge.dy + (nudge.dy - appliedNudge.dy) * k)
+        camera.position = CGPoint(x: base.x + appliedNudge.dx, y: base.y + appliedNudge.dy)
     }
 }

@@ -112,9 +112,21 @@ struct StoryDirectorTests {
         do { let v = d.handle(.rescue).cues.count; #expect(v == 1) }                     // every rescue
     }
 
-    @Test func bossTriggersAreIgnoredUntilM4() {
+    /// M4-6: `bossPhase:n` and `bossDefeated` play the L5 boss beats once each.
+    @Test func bossTriggersPlayTheBossBeatsOnce() {
         var d = Self.director("l5")
-        do { let v = d.handle(.bossPhase(1)); #expect(v == .silent) }
-        do { let v = d.handle(.bossDefeated); #expect(v == .silent) }
+        let p1 = d.handle(.bossPhase(1)).cues.map(\.key)
+        #expect(p1 == ["boss.megamech.intro.1", "boss.megamech.intro.2"])
+        let again = d.handle(.bossPhase(1)).cues
+        #expect(again.isEmpty, "once")
+        let p2 = d.handle(.bossPhase(2)).cues.map(\.key)
+        #expect(p2 == ["boss.megamech.phase2.1", "boss.megamech.phase2.2"])
+        let p3 = d.handle(.bossPhase(3)).cues.map(\.key)
+        #expect(p3 == ["boss.megamech.phase3.1", "boss.megamech.phase3.2"])
+        let end = d.handle(.bossDefeated).cues.map(\.key)
+        #expect(end == ["boss.megamech.defeated.1"])
+        var l1 = Self.director("l1")
+        let none = l1.handle(.bossPhase(1))
+        #expect(none == .silent, "no boss beats outside L5")
     }
 }

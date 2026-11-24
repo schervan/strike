@@ -16,6 +16,8 @@ final class GameScene: SKScene, @preconcurrency SKPhysicsContactDelegate {
     static let logicalSize = CGSize(width: 1194, height: 834)
     /// GDD §5: projectile pool size for the hero.
     static let projectileCapacity = 64
+    /// Enemy shots alive at once (laser balls, spores, boss stars).
+    static let enemyShotCapacity = 48
 
     weak var model: GameModel? {
         didSet {
@@ -42,6 +44,15 @@ final class GameScene: SKScene, @preconcurrency SKPhysicsContactDelegate {
     let cameraNode = SKCameraNode()
     let hero: HeroNode
     let pool: ProjectilePool
+    let enemyShots = EnemyShotPool(capacity: GameScene.enemyShotCapacity)
+    /// Generated level or the fixed boss arena (DECISIONS 2026-11-24).
+    let stage: LevelStage
+    let arena: BossArenaLayout.Arena?
+    var isArena: Bool { arena != nil }
+    /// SWAP / wheel order (GDD §5).
+    let weaponOrder: [String]
+    private var ownedAtStart = 1
+    private var swapShown = false
     var puzzle: PuzzleState
     /// The hero's bag (carried over from `RunState`).
     var inventory: Inventory
@@ -73,6 +84,8 @@ final class GameScene: SKScene, @preconcurrency SKPhysicsContactDelegate {
     private(set) lazy var interaction = InteractionController(scene: self, useCooldownSec: data.rules.inventory.useCooldownSec)
     private(set) lazy var rescueController = RescueController(scene: self)
     private(set) lazy var pixelDirector = PixelDirector(scene: self)
+    /// Only on the arena stage.
+    private(set) var bossDirector: BossDirector?
 
     // MARK: Input
 
@@ -87,6 +100,10 @@ final class GameScene: SKScene, @preconcurrency SKPhysicsContactDelegate {
     private var pendingPixelTouch: PendingTouch?
     private var lastUpdateTime: TimeInterval?
     private var playedLevelStart = false
+    #if DEBUG
+    private var statsFrames = 0
+    private var statsTime = 0.0
+    #endif
 
     /// Ignores aim-stick noise when the finger rests on the base.
     private static let aimEpsilon: CGFloat = 0.05
@@ -95,7 +112,8 @@ final class GameScene: SKScene, @preconcurrency SKPhysicsContactDelegate {
     // MARK: Setup
 
     /// `run`: the carried loadout, bag and settings (nil = a fresh run, tests).
-    init(data: GameData, level def: LevelDef, seed: UInt64, size: CGSize = GameScene.logicalSize, run: RunState? = nil) {
+    init(data: GameData, level def: LevelDef, seed: UInt64, size: CGSize = GameScene.logicalSize, run: RunState? = nil,
+         stage: LevelStage = .level) {
         self.data = data
         self.levelDef = def
         self.random = GKMersenneTwisterRandomSource(seed: seed)
@@ -103,13 +121,19 @@ final class GameScene: SKScene, @preconcurrency SKPhysicsContactDelegate {
         darkFloor = def.index >= 4
         pixel = PixelNode(rules: data.rules.pixel, hints: data.rules.hints)
         pixelBrain = PixelController(level: def, rules: data.rules, talk: run?.settings.pixelTalk ?? .lots)
-        level = LevelGenerator.generate(def, seed: seed, data: data)
+        let bossDef = def.bossId.flatMap { data.enemies[$0] }
+        let core = bossDef?.phases?.compactMap(\.unlockBy).first?.requiresItem
+        arena = stage == .bossArena ? core.flatMap { BossArenaLayout.build(def, coreItemId: $0) } : nil
+        self.stage = arena == nil ? .level : .bossArena
+        level = arena?.level ?? LevelGenerator.generate(def, seed: seed, data: data)
+        weaponOrder = Loadout.order(data.weapons)
         built = LevelBuilder.build(level, def: def, data: data)
         solidGrid = level.gridAllDoorsClosed
         pathfinder = Pathfinder(grid: solidGrid)
         puzzle = PuzzleState(level: level, rules: data.rules.puzzle)
         inventory = run?.inventory ?? Inventory(items: data.items, rules: data.rules.inventory)
         session = LevelSession(level: level)
+        if arena != nil, let carry = run?.arena { session.resume(carry) }
         guard let weapon = data.weapons[data.hero.startLoadout.weaponId] else {
             fatalError("hero.json startLoadout.weaponId \(data.hero.startLoadout.weaponId) not in weapons.json")
         }
@@ -126,9 +150,9 @@ final class GameScene: SKScene, @preconcurrency SKPhysicsContactDelegate {
 
     /// Level by id (debug launch arguments, tests).
     convenience init(data: GameData, levelId: String, seed: UInt64, size: CGSize = GameScene.logicalSize,
-                     run: RunState? = nil) {
+                     run: RunState? = nil, stage: LevelStage = .level) {
         guard let def = data.levels[levelId] ?? data.levelOrder.first else { fatalError("levels.json has no levels") }
-        self.init(data: data, level: def, seed: seed, size: size, run: run)
+        self.init(data: data, level: def, seed: seed, size: size, run: run, stage: stage)
     }
 
     @available(*, unavailable)
@@ -146,6 +170,7 @@ final class GameScene: SKScene, @preconcurrency SKPhysicsContactDelegate {
         interaction.spawnInitial()
         hud.setUp()
         if let start = level.checkpoints.first { built.checkpoints[start.id]?.setOn(true, animated: false) }
+        built.exitDoor.hidesCounter = arena != nil
         interaction.refreshDoorCounters(pop: nil)
 
         cameraNode.name = "camera"
@@ -156,6 +181,12 @@ final class GameScene: SKScene, @preconcurrency SKPhysicsContactDelegate {
         cameraController.snap(to: hero.position, visibleSize: visibleSize)
         sticks = TwinStickController(controls: data.controls, layer: cameraNode)
         hud.updateReveal()
+        ownedAtStart = hero.loadout.owned.count
+        swapShown = ownedAtStart >= 2
+        if let arena, let id = levelDef.bossId, let def = data.enemies[id], let boss = BossDirector(scene: self, arena: arena, def: def) {
+            bossDirector = boss
+            boss.start()
+        }
     }
 
     override func didMove(to view: SKView) {
@@ -184,6 +215,9 @@ final class GameScene: SKScene, @preconcurrency SKPhysicsContactDelegate {
         pathfinder.setCells(cells, walkable: true)
     }
 
+    /// Current HUD-avoidance offset of the camera (QA-015; tests).
+    var cameraNudge: CGVector { cameraController.appliedNudge }
+
     func snapCamera() {
         cameraController.snap(to: hero.position, visibleSize: visibleSize)
     }
@@ -205,6 +239,7 @@ final class GameScene: SKScene, @preconcurrency SKPhysicsContactDelegate {
     // MARK: Controller state (read by tests and the HUD)
 
     var enemies: [EnemyNode] { enemyDirector.enemies }
+    var boss: BossDirector? { bossDirector }
     var extraCrates: [CrateNode] { enemyDirector.extraCrates }
     var pickups: [PickupNode] { interaction.pickups }
     var focusedId: String? { interaction.focusedId }
@@ -233,45 +268,11 @@ final class GameScene: SKScene, @preconcurrency SKPhysicsContactDelegate {
     /// `debug.damageHero` amount (QA tool, not balance).
     static let debugDamage = 30
 
-    // MARK: Commands
-
-    func handle(_ command: GameCommand) {
-        switch command {
-        case .reload:
-            hero.startReload()
-        case .interact:
-            interaction.interact()
-        case .debugSolveAll:
-            interaction.solveAll()
-        case .debugGotoExit:
-            hero.clearKnockback()
-            hero.position = built.exitPad.position
-            snapCamera()
-        case .debugRevealMap:
-            hud.revealAll()
-            hud.pushMinimap(force: true)
-        case .resetInput:
-            resetTouches()
-            hero.drive(direction: .zero, magnitude: 0, dt: 0)
-        case .useQuick(let i):
-            interaction.useItem(quickSlot: i, slot: nil)
-        case .useItem(let slot):
-            interaction.useItem(quickSlot: nil, slot: slot)
-        case .dropItem(let slot, let count):
-            interaction.dropItem(slot: slot, count: count)
-        case .assignQuick(let itemId, let slot):
-            inventory.assignQuick(itemId: itemId, to: slot)
-        case .tidy:
-            inventory.tidy()
-        case .dismissBubble:
-            pixelBrain.dismiss()
-        case .debugSpawnCrowd:
-            enemyDirector.spawnCrowd()
-        case .debugDamageHero:
-            combat.damageHero(Self.debugDamage)
-        }
-        hud.pushHUD()
-        hud.pushBag()
+    /// QA-012: Pixel's swap line once, when SWAP first becomes visible in this level.
+    private func checkSwapVisible() {
+        guard !swapShown, hero.loadout.owned.count >= 2 else { return }
+        swapShown = true
+        pixelBrain.handle(.swapVisible)
     }
 
     // MARK: Touches (sticks live in the scene; HUD buttons swallow their touches first)
@@ -352,8 +353,21 @@ final class GameScene: SKScene, @preconcurrency SKPhysicsContactDelegate {
             lastUpdateTime = nil
             return
         }
-        let dt = lastUpdateTime.map { min(Self.maxStep, max(0, currentTime - $0)) } ?? 0
+        let raw = lastUpdateTime.map { max(0, currentTime - $0) } ?? 0
+        var dt = min(Self.maxStep, raw)
         lastUpdateTime = currentTime
+        #if DEBUG
+        statsFrames += 1
+        statsTime += raw
+        if statsTime >= 0.5 {
+            func count(_ n: SKNode) -> Int { 1 + n.children.reduce(0) { $0 + count($1) } }
+            model?.debugStats = "fps \(Int((Double(statsFrames) / statsTime).rounded())) · nodes \(count(self))"
+            statsFrames = 0
+            statsTime = 0
+        }
+        #endif
+        // ART_BIBLE §15.7: the weapon wheel slows game time.
+        if model?.isWheelOpen == true { dt *= data.rules.weapons.wheelTimeScale ?? 1 }
         step(dt: dt)
     }
 
@@ -380,7 +394,9 @@ final class GameScene: SKScene, @preconcurrency SKPhysicsContactDelegate {
         puzzle.tick(dt: dt)
         updateHero(dt: dt)
         enemyDirector.tick(dt: dt)
+        bossDirector?.tick(dt: dt)
         combat.updateProjectiles(dt: dt)
+        combat.updateEnemyShots(dt: dt)
         combat.checkContactDamage()
         interaction.updatePickups(dt: dt)
         interaction.updatePlates(dt: dt)
@@ -388,8 +404,10 @@ final class GameScene: SKScene, @preconcurrency SKPhysicsContactDelegate {
         interaction.updateCheckpoints()
         interaction.updateDoorsInfo()
         interaction.updateExit(dt: dt)
+        checkSwapVisible()
         hud.updateReveal()
         pixelDirector.update(dt: dt)
+        cameraController.nudge = hudNudge()
         updateCamera(dt: dt, aim: isAiming ? CGVector(dx: cos(aimAngle), dy: sin(aimAngle)) : nil)
         depthSort()
         hud.pushHUD()
@@ -416,6 +434,18 @@ final class GameScene: SKScene, @preconcurrency SKPhysicsContactDelegate {
         }
         hero.tick(dt: dt)
         combat.updateTrigger(fireHeld: sticks.fireHeld)
+    }
+
+    /// QA-015: the focused interactable is shifted out from under the right-column HUD buttons.
+    private func hudNudge() -> CGVector {
+        guard let id = interaction.focusedId, let node = built.interactables[id] else { return .zero }
+        let vis = visibleSize
+        let cam = cameraController.basePosition
+        let rel = CGPoint(x: node.position.x - cam.x, y: node.position.y - cam.y)
+        let r: CGFloat = node.type == .machine ? 64 : 32
+        let object = CGRect(x: rel.x - r, y: rel.y - r, width: 2 * r, height: 2 * r)
+        return HUDAvoidance.nudge(object: object, buttons: HUDAvoidance.rightColumn(visibleSize: vis),
+                                  maxShift: HUDAvoidance.maxShift)
     }
 
     /// Draw order: lower on screen = in front.

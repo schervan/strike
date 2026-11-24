@@ -34,6 +34,48 @@ nonisolated struct HUDState: Equatable, Sendable {
     var bagFull = false
     /// Pixel hint target in the bag: the inventory button glows (§14.6).
     var bagHint = false
+    /// Blasters in SWAP / wheel order (GDD §5); SWAP shows once 2 or more are owned.
+    var weapons: [WeaponSlotState] = []
+    /// A swap is running (`rules.weapons.swapSec`): SWAP ignores taps.
+    var isSwapping = false
+    /// Spore slow on the hero (ART_BIBLE §15.4 badge).
+    var slowed = false
+    /// Boss bar (arena stage only).
+    var boss: BossBarState?
+
+    var ownedWeaponCount: Int { weapons.filter(\.owned).count }
+    var swapVisible: Bool { ownedWeaponCount >= 2 }
+    /// The blaster a SWAP tap gives (badge on the button).
+    var nextWeaponId: String? {
+        let owned = weapons.filter(\.owned)
+        guard owned.count > 1, let i = owned.firstIndex(where: \.equipped) else { return nil }
+        return owned[(i + 1) % owned.count].id
+    }
+}
+
+/// One weapon-wheel slot (ART_BIBLE §15.7).
+nonisolated struct WeaponSlotState: Equatable, Sendable, Identifiable {
+    let id: String
+    let nameKey: String
+    var owned: Bool
+    var equipped: Bool
+    var magazine: Int
+    var reserve: Int
+}
+
+/// Boss bar (ART_BIBLE §15.8): no numbers; HP fraction, phase notches, shield and core pips.
+nonisolated struct BossBarState: Equatable, Sendable {
+    var nameKey: String
+    /// 0…1, quantised to 0.5 % so SwiftUI is not invalidated every frame.
+    var hpRatio: Double
+    var notches: [Double]
+    /// 1-based phase and the phase count.
+    var phase: Int
+    var phases: Int
+    var immune: Bool
+    var coresIn: Int
+    var coresNeeded: Int
+    var defeated: Bool
 }
 
 /// One quick slot in the HUD: a link to an item id with its total count (GDD §7).
@@ -74,11 +116,18 @@ nonisolated struct LevelResult: Equatable, Sendable {
     var rescues = 0
 }
 
+/// The part of a level a run plays: the generated level, or the fixed boss arena behind the L5
+/// exit pad (DECISIONS 2026-11-24).
+nonisolated enum LevelStage: String, Codable, Sendable, Equatable {
+    case level, bossArena
+}
+
 /// One play of one level; a new `id` rebuilds the scene.
 nonisolated struct LevelRun: Equatable, Sendable {
     let id: Int
     let levelId: String
     let seed: UInt64
+    var stage: LevelStage = .level
 }
 
 /// Commands sent from SwiftUI buttons to the scene.
@@ -97,6 +146,13 @@ nonisolated enum GameCommand: Sendable, Equatable {
     case dismissBubble
     /// Debug overlay (DEBUG builds only).
     case debugSolveAll, debugGotoExit, debugRevealMap, debugSpawnCrowd, debugDamageHero
+    case debugGiveBlasters, debugBossArena, debugBossNextPhase
+    case debugSpawn(String)
+    /// SWAP tap (GDD §5.1) and a weapon-wheel pick.
+    case swapNext
+    case swapTo(String)
+    /// Settings changed while playing (Pixel talk, aim assist).
+    case settingsChanged
     /// Pause menu / inventory opened: drop held sticks so nothing keeps moving on resume.
     case resetInput
 }
@@ -111,12 +167,15 @@ nonisolated struct LaunchOptions: Sendable, Equatable {
     var resetSettings = false
     /// `-StrikeFreshSave`: delete `save.json` on launch (UI tests).
     var freshSave = false
+    /// `-StrikeBossArena`: the first start goes straight into the L5 boss arena (QA, UI tests).
+    var bossArena = false
 
     static func parse(_ args: [String]) -> LaunchOptions {
         var o = LaunchOptions()
         o.autoStart = args.contains("-StrikeAutoStart")
         o.resetSettings = args.contains("-StrikeResetSettings")
         o.freshSave = args.contains("-StrikeFreshSave")
+        o.bossArena = args.contains("-StrikeBossArena")
         func value(_ key: String) -> String? {
             guard let i = args.firstIndex(of: key), i + 1 < args.count else { return nil }
             return args[i + 1]
@@ -137,6 +196,8 @@ final class GameModel {
         case title
         case game
         case levelComplete(LevelResult)
+        /// After the boss (ART_BIBLE §15.14).
+        case seasonComplete(LevelResult)
     }
 
     private(set) var screen: Screen = .title
@@ -161,8 +222,20 @@ final class GameModel {
     private(set) var isInventoryOpen = false
     /// Level intro card over the (frozen) level.
     private(set) var isIntroShowing = false
+    /// Weapon wheel open: game time runs at `rules.weapons.wheelTimeScale` (ART_BIBLE §15.7).
+    var isWheelOpen = false
+    /// DEBUG overlay: measured frame rate and node count (M4-5 performance log).
+    var debugStats = ""
     /// A save exists ("Continue" on the title).
     private(set) var hasSave = false
+
+    /// Season totals for the Season complete card: best score and datachips summed over the levels.
+    var seasonTotals: (score: Int, datachips: Int, datachipsTotal: Int) {
+        let levels = data.levelOrder
+        let score = levels.reduce(0) { $0 + (progress.bestResults[$1.id]?.bestScore ?? 0) }
+        let chips = levels.reduce(0) { $0 + (progress.bestResults[$1.id]?.datachips ?? 0) }
+        return (score, chips, levels.reduce(0) { $0 + $1.pickups.datachips })
+    }
 
     /// The scene is frozen (pause menu, inventory, intro card).
     var isGameFrozen: Bool { isPaused || isInventoryOpen || isIntroShowing }
@@ -213,6 +286,11 @@ final class GameModel {
     /// Title "Continue": the saved current level with the saved loadout and bag.
     func continueGame() {
         let id = progress.currentLevelId.flatMap { data.levels[$0] != nil ? $0 : nil } ?? data.levelOrder.first?.id ?? "l1"
+        // DECISIONS 2026-11-24: Continue resumes at the boss arena checkpoint once it was reached.
+        if progress.arena?.levelId == id {
+            startArena(id: id)
+            return
+        }
         startLevel(id: id, seed: Self.randomSeed())
     }
 
@@ -224,8 +302,55 @@ final class GameModel {
             usedLaunchLevel = true
             if let l = launch.levelId, data.levels[l] != nil { id = l }
             if let s = launch.seed { seed = s }
+            if launch.bossArena, let def = data.levels[id], def.bossArena != nil {
+                progress.startLevel(def, data: data)
+                progress.arena = ArenaProgress(levelId: id)
+                startArena(id: id, seed: seed)
+                return
+            }
         }
         startLevel(id: id, seed: seed)
+    }
+
+    /// The L5 exit pad was reached (or Continue / debug): the boss arena with the level's session
+    /// values carried over (GDD §15: one session for both stages).
+    func enterBossArena(levelId: String, carry: ArenaProgress, loadout: Loadout, inventory: Inventory) {
+        progress.loadout = loadout
+        progress.inventory = inventory
+        progress.arena = carry
+        startArena(id: levelId, seed: run?.seed ?? Self.randomSeed())
+    }
+
+    private func startArena(id: String, seed: UInt64 = GameModel.randomSeed()) {
+        bag = progress.inventory
+        runCounter += 1
+        run = LevelRun(id: runCounter, levelId: id, seed: seed, stage: .bossArena)
+        hud = HUDState()
+        toast = nil
+        bubble = nil
+        useFeedback = nil
+        minimap = MinimapSnapshot()
+        isPaused = false
+        isSettingsOpen = false
+        isInventoryOpen = false
+        isWheelOpen = false
+        isIntroShowing = false
+        screen = .game
+        save()
+    }
+
+    // MARK: Settings (Pixel talk, aim assist; saved in the run)
+
+    func setPixelTalk(_ t: PixelTalk) {
+        progress.settings.pixelTalk = t
+        commandHandler?(.settingsChanged)
+        save()
+    }
+
+    func setAimAssist(_ on: Bool) {
+        progress.settings.aimAssist = on
+        commandHandler?(.settingsChanged)
+        save()
     }
 
     /// Level start (GDD §16.10): start gift, starter top-up, puzzle items cleared, saved. The intro
@@ -243,6 +368,7 @@ final class GameModel {
         isPaused = false
         isSettingsOpen = false
         isInventoryOpen = false
+        isWheelOpen = false
         isIntroShowing = !launch.autoStart
         screen = .game
         save()
@@ -302,14 +428,19 @@ final class GameModel {
         commandHandler = nil
         carriedProvider = nil
         isInventoryOpen = false
+        isWheelOpen = false
         isIntroShowing = false
-        screen = .levelComplete(result)
+        screen = result.isLast ? .seasonComplete(result) : .levelComplete(result)
         save()
     }
 
     /// Continue on the Level complete card: next level with a new seed, after the last → title.
     func nextLevel() {
-        guard case .levelComplete(let r) = screen else { return }
+        let r: LevelResult
+        switch screen {
+        case .levelComplete(let x), .seasonComplete(let x): r = x
+        default: return
+        }
         if let next = data.level(after: r.levelId) {
             startLevel(id: next.id, seed: Self.randomSeed())
         } else {

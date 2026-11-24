@@ -18,6 +18,9 @@ final class PixelDirector {
 
     private var hint: ActiveHint?
     private(set) var arrow: HintArrowNode?
+    /// ART_BIBLE §14.6: edge chevron for an off-screen target, ring on the target.
+    private(set) var chevron: SKNode?
+    private(set) var targetRing: SKNode?
     private(set) var bagHintUntil: Double = 0
     private(set) var pointerPings: [String] = []
     private(set) var pointerExit = false
@@ -62,7 +65,8 @@ final class PixelDirector {
     func startStoryIfNeeded() {
         guard !startedStory else { return }
         startedStory = true
-        scene.pixelBrain.handle(.levelStart)
+        // The arena continues L5: its story starts with the boss intro (`bossPhase:1`).
+        if !scene.isArena { scene.pixelBrain.handle(.levelStart) }
     }
 
     /// An element turned on: a hint that pointed at it ends.
@@ -76,6 +80,7 @@ final class PixelDirector {
         if var h = hint {
             h.remaining -= dt
             arrow?.update(dt: dt, hero: hero.position)
+            updateChevron(target: h.target)
             let reached = hypot(h.target.x - hero.position.x, h.target.y - hero.position.y) <= Self.hintReachedDistance
             let pickedUp = h.floorId.map { id in !scene.pickups.contains { floorId($0) == id } } ?? false
             hint = h
@@ -196,12 +201,66 @@ final class PixelDirector {
         }
         hint = ActiveHint(target: target, elementId: elementId, floorId: floorId,
                           remaining: data.rules.hints.flySec + data.rules.hints.arrowSec)
+        targetRing?.removeFromParent()
+        let ring = SKShapeNode(circleOfRadius: 24)
+        ring.strokeColor = Palette.star
+        ring.lineWidth = 3
+        ring.name = "hint_ring"
+        ring.position = target
+        ring.zPosition = 39
+        ring.run(.repeatForever(.sequence([.scale(to: 1.2, duration: 0.4), .scale(to: 1.0, duration: 0.4)])))
+        scene.worldNode.addChild(ring)
+        targetRing = ring
+        updateChevron(target: target)
         scene.hud.pushMinimap(force: true)
+    }
+
+    /// Off-screen target: a 40 pt chevron plate clamped to the screen edge (inset 24 pt), pointing
+    /// at it and bobbing; it never sits in the bottom 160 pt (joystick corners).
+    private func updateChevron(target: CGPoint) {
+        let vis = scene.visibleSize, cam = scene.cameraNode.position
+        let rel = CGPoint(x: target.x - cam.x, y: target.y - cam.y)
+        let hw = vis.width / 2 - 24 - 20, hh = vis.height / 2 - 24 - 20
+        let onScreen = abs(rel.x) <= vis.width / 2 - 24 && abs(rel.y) <= vis.height / 2 - 24
+        guard !onScreen else { chevron?.removeFromParent(); chevron = nil; return }
+        if chevron == nil {
+            let n = SKNode()
+            n.name = "hint_chevron"
+            n.zPosition = 860
+            let inner = SKNode()
+            n.addChild(inner)
+            let plate = SKShapeNode(circleOfRadius: 20)
+            plate.fillColor = Palette.star
+            plate.strokeColor = Palette.outline
+            plate.lineWidth = 2
+            inner.addChild(plate)
+            let p = CGMutablePath()
+            p.move(to: CGPoint(x: -6, y: 9)); p.addLine(to: CGPoint(x: 6, y: 0)); p.addLine(to: CGPoint(x: -6, y: -9))
+            let arrowHead = SKShapeNode(path: p)
+            arrowHead.strokeColor = Palette.outline
+            arrowHead.lineWidth = 4
+            arrowHead.lineCap = .round
+            arrowHead.lineJoin = .round
+            arrowHead.name = "head"
+            inner.addChild(arrowHead)
+            inner.run(.repeatForever(.sequence([.moveBy(x: 0, y: 4, duration: 0.4), .moveBy(x: 0, y: -4, duration: 0.4)])))
+            scene.cameraNode.addChild(n)
+            chevron = n
+        }
+        let k = min(hw / max(0.001, abs(rel.x)), hh / max(0.001, abs(rel.y)))
+        var p = CGPoint(x: rel.x * k, y: rel.y * k)
+        p.y = max(p.y, -vis.height / 2 + 160 + 20)
+        chevron?.position = p
+        chevron?.childNode(withName: "//head")?.zRotation = atan2(rel.y, rel.x)
     }
 
     func endHint() {
         guard hint != nil || arrow != nil else { return }
         hint = nil
+        chevron?.removeFromParent()
+        chevron = nil
+        targetRing?.run(.sequence([.fadeOut(withDuration: 0.3), .removeFromParent()]))
+        targetRing = nil
         if let a = arrow {
             arrow = nil
             a.run(.sequence([.fadeOut(withDuration: 0.3), .removeFromParent()]))

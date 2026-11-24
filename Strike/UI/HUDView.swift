@@ -23,6 +23,10 @@ struct HUDView: View {
         static let toastTop: CGFloat = 124
         static let inventoryRight: CGFloat = 96
         static let badge: CGFloat = 24
+        static let swapBottom: CGFloat = 340
+        static let bossBarTop: CGFloat = 64
+        /// The boss bar slides down this much while Pixel's bubble shows (ART_BIBLE §15.8).
+        static let bossBarBubbleShift: CGFloat = 36
     }
 
     // MARK: Inventory button (ART_BIBLE §7, §14.3 "!" badge, §14.6 hint glow)
@@ -93,6 +97,23 @@ struct HUDView: View {
                 .padding(.bottom, Layout.reloadBottom)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
 
+            if hud.swapVisible {
+                SwapButton(hud: hud)
+                    .padding(.trailing, Layout.reloadRight)
+                    .padding(.bottom, Layout.swapBottom)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+                    .transition(.scale(scale: 0.1).combined(with: .opacity))
+            }
+
+            if let boss = hud.boss {
+                BossBarView(state: boss)
+                    .padding(.top, Layout.bossBarTop + (model.bubble != nil ? Layout.bossBarBubbleShift : 0))
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                    .animation(.easeOut(duration: 0.25), value: model.bubble != nil)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                    .allowsHitTesting(false)
+            }
+
             interactButton(hud)
                 .padding(.trailing, Layout.reloadRight - (Layout.interactGlow - Layout.button) / 2)
                 .padding(.bottom, Layout.interactBottom - (Layout.interactGlow - Layout.button) / 2)
@@ -112,6 +133,8 @@ struct HUDView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                 .allowsHitTesting(false)
         }
+        .animation(.spring(response: 0.25, dampingFraction: 0.55), value: hud.swapVisible)
+        .animation(.easeOut(duration: 0.3), value: hud.boss != nil)
     }
 
     // MARK: Interact
@@ -213,6 +236,19 @@ struct HUDView: View {
                     .animation(.easeOut(duration: 0.2), value: hud.hp)
             }
             .frame(width: Layout.hpBar.width, height: Layout.hpBar.height)
+            .overlay(alignment: .trailing) {
+                if hud.slowed {
+                    // ART_BIBLE §15.4: spore slow badge right of the bar.
+                    ZStack {
+                        Circle().fill(Color(red: 0xE3 / 255, green: 0x6B / 255, blue: 0xD8 / 255))
+                        Circle().stroke(Self.outline, lineWidth: 2)
+                        Image(systemName: "arrow.down").font(.system(size: 13, weight: .heavy)).foregroundStyle(.white)
+                    }
+                    .frame(width: 24, height: 24)
+                    .offset(x: 32)
+                    .accessibilityIdentifier("hud.slowBadge")
+                }
+            }
             .overlay {
                 if hud.lowHp {
                     RoundedRectangle(cornerRadius: Layout.hpBar.height / 2)

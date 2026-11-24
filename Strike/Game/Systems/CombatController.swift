@@ -3,7 +3,8 @@ import UIKit
 
 /// Shots and damage in the running scene: the hero's trigger and blaster fire (aim assist,
 /// jitter, pellets), projectile flight, physics contacts, enemy hits and power-down with loot,
-/// crates, and contact damage to the hero (0 HP hands over to `RescueController`).
+/// crates, enemy shots (laser balls, spores, boss stars) and every hit on the hero (0 HP hands
+/// over to `RescueController`). Boss hits go to `BossDirector`.
 /// Split out of `GameScene` in M4-3 with no behaviour change.
 @MainActor
 final class CombatController {
@@ -86,29 +87,45 @@ final class CombatController {
         guard !pendingHits.isEmpty else { return }
         let hits = pendingHits
         pendingHits.removeAll(keepingCapacity: true)
+        for (shot, target) in hits where shot.isActive { resolve(shot, target: target) }
+    }
+
+    /// One shot touching `target` (an enemy, crate or wall). Shots pass through powered-down
+    /// enemies and popping slime children; everything else ends the shot.
+    func resolve(_ shot: ProjectileNode, target: SKNode?) {
         let world = scene.worldNode
-        for (shot, target) in hits where shot.isActive {
-            let color = Palette.projectile(style: shot.style)
-            if let enemy = target as? EnemyNode {
-                guard !enemy.isPoweredDown else { continue } // shots pass through powered-down enemies
-                hitEnemy(enemy, with: shot)
-            } else if let crate = target as? CrateNode {
-                guard !crate.isBroken else { continue }
-                world.addChild(Particles.hitSparkle(color: color, at: shot.position, shotAngle: shot.angle, small: true))
-                if crate.hit(damage: shot.damage) { breakCrate(crate) }
+        let color = Palette.projectile(style: shot.style)
+        if let enemy = target as? EnemyNode {
+            guard !enemy.isPoweredDown, enemy.isDamageable else { return }
+            if enemy.isBoss, let boss = scene.bossDirector {
+                boss.hit(with: shot)
             } else {
-                world.addChild(Particles.hitSparkle(color: color, at: shot.position, shotAngle: shot.angle, small: true))
+                hitEnemy(enemy, with: shot)
             }
-            scene.pool.recycle(shot)
+        } else if let crate = target as? CrateNode {
+            guard !crate.isBroken else { return }
+            world.addChild(Particles.hitSparkle(color: color, at: shot.position, shotAngle: shot.angle, small: true))
+            if crate.hit(damage: shot.damage) { breakCrate(crate) }
+        } else {
+            world.addChild(Particles.hitSparkle(color: color, at: shot.position, shotAngle: shot.angle, small: true))
         }
+        scene.pool.recycle(shot)
     }
 
     private func hitEnemy(_ enemy: EnemyNode, with shot: ProjectileNode) {
         let dir = CGVector(dx: cos(shot.angle), dy: sin(shot.angle))
+        if enemy.blocksShot(angle: shot.angle) {
+            // ART_BIBLE §15.2: the shot bounces off as sparkles, no damage, no flinch.
+            scene.worldNode.addChild(EnemyFX.shieldBounce(at: shot.position, shotAngle: shot.angle))
+            return
+        }
         scene.worldNode.addChild(Particles.hitSparkle(color: Palette.projectile(style: shot.style),
                                                       at: shot.position, shotAngle: shot.angle,
                                                       small: shot.style == "foam"))
-        switch enemy.health.applyDamage(shot.damage) {
+        let bonus = enemy.damageMultiplier > 1
+        if bonus { scene.worldNode.addChild(Particles.stateOn(at: shot.position, color: .white, count: 5)) }
+        let damage = DamageModel.finalDamage(base: shot.damage, dizzyMultiplier: enemy.damageMultiplier)
+        switch enemy.health.applyDamage(damage) {
         case .ignored:
             return
         case .hit:
@@ -127,10 +144,17 @@ final class CombatController {
         scene.audio?.play(.enemyPowerDown)
         let origin = enemy.position
         scene.worldNode.addChild(Particles.poof(at: origin, bodyColors: Self.poofColors(enemy.def.id), darkFloor: scene.darkFloor))
-        let drops = LootRoller.roll(tableId: enemy.def.lootTableId, data: scene.data, context: lootContext, random: scene.random)
+        var drops = LootRoller.roll(tableId: enemy.def.lootTableId, data: scene.data, context: lootContext, random: scene.random)
+        // A core carrier drops its core for sure (GDD §9); the boss counts it as in flight meanwhile.
+        let carried = enemy.carriesItem
+        if let item = carried { drops.append(LootDrop(itemId: item, count: 1)) }
+        scene.bossDirector?.spawnPoweredDown(enemy)
+        // Slime split (GDD §8.1): the children pop out of the body.
+        scene.enemyDirector.split(enemy)
         enemy.powerDown { [weak self, weak enemy] in
             guard let self, let enemy else { return }
             self.spawnLoot(drops, at: origin)
+            if carried != nil { self.scene.bossDirector?.coreLanded() }
             self.scene.enemyDirector.remove(enemy)
         }
     }
@@ -188,24 +212,78 @@ final class CombatController {
     func checkContactDamage() {
         let hero = scene.hero
         guard !hero.health.isInvulnerable else { return }
-        for e in scene.enemies where !e.isPoweredDown && e.def.contactDamage > 0 {
+        for e in scene.enemies where !e.isPoweredDown && !e.isHarmless && e.contactDamageNow > 0 {
             let dx = hero.position.x - e.position.x, dy = hero.position.y - e.position.y
             guard hypot(dx, dy) < hero.radius + e.radius else { continue }
-            let dir = CGVector(dx: dx, dy: dy)
-            switch hero.health.applyDamage(e.def.contactDamage) {
-            case .ignored:
-                continue
-            case .hit:
-                hero.knockBack(along: dir)
-                hero.animator.playHit(from: dir)
-                scene.worldNode.addChild(Particles.heroHit(at: hero.position))
-                scene.lightHaptic.impactOccurred()
-                scene.audio?.play(.heroHurt)
-            case .depleted:
-                scene.lightHaptic.impactOccurred()
-                scene.rescueController.begin()
+            if hurtHero(e.contactDamageNow, from: e.position) { return }
+        }
+    }
+
+    /// Any damage to the hero (contact, enemy shot, boss attack). Returns true when it landed.
+    @discardableResult
+    func hurtHero(_ amount: Int, from source: CGPoint) -> Bool {
+        let hero = scene.hero
+        guard scene.rescue == nil, amount > 0 else { return false }
+        let dir = CGVector(dx: hero.position.x - source.x, dy: hero.position.y - source.y)
+        switch hero.health.applyDamage(amount) {
+        case .ignored:
+            return false
+        case .hit:
+            hero.knockBack(along: dir)
+            hero.animator.playHit(from: dir)
+            scene.worldNode.addChild(Particles.heroHit(at: hero.position))
+            scene.lightHaptic.impactOccurred()
+            scene.audio?.play(.heroHurt)
+        case .depleted:
+            scene.lightHaptic.impactOccurred()
+            scene.rescueController.begin()
+        }
+        return true
+    }
+
+    // MARK: Enemy shots (GDD §8: big, slow, colourful; stop at walls)
+
+    func fireEnemyShots(from e: EnemyNode, angles: [CGFloat], attack a: EnemyAttackDef) {
+        let kind: EnemyProjectileNode.Kind = a.slowMultiplier != nil ? .spore : .laser
+        let muzzle = e.radius + 6
+        for angle in angles {
+            let p = CGPoint(x: e.position.x + cos(angle) * muzzle, y: e.position.y + sin(angle) * muzzle)
+            spawnEnemyShot(kind: kind, at: p, angle: angle, speed: CGFloat(a.projectileSpeed ?? 200),
+                           radius: CGFloat(a.projectileRadius ?? 10), damage: a.damage, range: CGFloat(a.range),
+                           slowMultiplier: a.slowMultiplier, slowSec: a.slowSec)
+        }
+        scene.audio?.play(.enemyShot)
+    }
+
+    func spawnEnemyShot(kind: EnemyProjectileNode.Kind, at p: CGPoint, angle: CGFloat, speed: CGFloat, radius: CGFloat,
+                        damage: Int, range: CGFloat, slowMultiplier: Double? = nil, slowSec: Double? = nil) {
+        let glow = scene.darkFloor
+        _ = scene.enemyShots.spawn(in: scene.worldNode) {
+            $0.activate(kind: kind, at: p, angle: angle, speed: speed, radius: radius, damage: damage, range: range,
+                        slowMultiplier: slowMultiplier, slowSec: slowSec, glow: glow)
+        }
+    }
+
+    func updateEnemyShots(dt: Double) {
+        let hero = scene.hero, grid = scene.solidGrid
+        var done: [(EnemyProjectileNode, Bool)] = []
+        scene.enemyShots.forEachActive { s in
+            guard s.step(dt: dt) else { done.append((s, false)); return }
+            if grid.isBlocked(s.position, radius: s.radius * 0.5) { done.append((s, true)); return }
+            let d = hypot(hero.position.x - s.position.x, hero.position.y - s.position.y)
+            guard d < hero.radius + s.radius, scene.rescue == nil else { return }
+            if hurtHero(s.damage, from: s.position), let m = s.slowMultiplier, let sec = s.slowSec {
+                hero.applySlow(multiplier: m, sec: sec)
             }
-            return
+            done.append((s, true))
+        }
+        for (s, pop) in done {
+            if pop {
+                let puff = s.kind == .spore
+                scene.worldNode.addChild(Particles.hitSparkle(color: puff ? EnemyFX.sporeLight : s.color, at: s.position,
+                                                              small: true))
+            }
+            scene.enemyShots.recycle(s)
         }
     }
 

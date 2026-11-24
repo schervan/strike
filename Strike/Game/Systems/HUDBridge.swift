@@ -59,7 +59,19 @@ final class HUDBridge {
             quickSlots: quickSlotStates,
             lowHp: hero.health.current > 0 && hero.health.current <= scene.data.rules.lowHp.threshold,
             bagFull: scene.inventory.freeSlots == 0,
-            bagHint: scene.clock < scene.pixelDirector.bagHintUntil)
+            bagHint: scene.clock < scene.pixelDirector.bagHintUntil,
+            weapons: weaponSlots, isSwapping: hero.weapon.isSwapping, slowed: hero.status.isSlowed,
+            boss: scene.bossDirector?.barState)
+    }
+
+    /// Wheel / SWAP slots in GDD order: owned, equipped, magazine and reserve.
+    var weaponSlots: [WeaponSlotState] {
+        let l = scene.hero.loadout
+        return scene.weaponOrder.compactMap { id in
+            guard let w = scene.data.weapons[id] else { return nil }
+            return WeaponSlotState(id: id, nameKey: w.nameKey, owned: l.owns(id), equipped: l.equipped == id,
+                                   magazine: l.magazine(id), reserve: l.reserve(for: w))
+        }
     }
 
     /// Q1…Q4: linked id, total count, cooldown sweep, and whether a use would be refused.

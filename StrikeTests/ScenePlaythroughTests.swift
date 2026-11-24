@@ -162,9 +162,79 @@ struct ScenePlaythroughTests {
         log.add("complete=\(scene.isComplete), minimap rooms \(scene.minimapSnapshot.rooms.count)/\(level.rooms.count), time \(scene.session.elapsed)")
         if check {
             #expect(scene.isComplete, "level did not complete on the exit pad")
+            if def.bossArena != nil {
+                // M4-6: the L5 exit pad leads to the boss arena; the boss ends the level.
+                #expect(model.run?.stage == .bossArena, "L5 exit pad must lead to the boss arena")
+                #expect(model.progress.l5ArenaReached)
+                let done = try playArena(model: model, data: data, def: def, log: &log)
+                #expect(done, "boss not defeated")
+                if case .seasonComplete(let r) = model.screen { #expect(r.levelId == levelId && r.isLast) } else { Issue.record("model did not reach seasonComplete") }
+                return (log, done)
+            }
             if case .levelComplete(let r) = model.screen { #expect(r.levelId == levelId) } else { Issue.record("model did not reach levelComplete") }
         }
         return (log, scene.isComplete)
+    }
+
+    /// A real hero blaster shot that touches `target` (physics contacts do not run headless).
+    static func shoot(_ scene: GameScene, at target: SKNode) {
+        let w = scene.hero.weapon.def
+        let a = atan2(target.position.y - scene.hero.position.y, target.position.x - scene.hero.position.x)
+        guard let shot = scene.pool.spawn(weapon: w, texture: SKTexture(), at: target.position, angle: a, in: scene.worldNode) else { return }
+        scene.combat.resolve(shot, target: target)
+    }
+
+    /// A real shot travelling along `angle` that touches `target`.
+    static func shootAlong(_ scene: GameScene, at target: SKNode, angle: CGFloat) {
+        let w = scene.hero.weapon.def
+        guard let shot = scene.pool.spawn(weapon: w, texture: SKTexture(), at: target.position, angle: angle, in: scene.worldNode) else { return }
+        scene.combat.resolve(shot, target: target)
+    }
+
+    /// M4-6 scripted boss fight: blaster hits on the boss, the phase-2 core puzzle through real
+    /// carriers, floor cores and the two core machines (INTERACT), until the Season complete card.
+    static func playArena(model: GameModel, data: GameData, def: LevelDef, log: inout Log) throws -> Bool {
+        let scene = GameScene(data: data, level: def, seed: 1, run: model.progress, stage: .bossArena)
+        let view = SKView(frame: CGRect(origin: .zero, size: GameScene.logicalSize))
+        view.presentScene(scene)
+        scene.model = model
+        scene.hero.health.reset(invulnerableFor: 1_000_000)
+        let boss = try #require(scene.boss, "arena without a boss")
+        #expect(scene.session.elapsed > 0, "L5 time carries into the arena")
+        scene.step(dt: 0.05)
+        #expect(model.hud.boss != nil, "boss bar state is pushed")
+        var phasesSeen: [Int] = [boss.brain.phaseIndex]
+        var t = 0.0
+        while !scene.isComplete, t < 400 {
+            if boss.brain.isImmune {
+                // Shield up: shoot the carriers, collect the cores, power both machines.
+                if let carrier = scene.enemies.first(where: { $0.carriesItem != nil && !$0.isPoweredDown }) {
+                    shoot(scene, at: carrier)
+                } else if let core = scene.pickups.first(where: { $0.item.id == boss.coreItemId && $0.hasLanded }) {
+                    scene.hero.position = core.groundPosition
+                } else if scene.inventory.count(of: boss.coreItemId) > 0,
+                          let m = scene.level.elements.first(where: { $0.type == .machine && !scene.puzzle.isOn($0.id) }) {
+                    _ = walk(scene, to: near(m))
+                    if let n = scene.built.interactables[m.id] {
+                        let dx = n.position.x - scene.hero.position.x, dy = n.position.y - scene.hero.position.y
+                        let d = hypot(dx, dy), want = 56 + n.reachPadding
+                        if d > want { scene.hero.position.x += dx / d * (d - want); scene.hero.position.y += dy / d * (d - want) }
+                    }
+                    scene.step(dt: 0.05)
+                    scene.handle(.interact)
+                }
+            } else if !boss.isDefeated {
+                shoot(scene, at: boss.node)
+            }
+            scene.step(dt: 0.05)
+            t += 0.05
+            if phasesSeen.last != boss.brain.phaseIndex { phasesSeen.append(boss.brain.phaseIndex) }
+        }
+        log.add("arena: phases \(phasesSeen.map { $0 + 1 }), cores in \(boss.brain.coresInserted), boss defeated \(boss.isDefeated), time \(Int(scene.session.elapsed)) s, complete \(scene.isComplete)")
+        #expect(phasesSeen == [0, 1, 2], "all three phases in order")
+        #expect(boss.brain.coresInserted >= 2)
+        settle(scene, seconds: 0.2)
+        return scene.isComplete
     }
 
     @Test(arguments: ["l1", "l2", "l3", "l4", "l5"])

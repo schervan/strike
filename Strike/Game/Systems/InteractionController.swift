@@ -57,7 +57,7 @@ final class InteractionController {
         let level = scene.level, data = scene.data
         for p in level.pickups {
             guard let item = data.items[p.itemId] else { continue }
-            addPlacedPickup(item, at: level.grid.world(p.cell), placementId: p.id)
+            addPlacedPickup(item, at: level.grid.world(p.cell), placementId: p.id, count: scene.isArena ? p.count : 1)
         }
         for i in level.itemPlacements {
             guard let item = data.items[i.itemId] else { continue }
@@ -65,8 +65,8 @@ final class InteractionController {
         }
     }
 
-    private func addPlacedPickup(_ item: ItemDef, at p: CGPoint, placementId: String?) {
-        let node = PickupNode(item: item, from: p, to: p, darkFloor: scene.darkFloor)
+    func addPlacedPickup(_ item: ItemDef, at p: CGPoint, placementId: String?, count: Int = 1) {
+        let node = PickupNode(item: item, from: p, to: p, count: count, darkFloor: scene.darkFloor)
         node.placementId = placementId
         addPickup(node)
     }
@@ -135,9 +135,13 @@ final class InteractionController {
                 scene.pixelBrain.handle(.bagFull)
             }
             return false
-        case .weapon:
-            // The blaster is owned now; SWAP, the wheel and Pixel's line arrive in M4-5.
+        case .weapon(_, let added, _):
             collectedCounts[item.id, default: 0] += p.count
+            // GDD §5: a new blaster is not equipped; SWAP pops in (`.swapVisible`). An owned one
+            // only gave ammo, with no Pixel line.
+            guard added else { return true }
+            scene.worldNode.addChild(Particles.stateOn(at: p.position, color: Palette.projectile(style:
+                scene.data.weapons[item.weaponId ?? item.id]?.projectileStyle ?? ""), count: 10))
         }
         scene.pixelBrain.handle(.pickup(itemId: item.id, stored: outcome == .stored))
         return true
@@ -285,6 +289,11 @@ final class InteractionController {
                 scene.pixelBrain.handle(lastOfExit ? .allElementsOn : .elementOn)
             }
         }
+        if scene.isArena {
+            // Arena: core machines feed the boss's shield puzzle; the sealed entrance never opens.
+            if puzzle.isOn(id), level.element(id)?.type == .machine { scene.bossDirector?.coreInserted() }
+            return
+        }
         for g in level.gates where puzzle.isGateOpen(g.id) {
             if let d = built.gates[g.id], !d.isOpen, !panQueue.contains(where: { $0 === d }), pan?.door !== d {
                 panQueue.append(d)
@@ -404,6 +413,7 @@ final class InteractionController {
     }
 
     func updateExit(dt: Double) {
+        guard !scene.isArena else { return }
         let pad = scene.built.exitPad, h = scene.hero.position
         let onPad = hypot(pad.position.x - h.x, pad.position.y - h.y) <= ExitPadNode.triggerRadius
             || exitPadCells.contains(scene.level.grid.cell(at: h))
@@ -413,9 +423,20 @@ final class InteractionController {
         completeLevel()
     }
 
+    /// The L5 exit pad leads to the boss arena (DECISIONS 2026-11-24) instead of the card.
+    private var pendingArena: ArenaProgress?
+
     private func completeLevel() {
         guard !isComplete else { return }
         let data = scene.data, def = scene.levelDef
+        if def.bossArena != nil, def.bossId != nil, !scene.isArena {
+            isComplete = true
+            scene.built.exitPad.playReached()
+            scene.hero.drive(direction: .zero, magnitude: 0, dt: 0)
+            pendingArena = scene.session.arenaCarry
+            completionDelay = ExitPadNode.flashSec
+            return
+        }
         isComplete = true
         scene.session.complete()
         scene.built.exitPad.playReached()
@@ -432,10 +453,41 @@ final class InteractionController {
     }
 
     /// Counts the exit flash down and hands the result to the model.
+    /// The boss is down (BossDirector after the sparkle burst): the level, and the season, is complete.
+    func completeArena() {
+        guard !isComplete else { return }
+        let data = scene.data, def = scene.levelDef
+        isComplete = true
+        scene.session.complete()
+        scene.audio?.playJingle(data.level(after: def.id) == nil ? MusicID.seasonComplete : MusicID.levelComplete)
+        scene.hero.drive(direction: .zero, magnitude: 0, dt: 0)
+        let session = scene.session
+        pendingResult = LevelResult(levelId: def.id, nameKey: def.nameKey, timeSec: Int(session.elapsed.rounded()),
+                                    score: session.score, datachips: session.datachipsFound.count,
+                                    datachipsTotal: def.pickups.datachips, isLast: data.level(after: def.id) == nil,
+                                    rescues: session.rescues)
+        completionDelay = 0
+    }
+
+    /// `debug.bossArena`: straight to the arena with the current session.
+    func debugEnterArena() {
+        guard !scene.isArena, scene.levelDef.bossArena != nil else { return }
+        isComplete = true
+        pendingArena = scene.session.arenaCarry
+        completionDelay = 0
+    }
+
     func tickCompletion(dt: Double) {
         guard var t = completionDelay else { return }
         t -= dt
         completionDelay = t
+        if t <= 0, let carry = pendingArena {
+            completionDelay = nil
+            pendingArena = nil
+            scene.model?.enterBossArena(levelId: scene.levelDef.id, carry: carry, loadout: scene.hero.loadout,
+                                        inventory: scene.inventory)
+            return
+        }
         if t <= 0, let r = pendingResult {
             completionDelay = nil
             pendingResult = nil

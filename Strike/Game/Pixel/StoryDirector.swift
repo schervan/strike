@@ -29,7 +29,7 @@ nonisolated enum StoryEvent: Sendable, Hashable {
     case rescue
     /// The SWAP button became visible (2 or more blasters owned; QA-012). The scene sends it in M4-5.
     case swapVisible
-    /// M4: ignored until the boss lands.
+    /// Boss phase `n` (1-based) began; `bossDefeated` after its power-down.
     case bossPhase(Int)
     case bossDefeated
 }
@@ -105,15 +105,13 @@ nonisolated struct StoryDirector: Sendable, Equatable {
         case .allElementsOn: "allElementsOn"
         case .doorOpen: "doorOpen"
         case .swapVisible: "firstSwapVisible"
-        case .elementOn, .gateOpen, .bagFull, .magazineEmpty, .checkpoint, .rescue, .bossPhase, .bossDefeated: nil
+        case .bossPhase(let n): "bossPhase:\(n)"
+        case .bossDefeated: "bossDefeated"
+        case .elementOn, .gateOpen, .bagFull, .magazineEmpty, .checkpoint, .rescue: nil
         }
     }
 
     mutating func handle(_ event: StoryEvent) -> StoryResponse {
-        switch event {
-        case .bossPhase, .bossDefeated: return .silent
-        default: break
-        }
         var r = StoryResponse()
         var isFirst = false
         if let t = Self.trigger(for: event) {

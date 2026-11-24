@@ -19,6 +19,9 @@ struct RootView: View {
             case .levelComplete(let result):
                 LevelCompleteView(result: result)
                     .transition(.opacity)
+            case .seasonComplete(let result):
+                SeasonCompleteView(result: result)
+                    .transition(.opacity)
             }
             if model.isSettingsOpen {
                 SettingsView()
@@ -30,6 +33,7 @@ struct RootView: View {
         .animation(.easeOut(duration: 0.15), value: model.isSettingsOpen)
         .ignoresSafeArea()
         .onChange(of: model.screen, initial: true) { _, screen in updateMusic(screen) }
+        .onChange(of: model.run?.stage) { _, _ in updateMusic(model.screen) }
         .onChange(of: model.isPaused) { _, paused in AudioManager.shared.setGamePaused(paused) }
         .onChange(of: scenePhase) { _, phase in
             // Save on app background (GDD §16.10).
@@ -37,17 +41,19 @@ struct RootView: View {
         }
     }
 
-    /// Title loop on the title screen, `levels.json` music in a level; the Level complete card
-    /// keeps the level loop under the jingle.
+    /// Title loop on the title screen, `levels.json` music in a level (`bossMusic` in the arena);
+    /// the Level complete card keeps the level loop under the jingle, the Season complete card the
+    /// `music_season_complete` jingle.
     private func updateMusic(_ screen: GameModel.Screen) {
         switch screen {
         case .title:
             AudioManager.shared.playMusic(MusicID.title)
         case .game:
-            if let id = model.run?.levelId, let level = model.data.levels[id] {
-                AudioManager.shared.playMusic(level.music)
+            if let run = model.run, let level = model.data.levels[run.levelId] {
+                // Boss arena: `bossMusic` crossfades in (GDD §9).
+                AudioManager.shared.playMusic(run.stage == .bossArena ? (level.bossMusic ?? level.music) : level.music)
             }
-        case .levelComplete:
+        case .levelComplete, .seasonComplete:
             break
         }
     }

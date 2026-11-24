@@ -649,7 +649,7 @@ Accessibility ids (new): `hud.swapButton`, `hud.weaponWheel`, `hud.weaponWheel.s
     - **Laser sweep:** a hero inside a gap is never hit
     - **Arena:** layout is valid for `SolvabilityChecker` and the fixed pickups sit next to pillars
 
-- [ ] **M4-5 swift-coder (pass B) — Real enemies, blasters, SWAP in the scene**
+- [x] **M4-5 swift-coder (pass B) — Real enemies, blasters, SWAP in the scene** (2026-11-24)
   - Outputs: `EnemyBehaviorFactory`, `*States`, `EnemyProjectileNode` + generic pool, enemy shot under-glow + `sfx_shot_enemy` (leftovers 5, 6), spread/rapid firing + SFX, weapon pickups live, SWAP button + `WeaponWheelView`, QA-012 gating, `StoryDirector` skips missing tip keys (QA-011)
   - Done when:
     - each enemy type behaves per GDD §8.1 in a debug spawn room (`debug.spawn.<id>`)
@@ -660,7 +660,7 @@ Accessibility ids (new): `hud.swapButton`, `hud.weaponWheel`, `hud.weaponWheel.s
     - `ScenePlaythroughTests` still finishes L1–L5 on 3 seeds with real behaviours (adjust the script, not the game)
     - < 1,500 nodes and ~60 fps on the simulator in an L5 room with all 5 types + `spawnCrowd`; result logged
 
-- [ ] **M4-6 swift-coder (pass B) — Boss arena, boss fight, season end, leftovers**
+- [x] **M4-6 swift-coder (pass B) — Boss arena, boss fight, season end, leftovers** (2026-11-24)
   - Outputs: `MegaMechNode`, `BossStates`, arena stage flow (L5 exit pad → fade → arena with Pixel line → entrance checkpoint), boss bar, `music_boss` crossfade on arena entry and `music_season_complete` (leftover 7), `SeasonCompleteView`, `l5ArenaReached` Continue, QA-015 camera nudge (leftover 4), off-screen hint chevron + target ring (leftover 8), Settings Pixel talk + aim assist (leftover 9), `ui_btn_settings` swap-in (leftover 10)
   - Done when:
     - the boss plays all 3 phases with telegraphs; the phase 2 core puzzle works (cores from carriers → both machines → shield pops → dizzy)
