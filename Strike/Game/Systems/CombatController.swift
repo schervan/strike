@@ -257,10 +257,10 @@ final class CombatController {
 
     func spawnEnemyShot(kind: EnemyProjectileNode.Kind, at p: CGPoint, angle: CGFloat, speed: CGFloat, radius: CGFloat,
                         damage: Int, range: CGFloat, slowMultiplier: Double? = nil, slowSec: Double? = nil) {
-        let glow = scene.darkFloor
-        _ = scene.enemyShots.spawn(in: scene.worldNode) {
+        let glow = scene.darkFloor, world = scene.worldNode
+        _ = scene.enemyShots.spawn(in: world) {
             $0.activate(kind: kind, at: p, angle: angle, speed: speed, radius: radius, damage: damage, range: range,
-                        slowMultiplier: slowMultiplier, slowSec: slowSec, glow: glow)
+                        slowMultiplier: slowMultiplier, slowSec: slowSec, glow: glow, world: world)
         }
     }
 
@@ -279,11 +279,7 @@ final class CombatController {
             done.append((s, true))
         }
         for (s, pop) in done {
-            if pop {
-                let puff = s.kind == .spore
-                scene.worldNode.addChild(Particles.hitSparkle(color: puff ? EnemyFX.sporeLight : s.color, at: s.position,
-                                                              small: true))
-            }
+            if pop { scene.worldNode.addChild(s.popEffect()) }
             scene.enemyShots.recycle(s)
         }
     }

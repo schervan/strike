@@ -119,6 +119,13 @@ final class PickupNode: SKSpriteNode {
     var hasLanded: Bool { popAge >= Self.popSec }
     var groundPosition: CGPoint { basePosition }
 
+    /// Moves a landed pickup to `p` (the boss nudges items out from under its body, QA-020).
+    func slide(to p: CGPoint) {
+        guard hasLanded, !isCollected else { return }
+        basePosition = p
+        position = p
+    }
+
     /// Moves along the pop arc, bobs, and drifts toward `magnetTarget` when given.
     func step(dt: Double, magnetTarget: CGPoint?, magnetSpeed: CGFloat) {
         guard !isCollected else { return }

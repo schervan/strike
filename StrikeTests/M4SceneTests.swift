@@ -206,7 +206,7 @@ struct M4SceneTests {
         #expect(s.rescue != nil && s.enemyShots.activeCount == 0)
     }
 
-    @Test func arenaHasTheBossBarAndARescueResetsToThePhaseTopKeepingCores() throws {
+    @Test func arenaHasTheBossBarAndARescueKeepsTheBossDamageAndCores() throws {
         var run = RunState.newGame(data: Self.data)
         run.arena = ArenaProgress(levelId: "l5", elapsed: 300, score: 1234, bolts: 3, datachipsFound: ["d1"], rescues: 1)
         let s = Self.scene("l5", run: run, stage: .bossArena, clearEnemies: false)
@@ -224,13 +224,14 @@ struct M4SceneTests {
         #expect(!boss.brain.isImmune)
         for _ in 0..<30 { s.step(dt: 1.0 / 30) }                // dizzy, phase lock over
         boss.applyDamage(150)
-        #expect(boss.brain.hp < 800)
+        let hpBefore = boss.brain.hp
+        #expect(hpBefore < 800)
         s.hero.health.reset(invulnerableFor: 0)
         s.hero.position = CGPoint(x: s.hero.position.x + 200, y: s.hero.position.y)
         s.damageHero(1000)
         var t = 0.0
         while s.rescue != nil, t < 5 { s.step(dt: 0.05); t += 0.05 }
-        #expect(boss.brain.hp == 800 && boss.brain.coresInserted == 2 && !boss.brain.isImmune)
+        #expect(boss.brain.hp == hpBefore && boss.brain.coresInserted == 2 && !boss.brain.isImmune, "QA-016: damage and cores stay")
         #expect(hypot(s.hero.position.x - s.respawnPoint.x, s.hero.position.y - s.respawnPoint.y) < 40)
         #expect(s.session.rescues == 2)
     }
@@ -315,6 +316,28 @@ struct M4SceneTests {
                                  slowMultiplier: 0.7, slowSec: 2)
         l1.step(dt: 1.0 / 30)
         #expect(l1.hero.status.isSlowed && Self.said(l1).contains(StoryDirector.Key.slow))
+    }
+
+    /// QA-020: the boss never stands on the hero, and an item under the boss slides out so it stays
+    /// collectable (found by QA's spread-blaster fight: a pillar pickup under the parked boss).
+    @Test func bossKeepsTheHeroAndItemsClearOfItsBody() throws {
+        var run = RunState.newGame(data: Self.data)
+        run.arena = ArenaProgress(levelId: "l5")
+        let s = Self.scene("l5", run: run, stage: .bossArena, clearEnemies: false)
+        let boss = try #require(s.boss)
+        let item = try #require(Self.data.items["ammo_starter"])
+        s.interaction.addPlacedPickup(item, at: boss.node.position, placementId: "test_under_boss")
+        for _ in 0..<10 { s.step(dt: 1.0 / 30) }           // hero far away at the entrance
+        let p = try #require(s.pickups.first { $0.placementId == "test_under_boss" })
+        let pg = hypot(p.groundPosition.x - boss.node.position.x, p.groundPosition.y - boss.node.position.y)
+        #expect(pg >= boss.node.radius + s.hero.radius, "item slid out (\(pg) pt)")
+        s.hero.position = p.groundPosition
+        for _ in 0..<6 { s.step(dt: 1.0 / 30) }
+        #expect(!s.pickups.contains { $0 === p }, "collectable after the slide")
+        s.hero.position = boss.node.position
+        s.step(dt: 1.0 / 30)
+        let gap = hypot(s.hero.position.x - boss.node.position.x, s.hero.position.y - boss.node.position.y)
+        #expect(gap >= boss.node.radius + s.hero.radius, "hero pushed clear (\(gap) pt)")
     }
 
     // MARK: Leftovers

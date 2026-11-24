@@ -167,7 +167,7 @@ struct M4ScenarioTests {
         }
     }
 
-    /// Dodge skill sweep with the starter blaster (logged, asserted only above 75 %): how forgiving is the fight?
+    /// Dodge skill sweep with the starter blaster, asserted at every skill level since QA-016 was fixed.
     @Test func dodgeSkillSweepIsLogged() throws {
         for dodge in [0.0, 0.25, 0.5, 0.75, 0.9] {
             var times: [Double] = [], rescues: [Int] = [], wins = 0
@@ -177,8 +177,8 @@ struct M4ScenarioTests {
             }
             if wins < 4 { for seed in [1, 2, 3, 4] as [UInt64] { let r = try Self.fight(weaponId: "blaster_starter", seed: seed, accuracy: 0.6, dodge: dodge, maxSeconds: 600); if !r.done { print("BOSSSTUCK dodge \(dodge) seed \(seed): phases \(r.phaseTimes.map { Int($0) }) rescues \(r.rescues) shots \(r.shots) \(r.milestones)") } } }
             print("BOSSSWEEP dodge \(Int(dodge * 100)) %: wins \(wins)/4, times \(times.map { Int($0) }), rescues \(rescues)")
-            // 75 % is the asserted skill; 90 % is logged only (bot noise makes the curve non-monotonic, see QA_REPORT).
-            if dodge == 0.75 { #expect(wins == 4, "dodge \(dodge): \(wins)/4 wins") }
+            // QA-016 fixed (a rescue keeps the boss's damage): even a kid who never dodges must be able to win.
+            #expect(wins == 4, "dodge \(dodge): \(wins)/4 wins")
         }
     }
 }

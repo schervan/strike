@@ -17,7 +17,9 @@ import Foundation
 /// - `unlockBy`: immune until `count` cores are inserted → shield pops, dizzy `dizzySec` with
 ///   × `dizzyDamageMultiplier`; the phase then continues vulnerable to its `hpTo`.
 /// - Dash into a pillar → dizzy `pillarDizzySec`.
-/// - `rescueReset()`: HP back to the current phase's `hpFrom`; inserted cores stay.
+/// - `rescueReset()` (QA-016, owner decision): the attack timing starts over (the running attack
+///   ends, every cooldown restarts from full). HP stays, unless `rescueResetsToPhaseTop` is true (then HP
+///   goes back to the phase's `hpFrom`). Inserted cores and a running dizzy stay.
 nonisolated struct BossBrain: Sendable, Equatable {
     /// Energy cores the brain cannot see itself.
     struct CoreCensus: Sendable, Equatable {
@@ -214,14 +216,13 @@ nonisolated struct BossBrain: Sendable, Equatable {
         return startDizzy(sec: attack.pillarDizzySec ?? 0, multiplier: attack.pillarDizzyDamageMultiplier ?? 1)
     }
 
-    /// Hero rescue in the arena (GDD §9 kid-safe retries).
+    /// Hero rescue in the arena (GDD §9 kid-safe retries, QA-016).
     mutating func rescueReset() {
-        guard !isDefeated, def.rescueResetsToPhaseTop ?? true else { return }
-        hp = phase.hpFrom
-        dizzyRemaining = 0
-        dizzyMultiplier = 1
+        guard !isDefeated else { return }
+        if def.rescueResetsToPhaseTop ?? false { hp = phase.hpFrom }
         busyRemaining = 0
-        resetCooldowns()
+        // As if every attack had just started (GDD §9, designer M4 fix round).
+        cooldowns = phase.attacks.map { $0.cooldownSec * phase.effectiveCooldownMultiplier }
     }
 
     /// `debug.bossNextPhase`: jump to the next phase (or defeat in the last one).
@@ -247,6 +248,8 @@ nonisolated struct BossBrain: Sendable, Equatable {
     private mutating func enterPhase(_ i: Int) -> [Event] {
         phaseIndex = i
         hp = phase.hpFrom
+        // QA-021: each phase's shield puzzle counts its own cores.
+        coresInserted = 0
         dizzyRemaining = 0
         dizzyMultiplier = 1
         busyRemaining = 0

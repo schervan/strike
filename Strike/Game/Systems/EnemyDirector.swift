@@ -121,7 +121,8 @@ final class EnemyDirector: EnemyWorld {
 
     var rescueEnemies: [RescueEnemy] {
         // The boss resets through its own brain (GDD §9 phase top), not to full HP.
-        enemies.filter { !$0.isBoss }.map { RescueEnemy(id: Self.rescueId($0), isPoweredDown: $0.isPoweredDown) }
+        // Boss-phase spawns (core carriers) keep their HP too (QA-016).
+        enemies.filter { !$0.isBoss && $0.bossSpawnId == nil }.map { RescueEnemy(id: Self.rescueId($0), isPoweredDown: $0.isPoweredDown) }
     }
 
     private static func rescueId(_ e: EnemyNode) -> String { ObjectIdentifier(e).debugDescription }

@@ -149,7 +149,7 @@ zone-1 treasure room), `blaster_rapid` in L3. Owned blasters carry over between 
 DPS (sustained, incl. reload, every shot hits): starter 30.0, spread 44.9 (all 5 bubbles, point
 blank) / 26.9 (3 bubbles, ≈ 120 pt), rapid 34.5. At kid aim quality see §8.3.
 Roles (backed by §8.3): starter = precise, best against drones at range; spread = close range:
-boltbots, slimes and their smalls, dizzy shield androids (worst at mid range: one bubble lands);
+slimes and their smalls, dizzy shield androids (against boltbots all three are about equal) (worst at mid range: one bubble lands);
 rapid = big targets and long fights (boss, sporeplants), big magazine, weak against small targets
 far away (7° jitter).
 
@@ -329,7 +329,7 @@ Formulas:
 
 | Enemy (hp) | Starter T / hits | Spread T / volleys (n) | Rapid T / hits (j) | Best |
 |---|---|---|---|---|
-| `boltbot` (30) | **1.67 s** / 3 | **1.31 s** / 2 (3) | **1.45 s** / 6 | spread |
+| `boltbot` (30) | **1.67 s** / 3 | **1.31 s** / 2 (3) | **1.45 s** / 6 | any (measured: rapid 1.37, starter 1.48, spread 1.51; QA-017) |
 | `laserdrone` (20) | **1.11 s** / 2 | **2.62 s** / 3 (1) | **1.69 s** / 4 (0.57) | starter |
 | `slimemutant` (40) | **2.22 s** / 4 | **1.75 s** / 2 (3) | **1.93 s** / 8 | spread |
 | `slimemutant_small` (12) | **0.67 s** / 2 | **0.52 s** / 1 (3) | **0.58 s** / 3 | spread |
@@ -337,6 +337,20 @@ Formulas:
 | `shieldandroid` (60, m 0.75) | **4.44 s** / 4 dizzy | **3.50 s** / 2 dizzy (3) | **3.87 s** / 8 dizzy | spread |
 | `sporeplant` (45) | **2.50 s** / 5 | **5.90 s** / 6 (1) | **2.32 s** / 9 (0.94) | rapid |
 | crate (20, `rules.crate.hp`) | 2 hits | 1 volley | 4 hits | – |
+
+**Measured check (QA `BalanceSmokeTests`, M4-7).** QA samples the real pellet fan, damage model
+and magazine/reload timing over 3,000 trials per pair. All 18 pairs are within 25 % of the table,
+except where whole hits overshoot the HP (overkill = hits × damage ÷ HP > 1.3, tolerance 40 %).
+Pairs that differ by more than 15 %:
+
+| Pair | Formula | Measured | Why |
+|---|---|---|---|
+| `slimemutant_small` × starter | 0.67 s | 0.92 s (+37 %) | 2 hits of 10 on 12 HP (overkill 1.67) |
+| `laserdrone` × starter | 1.11 s | 0.92 s (−17 %) | 2 hits of 10 = 20 HP exactly; the first shot comes at once |
+| `boltbot` × spread | 1.31 s | 1.51 s (+16 %) | 2 volleys of 24 on 30 HP (overkill 1.6); a reload often falls in between |
+
+The shield android is within 5 % for all three blasters. No pair misses with low overkill, so
+nothing is retuned. Against boltbots all three blasters are about equal in play.
 
 Kid DPS used: starter 18.0; spread 22.9 (n 3) / 7.63 (n 1); rapid 20.7 (j 1) / 11.9 (drone) /
 19.4 (sporeplant). Every blaster powers down every enemy in under 6 s; the "wrong" blaster costs
@@ -353,13 +367,29 @@ then the rest at uptime 0.7. Damage time only; add ≈ 25 s for the core puzzle 
 | 3 Overload (400, uptime 0.6) | 37.0 s | 29.1 s | 32.2 s |
 | **Total damage time** | **93 s** | **72 s** | **80 s** |
 
-Whole fight ≈ 1.9–2.2 min → L5 `parTimeSec` includes 120 s for the boss (§20).
+Whole fight without rescues ≈ 112–133 s (damage + puzzle + lines).
+
+**Rescues (QA-016 rule, boss keeps damage).** A rescue now only costs time (≈ 6 s) and never
+undoes damage, so the fight length is `T = base / (1 − 6 / secondsBetweenRescues)`:
+
+| Kid | Rescue every | Rescues | Fight length |
+|---|---|---|---|
+| good (dodges ≈ 75 %) | ≈ 60 s | 2 | 125–148 s ≈ 2.1–2.5 min |
+| average (≈ 50 %) | ≈ 30 s | 4–5 | 140–166 s ≈ 2.3–2.8 min |
+| struggling (≈ 25 %) | ≈ 15 s | 9–10 | 187–222 s ≈ 3.1–3.7 min |
+| never dodges (0 %) | ≈ 11 s (QA bot) | 20–25 | 246–293 s ≈ 4–5 min, but always finishes |
+
+Old rule for comparison (reset to the phase top): QA's bot at 75 % dodge needed 2.5–8.6 min, and
+at 0 % it never cleared phase 1. The target of 2–3 min for a typical kid is met. L5 `parTimeSec`
+keeps 120 s for the boss (§20); ★3 allows par × 1.5, which covers the average kid.
 
 **Ammo for the boss** (kid aim, damage per unit: starter 6, spread 20.4 per volley, rapid 3):
-full reserves of all three = 648 + 857 + 720 = 2,225. Each phase the 4 pillar pickups
-(`pickups.fixed`: 2 healpack, 1 `ammo_rapid` = 180, 1 `ammo_spread` = 245) give 425, × 3 phases =
-1,275 ≥ 1,200 HP. A kid who arrives with empty reserves can still win from the pillars alone,
-plus the starter safety net and the carrier boltbots' loot. `pickups.fixed` confirmed unchanged.
+full reserves of all three = 648 + 857 + 720 = 2,225. Each phase the 5 pillar pickups
+(`pickups.fixed`: 2 healpack, 1 `ammo_rapid` = 180, 1 `ammo_spread` = 245, 1 `ammo_starter` =
+144) give 569, × 3 phases = 1,707 ≥ 1,200 HP. With the starter pack (QA-019), a kid who never
+swaps still gets 144 per phase plus the starter safety net (2 shots/s while empty = 12 kid-DPS).
+A kid who arrives with empty reserves can win from the pillars alone, with or without swapping.
+The carrier boltbots' loot is extra.
 
 **Level combat budget** (expected values; per-room threat = mean room area × `enemyDensity` / 40,
 rooms with enemies = mean rooms − start − checkpoint rooms; time = starter T per enemy):
@@ -387,8 +417,8 @@ its face screen shows OVERMIND's emoji-like expressions.
 
 Arena numbers confirmed in M4-1 (`levels.json → l5.bossArena`): 22 × 16 tiles (1408 × 1024 pt,
 ≈ 1.2 × 1.2 screens, so the boss and a pillar are always near the view), 4 pillars, 2 core
-machines. `pickups.fixed`: 2 `healpack`, 1 `ammo_rapid`, 1 `ammo_spread`, one at each pillar,
-respawned at each phase start (ammo check in §8.3). The L5 level time keeps running in the arena
+machines. `pickups.fixed`: 2 `healpack`, 1 `ammo_rapid`, 1 `ammo_spread`, 1 `ammo_starter`
+(QA-019) at the 4 pillars (one pillar holds two), respawned at each phase start (ammo check in §8.3). The L5 level time keeps running in the arena
 (one `LevelSession`), so `parTimeSec` includes the boss. Boss fight length at kid aim ≈ 2 min (§8.3).
 First sight of the boss plays `pixel.tip.megamech` like any tip (QA-011); the `bossPhase:1` beats
 follow (queue: 1 shown + 2 waiting, nothing is dropped).
@@ -402,9 +432,20 @@ follow (queue: 1 shown + 2 waiting, nothing is dropped).
 Power-down: big sparkle explosion, OVERMIND face says "This is not fair! … Okay, it is fair."
 and the screen goes to a smiley. Drop: `loot_megamech` (bolts shower + datachip-like trophy).
 
-**Kid-safety retries:** on rescue in the arena, the hero returns to the arena checkpoint; the boss
-returns to the **start of its current phase** (HP = phase top) and keeps phase progress, inserted
-cores stay inserted.
+**Kid-safety retries (QA-016, owner decision 2026-11-24):** on rescue in the arena, the hero
+returns to the arena checkpoint and the boss **keeps all damage** (HP, phase, shield state).
+Inserted cores stay inserted, and carried or dropped cores stay where they are. Only the attack
+timing resets:
+1. a running telegraph or attack is cancelled, and enemy shots in flight are removed (§12);
+2. every boss attack cooldown restarts from full, as if each attack had just started, so the next
+   attack comes ≥ 3.0 s × the phase `cooldownMultiplier` after the hero reappears (on top of the
+   hero's 2 s invulnerability);
+3. the boss walks back toward the arena centre; carrier boltbots keep their HP (they are part of
+   the puzzle, not a room to reset).
+Data: `enemies.json → megamech.rescueResetsToPhaseTop: false` (true would be the old
+phase-top reset). Every try makes progress, so a kid who keeps getting hit still wins. The cost of
+a rescue is about 6 s (0.6 s slow-mo + 0.8 s beam + ≈ 4 s back into the fight) and the L5 ★3
+rescue limit (2).
 
 ---
 
@@ -494,7 +535,8 @@ zone or an earlier zone and never behind the gate it opens. Verified by simulati
   4. Inventory, quick slots, blasters, ammo, collected datachips: kept.
   5. Starter ammo topped to at least one full magazine.
   6. Puzzle states kept. Powered-down enemies stay down. Living enemies get full HP and return to
-     their home rooms.
+     their home rooms. **Exception, the boss arena (§9):** the boss keeps its damage and only its
+     attack timing resets; carrier boltbots keep their HP.
   7. `rescues` counter + 1 (affects 3rd star, §15).
 - No lives, no restart penalty besides the star.
 - M3 numbers: `rules.json → rescue` (§16.9): slow-mo `slowMoScale` 0.3 for `slowMoSec` 0.6
@@ -786,7 +828,7 @@ other and are validated at load (debug assert + unit test).
 | `hopChance?`, `hopEverySec?`, `hopPauseSec?` | float | chaser breather pauses (boltbot) |
 | `separation?` | float | pt kept from same-type allies |
 | `retreatRange?`, `strafeSec?` | float | kiter: back off below this distance; strafe time between shots |
-| `rescueResetsToPhaseTop?` | bool | boss: on hero rescue, HP returns to current phase's `hpFrom` |
+| `rescueResetsToPhaseTop?` | bool | boss: `true` = on hero rescue, HP returns to the current phase's `hpFrom`; `false` = HP is kept and only the attack timing resets (§9). S1 megamech: `false` (QA-016) |
 | `phases?` | [Phase] | boss only: `{ "id", "hpFrom", "hpTo", "immune", "cooldownMultiplier?", "attacks": [ {"type": "stomp"/"volley"/"laser_sweep"/"dash", "damage", "cooldownSec", "telegraphSec", "range", "telegraphRadius?", "projectileSpeed?", "projectileCount?", "spreadDeg?", "projectileRadius?", "gaps?", "sweepDegPerSec?", "gapDeg?", "sweepSec?", "waveSec?", "dashSpeed?", "pillarDizzySec?"} ], "spawn?": {"enemyId","everySec","maxAlive","carryItemFirst?","carryCount?"}, "unlockBy?": {"elementType","requiresItem","count","dizzySec","dizzyDamageMultiplier"} }` |
 
 ### 16.3 `items.json`
@@ -1316,6 +1358,10 @@ Details: `docs/levels/L1.md` … `L5.md`.
 | 2026-11-24 | M4-1 laser_sweep `gapDeg` | 50 → 60 | More room for kid steering while walking with the gap (a gap is 210 pt wide at 200 pt). 2 × 60° safe out of 360° |
 | 2026-11-24 | §8 cooldown rule | "≥ telegraph + attack + recovery" → "≥ telegraph + active part; dizzy pauses the scheduler" | Phase 3 dash: 3.75 s < 5.2 s with the pillar dizzy; the brain already never attacks while dizzy, so the rule now says what the code does |
 | 2026-11-24 | M4-1 3 optional Pixel lines | – → `pixel.boss.shield`, `pixel.boss.core_needed`, `pixel.generic.slow` (de + en, ≤ 60 chars) | coder-m4 hooks: phase 2 shield up, core hint, spore slow |
+| 2026-11-24 | §8.3 measured check + §5 roles (QA-017) | "spread best vs boltbot" → "any"; new table of measured pairs that differ > 15 % | QA Monte Carlo: rapid 1.37 / starter 1.48 / spread 1.51 s against boltbots. These are whole-hit overshoot effects, not balance errors; no JSON change |
+| 2026-11-24 | QA-016 boss retry rule: `megamech.rescueResetsToPhaseTop` | true → false: the boss keeps its damage on a rescue; only the attack timing resets (telegraph cancelled, cooldowns restart, boss walks to the centre); cores and carriers stay | Owner decision (DECISIONS 2026-11-24). Old rule: a phase had to be cleared on one life (QA bot 2.5–8.6 min, 0 % dodge never cleared phase 1). New estimate 2.1–2.8 min for good and average kids, < 5 min worst case, always finishes. No new `rules.json` field: the existing per-boss flag holds the rule |
+| 2026-11-24 | QA-019 `l5.pickups.fixed` | 2 healpack + 1 rapid + 1 spread → + 1 `ammo_starter` (respawns each phase) | A kid who never swaps had only the starter safety net at the pillars; + 144 kid-damage per phase. Pillars now give 569 per phase, 1,707 in total |
+| 2026-11-24 | §8.3 measured check | the measured table now covers the whole-hit overshoot pairs (mini slime × starter +37 %, boltbot × spread +16 %, overkill 1.67 / 1.6) | QA-017 close-out; QA's corrected overkill value for boltbot × spread is 1.6 |
 | 2026-11-24 | M4-1 `loot.json`, threat costs, other enemies | unchanged | §8.3: floor ammo alone covers each level ≈ 2 × at 60 % accuracy; threat costs match the power-down times |
 | 2026-11-24 | §16.7 keys, xcstrings | 90 keys → 214 (+56 story/level-beat/boss keys from `levels.json`, +21 `pixel.generic.*`, +6 `pixel.tip.*`, +41 UI: 16 inventory, 5 hud, 5 pause, 6 title, 2 levelIntro, 2 ui.toast, 5 settings) | M3-1; M2 leftover 9 |
 | 2026-11-24 | `pixel.l1.heal` | "Tap the heart to heal." / „Tipp auf das Herz zum Heilen." → "Tap the heal pack or apple below to heal!" / „Tipp unten auf Heilpaket oder Apfel zum Heilen!" | The HUD heart can't be tapped; healing is a quick slot (ART_BIBLE §14.1). L1 start gift puts a heal pack in Q1 and apples in Q2, so both words match what the kid sees |

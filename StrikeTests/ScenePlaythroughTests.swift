@@ -204,6 +204,8 @@ struct ScenePlaythroughTests {
         scene.step(dt: 0.05)
         #expect(model.hud.boss != nil, "boss bar state is pushed")
         var phasesSeen: [Int] = [boss.brain.phaseIndex]
+        var coresPhase2 = 0
+        var overlaps = 0
         var t = 0.0
         while !scene.isComplete, t < 400 {
             if boss.brain.isImmune {
@@ -229,10 +231,15 @@ struct ScenePlaythroughTests {
             scene.step(dt: 0.05)
             t += 0.05
             if phasesSeen.last != boss.brain.phaseIndex { phasesSeen.append(boss.brain.phaseIndex) }
+            if boss.brain.phaseIndex == 1 { coresPhase2 = max(coresPhase2, boss.brain.coresInserted) }
+            // QA-020: the boss never stands on the hero (checked after each step).
+            let gap = hypot(scene.hero.position.x - boss.node.position.x, scene.hero.position.y - boss.node.position.y)
+            if !boss.node.isHidden, gap < boss.node.radius + scene.hero.radius - 0.5 { overlaps += 1 }
         }
-        log.add("arena: phases \(phasesSeen.map { $0 + 1 }), cores in \(boss.brain.coresInserted), boss defeated \(boss.isDefeated), time \(Int(scene.session.elapsed)) s, complete \(scene.isComplete)")
+        log.add("arena: phases \(phasesSeen.map { $0 + 1 }), cores in \(coresPhase2), overlaps \(overlaps), boss defeated \(boss.isDefeated), time \(Int(scene.session.elapsed)) s, complete \(scene.isComplete)")
         #expect(phasesSeen == [0, 1, 2], "all three phases in order")
-        #expect(boss.brain.coresInserted >= 2)
+        #expect(coresPhase2 >= 2, "both cores went in during phase 2")
+        #expect(overlaps == 0, "the boss stood on the hero \(overlaps) times")
         settle(scene, seconds: 0.2)
         return scene.isComplete
     }

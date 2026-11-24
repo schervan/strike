@@ -110,7 +110,7 @@ final class PixelDirector {
 
         // Minimap pointer pings after `hints.pointerAfterSec` (recomputed twice a second).
         pointerTimer -= dt
-        if pointerTimer <= 0, scene.session.elapsed >= data.rules.hints.pointerAfterSec {
+        if !scene.isArena, pointerTimer <= 0, scene.session.elapsed >= data.rules.hints.pointerAfterSec {
             pointerTimer = 0.5
             let p = HintPlanner.pings(afterSec: scene.session.elapsed, rules: data.rules.hints, level: level,
                                       puzzle: scene.puzzle, heroAt: hero.position)
@@ -184,6 +184,7 @@ final class PixelDirector {
 
     /// Plans and shows a hint: fly + dotted arrow + minimap ping, or a line only.
     func runHint(_ trigger: HintTrigger) {
+        if scene.isArena { runArenaHint(); return }
         let level = scene.level, brain = scene.pixelBrain, data = scene.data
         let plan = HintPlanner.plan(level: level, puzzle: scene.puzzle, heroAt: scene.hero.position, carrier: scene.inventory,
                                     floorItems: floorItems, trigger: trigger)
@@ -261,6 +262,41 @@ final class PixelDirector {
         p.y = max(p.y, -vis.height / 2 + 160 + 20)
         chevron?.position = p
         chevron?.childNode(withName: "//head")?.zRotation = atan2(rel.y, rel.x)
+    }
+
+    /// Arena (QA-020): the sealed entrance is never a hint target. While the shield is up Pixel
+    /// points at a core on the floor, then a free core machine (core in the bag), then a carrier;
+    /// otherwise a line about the boss.
+    private func runArenaHint() {
+        let brain = scene.pixelBrain
+        guard let boss = scene.bossDirector else { brain.progress(); return }
+        var target: CGPoint?
+        if boss.brain.isImmune {
+            let core = boss.coreItemId
+            if let p = scene.pickups.first(where: { !$0.isCollected && $0.item.id == core }) {
+                target = p.groundPosition
+            } else if scene.inventory.count(of: core) > 0,
+                      let m = scene.level.elements.first(where: { $0.type == .machine && !scene.puzzle.isOn($0.id) }) {
+                target = m.position
+            } else if let c = scene.enemies.first(where: { $0.carriesItem != nil && !$0.isPoweredDown }) {
+                target = c.position
+            }
+            brain.say(StoryDirector.Key.coreNeeded, kind: .hint)
+        } else {
+            brain.say(StoryDirector.Key.tip("megamech"), kind: .hint)
+        }
+        guard let t = target else { brain.beginLineOnlyHint(); return }
+        brain.beginHint()
+        scene.pixel.flyTo(t)
+        scene.pixel.scan(toward: t)
+        arrow?.removeFromParent()
+        let a = HintArrowNode(target: t, lifetime: scene.data.rules.hints.arrowSec)
+        scene.worldNode.addChild(a)
+        arrow = a
+        hint = ActiveHint(target: t, elementId: nil, floorId: nil,
+                          remaining: scene.data.rules.hints.flySec + scene.data.rules.hints.arrowSec)
+        updateChevron(target: t)
+        scene.hud.pushMinimap(force: true)
     }
 
     func endHint() {

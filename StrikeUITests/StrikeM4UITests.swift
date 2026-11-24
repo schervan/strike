@@ -77,6 +77,16 @@ final class StrikeM4UITests: XCTestCase {
         print("WHEEL ammo readout after pick: \(ammo.value ?? "")")
     }
 
+    /// QA-018: the spore shot look (ART_BIBLE §15.16). A burst of frames so one catches spores in flight.
+    @MainActor
+    func testSporeShotLook() {
+        let app = launch("l1", seed: 42)
+        sleep(2)
+        app.buttons["debug.spawn.sporeplant"].tap()
+        usleep(900_000)
+        for i in 0..<4 { shot("m4_spore_\(i)"); usleep(250_000) }
+    }
+
     /// Drone + shield android + spore plant in one view (screenshot), then all 5 types + crowd on
     /// L5 for the FPS / node log.
     @MainActor

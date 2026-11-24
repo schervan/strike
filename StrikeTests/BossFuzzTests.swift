@@ -47,7 +47,8 @@ struct BossFuzzTests {
         var mult: Double { dizzy > 0 ? (p.unlockBy?.dizzyDamageMultiplier ?? 1) : 1 }
 
         mutating func nextPhase() {
-            if phase + 1 < phases.count { phase += 1; hp = p.hpFrom; dizzy = 0 } else { hp = 0; defeated = true; dizzy = 0 }
+            // QA-021: each phase counts its own inserted cores.
+            if phase + 1 < phases.count { phase += 1; hp = p.hpFrom; dizzy = 0; inserted = 0 } else { hp = 0; defeated = true; dizzy = 0 }
         }
         /// Returns true when the hit did damage.
         mutating func damage(_ base: Int, dizzyMult: Double) -> Bool {
@@ -199,9 +200,9 @@ struct BossFuzzTests {
                 if world.bag > 0 { world.bag -= 1; cov.coreLost += 1 } else if world.floor > 0 { world.floor -= 1; cov.coreLost += 1 }
                 log.append("coreLost")
             case 10:
-                // hero rescued: HP back to the top of the current phase, inserted cores stay
+                // hero rescued (QA-016): the boss keeps its damage, cores and dizzy; only attack timing resets
                 brain.rescueReset(); cov.rescues += 1
-                if !model.defeated { model.hp = model.p.hpFrom; model.dizzy = 0 }
+                if !model.defeated, def.rescueResetsToPhaseTop ?? false { model.hp = model.p.hpFrom }
                 if let m = compare() { return m }
                 log.append("rescue")
             default:

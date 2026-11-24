@@ -29,7 +29,7 @@ struct BossBrainTests {
         #expect(spore.behavior == EnemyDef.turret && spore.shyRange == 80 && spore.shySec == 1.0)
         #expect(spore.attack?.slowMultiplier == 0.7 && spore.attack?.slowSec == 2.0)
         let mech = try #require(e["megamech"])
-        #expect(mech.behavior == EnemyDef.boss && mech.rescueResetsToPhaseTop == true)
+        #expect(mech.behavior == EnemyDef.boss && mech.rescueResetsToPhaseTop == false, "QA-016")
         let phases = try #require(mech.phases)
         #expect(phases.map(\.id) == ["stomp", "shield", "overload"])
         #expect(phases[1].spawn?.carryItemFirst == "energycore" && phases[1].unlockBy?.count == 2)
@@ -256,21 +256,41 @@ struct BossBrainTests {
 
     // MARK: Retries
 
-    @Test func rescueResetRestoresThePhaseTopAndKeepsInsertedCores() throws {
+    /// QA-016 (owner): a rescue keeps the boss's damage, inserted cores and dizzy; only the attack
+    /// timing starts over.
+    @Test func rescueResetKeepsDamageAndCoresAndRestartsAttackTiming() throws {
+        #expect(Self.mech.rescueResetsToPhaseTop == false)
         var b = try Self.brain()
         _ = b.takeDamage(100)
+        var started = false
+        while !started { started = b.tick(dt: 0.05).contains { if case .attack = $0 { true } else { false } } }
+        #expect(b.isBusy)
         b.rescueReset()
-        #expect(b.hp == 1200)
+        #expect(b.hp == 1100, "damage stays")
+        #expect(!b.isBusy, "the running attack ends")
+        #expect(zip(b.cooldowns, b.phase.attacks).allSatisfy { abs($0 - $1.cooldownSec * b.phase.effectiveCooldownMultiplier) < 1e-9 },
+                "every cooldown restarts from full")
         b = try Self.brain(phase: 1)
         _ = b.coreInserted(); _ = b.coreInserted()
+        #expect(b.isDizzy)
         _ = b.takeDamage(150)
-        #expect(b.hp < 800)
+        let hp = b.hp
+        #expect(hp < 800)
         b.rescueReset()
-        #expect(b.hp == 800 && b.coresInserted == 2 && b.shieldDown && !b.isImmune && !b.isDizzy)
+        #expect(b.hp == hp && b.coresInserted == 2 && b.shieldDown && !b.isImmune && b.isDizzy)
         var c = try Self.brain(phase: 1)
         _ = c.coreInserted()
         c.rescueReset()
         #expect(c.coresInserted == 1 && c.isImmune)
+    }
+
+    /// QA-021: the inserted-core count starts at 0 in every phase.
+    @Test func coresInsertedResetsOnAPhaseChange() throws {
+        var b = try Self.brain(phase: 1)
+        _ = b.coreInserted(); _ = b.coreInserted()
+        #expect(b.coresInserted == 2)
+        _ = b.debugNextPhase()
+        #expect(b.phaseIndex == 2 && b.coresInserted == 0)
     }
 
     @Test func debugNextPhaseWalksToTheEnd() throws {

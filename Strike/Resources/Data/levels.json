@@ -748,6 +748,11 @@
             "itemId": "ammo_spread",
             "count": 1,
             "respawnOnBossPhase": true
+          },
+          {
+            "itemId": "ammo_starter",
+            "count": 1,
+            "respawnOnBossPhase": true
           }
         ]
       },

@@ -32,7 +32,7 @@ Owner: visual-artist. Source of truth for sprite names/sizes/frames: `tools/asse
 | Robot metal | #A9BCE0, #C9D2EA, #8FA3C8, dark #444B6B |
 | Slime green | #6FE06A / #8CF07F |
 | Spore pink | #E36BD8 / #FFB3F2 |
-| Weapon colors | starter #FF8A3D, spread #B05CFF, rapid #FFD93D (projectile, ammo crate and HUD icon share it); enemy shot #FF3B5C |
+| Weapon colors | starter #FF8A3D, spread #B05CFF, rapid #FFD93D (projectile, ammo crate and HUD icon share it); enemy shots see 15.16 (pink orb, lilac puffball, cartoon rocket) |
 | State colors | off/locked #FF3B5C, on/open #5FE08A |
 
 ### Per level theme (floor A / floor B / wall / wall top / accent)
@@ -783,3 +783,13 @@ Rules: the overlay blinks every 3.5 s (eyes squash to 2 pt for 0.12 s); the mood
 - New Gemini prompts: **none** (all of the above is code-drawn; the boss face is code-drawn per 15.13, so no face sprites are generated).
 - Open leftover from M3: prompt **#36** (`ui_icon_gear`, slicer name `ui_btn_settings`) is already in `art/prompts/gemini/PROMPTS.md` and the asset manifest and is still ungenerated. Main runs it; then `python3 tools/slice_atlas.py` and swap the SF Symbol out (14.10). I did not call Gemini.
 - Everything here must be created once and cached (star, ring, petal, arc, hex, ribbon textures), as in 14.11.
+
+### 15.16 Enemy projectile looks (QA-018 fix, supersedes "enemy shot #FF3B5C" in section 2)
+Owner decision: no glossy red discs. Red survives only as soft telegraph glows, warning lines and rings (15.1). All three enemy shots are flat, outlined, candy-coloured, and none is a plain round red. Outline for all: 2 pt #2B2140 (1.5 pt for the rocket parts). Verified by compositing at 2 pt/px on `tile_l1..l5_floor_01`: all three read on all five floors by their plum outline plus light fills (checked at 1:1 and 50 %). Tail stars and bubble bumps must not go below the sizes below.
+| Shot | Source | Size (pt) | Look |
+|---|---|---|---|
+| Spore (sporeplant, radius 12) | `proj_enemy_spore` | 28 incl. fuzz (body 22) | pastel puffball: 12 fuzz bumps (7 pt dots on the rim, alternating #D9C2FF lilac and #B8F5DC mint) around a body #D9C2FF; inner disc #B8F5DC (45 % of the radius); a white 6 x 6 pt highlight top-left; plum rim #4A3A70 under the bumps, then the 2 pt outline #2B2140. Matte, no gloss streak. Motion: scale 0.94 to 1.06 at 5 Hz and spin 1.0 rev/s so it feels fluffy; a faint trail of 3 mint puffs (#B8F5DC 50 %, 8 pt, life 0.3). Pop on walls/hero: 8 lilac/mint puffs (see 15.4, pink hero tint stays) |
+| Boss firework rocket (volley, radius 12) | `proj_boss_rocket` | 52 long x 24 high, points along travel | cartoon rocket: body capsule #3DE3D0 (outline 1.5 pt), nose cone #FFD93D, porthole #BFFFF7 6.4 pt with outline, fins #FFD93D, white 5 x 4 pt highlight; tail of 2 stars (outline 1.2 pt): near star #FFF3A0 12 pt, far star #FFD93D 10 pt, behind the fins at 8 and 20 pt; add a 3rd star #FFFFFF 8 pt at 32 pt (alpha 0.6) while flying. Tail stars twinkle (scale 0.8 to 1.1 at 10 Hz). Optional soft additive glow #FFD93D 30 pt at 20 %. Pop: 6 stars (#FFD93D / #3DE3D0 / #FFFFFF, 10 pt, 0.4 s). Aim telegraph keeps its red dashed line (15.1) |
+| Laserdrone ball (radius 10) | `proj_enemy` | 20 body (+ outline = 24) | candy-pink energy orb: ring #FF7AD9 (2 pt plum outline), inner #FFC2EF (60 % radius), white core #FFFFFF (28 %); no highlight streak; additive glow #FF7AD9 at 25 %, 36 pt, pulse 0.2 to 0.35 at 3 Hz. Trail: 3 pink sparkles (6 pt) each 12 pt. L4/L5 underglow (13.8) uses #FFC2EF at 35 %, not red |
+Palette change: **enemy shot colours are #FF7AD9 / #D9C2FF / #B8F5DC / #FFD93D / #3DE3D0**. #FF3B5C remains for states (off/locked lights, doors), telegraph glows, rings, lines and the boss face (section 15.13). The red hit spark on enemy shots (section 12 common rules) becomes a pink or white spark. Hero projectiles stay orange, purple and yellow: the drone orb (pink) is the only pink shot, the spore puffball (lilac/mint) is the only lilac/mint shot, and neither shares a hue with a hero shot.
+Delivery: code-drawn textures cached once (14.11); no new Gemini prompts. Hit radii are unchanged (JSON `projectileRadius`), the visuals may be larger than the radius but never smaller.

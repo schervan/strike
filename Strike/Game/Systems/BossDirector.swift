@@ -36,6 +36,8 @@ final class BossDirector {
     private let fixedRespawn: [String: Bool]
     private var sockets: [String: SKNode] = [:]
     private var saidShield = false
+    /// After a rescue the boss walks back toward the arena centre (QA-016).
+    private var returning = false
     private var coreNeededAt = -Double.infinity
 
     /// `pixel.boss.core_needed` repeats at most this often (ART_BIBLE §15.10).
@@ -96,6 +98,7 @@ final class BossDirector {
         handle(brain.tick(dt: dt, census: census))
         updateAttack(dt: dt)
         walk(dt: dt)
+        keepHeroClear()
         updateMood()
         node.setBubble(brain.isImmune)
         updateSockets()
@@ -107,6 +110,17 @@ final class BossDirector {
     }
 
     private func walk(dt: Double) {
+        if returning {
+            let home = arena.bossSpawnPosition, p = node.position
+            let dx = home.x - p.x, dy = home.y - p.y, d = hypot(dx, dy)
+            let v = CGFloat(node.def.moveSpeed)
+            guard d > 8, running == nil, !brain.isDizzy, v > 0 else { returning = false; node.desiredVelocity = .zero; return }
+            let step = min(d, v * CGFloat(dt))
+            node.desiredVelocity = CGVector(dx: dx / d * v, dy: dy / d * v)
+            let q = CGPoint(x: p.x + dx / d * step, y: p.y + dy / d * step)
+            if !scene.solidGrid.isBlocked(q, radius: node.radius * 0.8) { node.position = q } else { returning = false }
+            return
+        }
         let h = scene.hero.position, p = node.position
         let dx = h.x - p.x, dy = h.y - p.y, d = hypot(dx, dy)
         guard running == nil, !brain.isDizzy, d > Self.walkStopDistance, node.def.moveSpeed > 0 else {
@@ -117,6 +131,48 @@ final class BossDirector {
         let step = CGPoint(x: p.x + dx / d * v * CGFloat(dt), y: p.y + dy / d * v * CGFloat(dt))
         node.desiredVelocity = CGVector(dx: dx / d * v, dy: dy / d * v)
         if !scene.solidGrid.isBlocked(step, radius: node.radius * 0.8) { node.position = step }
+    }
+
+    /// QA-020: the boss never stands on the hero. If the bodies overlap (end of a dash, the
+    /// defeat pose) the hero is pushed out to the nearest free spot just outside the boss.
+    func keepHeroClear() {
+        keepPickupsClear()
+        let hero = scene.hero, b = node.position
+        let need = node.radius + hero.radius + 4
+        let dx = hero.position.x - b.x, dy = hero.position.y - b.y
+        guard hypot(dx, dy) < need else { return }
+        let base = hypot(dx, dy) > 0.5 ? atan2(dy, dx) : -CGFloat.pi / 2
+        for k in 0..<16 {
+            let a = base + CGFloat((k + 1) / 2) * (k % 2 == 0 ? 1 : -1) * .pi / 8
+            for extra in [0, 32, 64] as [CGFloat] {
+                let p = CGPoint(x: b.x + cos(a) * (need + extra), y: b.y + sin(a) * (need + extra))
+                if !scene.solidGrid.isBlocked(p, radius: hero.radius) {
+                    hero.clearKnockback()
+                    hero.position = p
+                    return
+                }
+            }
+        }
+    }
+
+    /// Items under the boss would be out of reach once the hero is kept clear of it: they slide
+    /// to just outside the hero's push-out ring (never into a wall).
+    private func keepPickupsClear() {
+        let b = node.position
+        let ring = node.radius + scene.hero.radius + 12
+        for p in scene.pickups where p.hasLanded && !p.isCollected {
+            let g = p.groundPosition
+            let dx = g.x - b.x, dy = g.y - b.y
+            guard hypot(dx, dy) < ring - 8 else { continue }
+            let base = hypot(dx, dy) > 0.5 ? atan2(dy, dx) : -CGFloat.pi / 2
+            search: for k in 0..<16 {
+                let a = base + CGFloat((k + 1) / 2) * (k % 2 == 0 ? 1 : -1) * .pi / 8
+                for extra in [0, 32, 64] as [CGFloat] {
+                    let q = CGPoint(x: b.x + cos(a) * (ring + extra), y: b.y + sin(a) * (ring + extra))
+                    if !scene.solidGrid.isBlocked(q, radius: 12) { p.slide(to: q); break search }
+                }
+            }
+        }
     }
 
     private func updateMood() {
@@ -225,11 +281,12 @@ final class BossDirector {
         coresInFlight = max(0, coresInFlight - 1)
     }
 
-    /// The hero was rescued in the arena: the boss goes back to its phase top (GDD §9).
+    /// The hero was rescued in the arena (QA-016): the attack timing starts over; damage, cores
+    /// and a running dizzy stay.
     func heroRescued() {
         cancelAttack()
         brain.rescueReset()
-        EnemyFX.setDizzy(node, false)
+        returning = true
     }
 
     /// `debug.bossNextPhase`.
@@ -461,6 +518,7 @@ final class BossDirector {
         node.setMood(.panic)
         node.phaseFlash()
         node.desiredVelocity = .zero
+        keepHeroClear()
         scene.enemyShots.recycleAll(popInto: scene.worldNode)
         for e in scene.enemies where !e.isBoss && !e.isPoweredDown {
             scene.worldNode.addChild(Particles.poof(at: e.position, darkFloor: true))
@@ -476,6 +534,7 @@ final class BossDirector {
     private func updateDefeat(dt: Double) {
         guard var t = defeatT else { return }
         t += dt
+        keepHeroClear()
         defeatT = t
         let colors = [Palette.star, Palette.pixelCyan, SKColor.white, Palette.hex(0xD61F8F)]
         let torso = CGPoint(x: node.position.x, y: node.position.y + MegaMechNode.poseHeight * 0.35)
