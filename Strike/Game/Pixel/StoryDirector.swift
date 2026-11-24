@@ -27,7 +27,9 @@ nonisolated enum StoryEvent: Sendable, Hashable {
     case checkpoint
     /// After the rescue beam.
     case rescue
-    /// M4: ignored until the boss lands.
+    /// The SWAP button became visible (2 or more blasters owned; QA-012). The scene sends it in M4-5.
+    case swapVisible
+    /// Boss phase `n` (1-based) began; `bossDefeated` after its power-down.
     case bossPhase(Int)
     case bossDefeated
 }
@@ -72,6 +74,14 @@ nonisolated struct StoryDirector: Sendable, Equatable {
         static let doorOpen = "pixel.generic.door_open"
         static let checkpoint = "pixel.generic.checkpoint"
         static let rescue = "pixel.generic.rescue"
+        /// `firstSwapVisible` when the level has no beat for it (QA-012).
+        static let swap = "pixel.generic.swap"
+        /// First spore slow of the level (ART_BIBLE §15.4).
+        static let slow = "pixel.generic.slow"
+        /// First shot on the boss's bubble shield (§15.9).
+        static let bossShield = "pixel.boss.shield"
+        /// A core machine used without a core (§15.10).
+        static let coreNeeded = "pixel.boss.core_needed"
         static let idle = "pixel.generic.idle"
         static let hintHere = "pixel.generic.hint_here"
         static let hintItem = "pixel.generic.hint_item"
@@ -100,15 +110,14 @@ nonisolated struct StoryDirector: Sendable, Equatable {
         case .zoneEntered(let n): "zone:\(n)"
         case .allElementsOn: "allElementsOn"
         case .doorOpen: "doorOpen"
-        case .elementOn, .gateOpen, .bagFull, .magazineEmpty, .checkpoint, .rescue, .bossPhase, .bossDefeated: nil
+        case .swapVisible: "firstSwapVisible"
+        case .bossPhase(let n): "bossPhase:\(n)"
+        case .bossDefeated: "bossDefeated"
+        case .elementOn, .gateOpen, .bagFull, .magazineEmpty, .checkpoint, .rescue: nil
         }
     }
 
     mutating func handle(_ event: StoryEvent) -> StoryResponse {
-        switch event {
-        case .bossPhase, .bossDefeated: return .silent
-        default: break
-        }
         var r = StoryResponse()
         var isFirst = false
         if let t = Self.trigger(for: event) {
@@ -125,6 +134,8 @@ nonisolated struct StoryDirector: Sendable, Equatable {
             }
             return r
         }
+        // The swap line plays only the first time SWAP appears (beat or generic, never both).
+        if case .swapVisible = event, !isFirst { return r }
         guard r.cues.isEmpty, let g = generic(event) else { return r }
         r.cues.append(g)
         return r
@@ -146,6 +157,7 @@ nonisolated struct StoryDirector: Sendable, Equatable {
         case .magazineEmpty: return once("firstReload", Key.reload)
         case .checkpoint: return StoryCue(key: Key.checkpoint, kind: .chatter)
         case .rescue: return StoryCue(key: Key.rescue, kind: .story)
+        case .swapVisible: return StoryCue(key: Key.swap, kind: .chatter)
         case .enemySeen, .elementSeen, .gateSeen, .zoneEntered, .bossPhase, .bossDefeated: return nil
         }
     }

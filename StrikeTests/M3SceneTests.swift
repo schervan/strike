@@ -244,6 +244,16 @@ struct M3SceneTests {
 
     /// Poof v2 (QA-009): renders on every floor and changes clearly more pixels than v1 did.
     @Test func poofV2IsVisibleOnAllFloors() throws {
+        // Warm-up: the first particle render of the process compiles shaders and loads textures,
+        // which can eat the sampling window of the first floor (L1 flaked at 4 % in M4).
+        do {
+            let warm = GameScene(data: Self.data, levelId: "l1", seed: 11)
+            let v = SKView(frame: CGRect(origin: .zero, size: GameScene.logicalSize))
+            v.presentScene(warm)
+            warm.worldNode.addChild(Particles.poof(at: warm.hero.position, darkFloor: false))
+            VisualCheckTests.spin(0.1)
+            _ = v.texture(from: warm.worldNode)
+        }
         for id in ["l1", "l2", "l3", "l4", "l5"] {
             let s = GameScene(data: Self.data, levelId: id, seed: 11)
             let view = SKView(frame: CGRect(origin: .zero, size: GameScene.logicalSize))
@@ -255,10 +265,12 @@ struct M3SceneTests {
             VisualCheckTests.spin(0.05)
             let before = try #require(view.texture(from: s.worldNode, crop: crop)?.cgImage())
             s.worldNode.addChild(Particles.poof(at: o, darkFloor: s.darkFloor))
-            // Particles are random and real-time: keep the strongest of three frames.
+            // Particles are random and real-time: keep the strongest frame; sample up to 8 frames and stop early once
+            // the effect is clearly visible (measured 8-10 % over 8 repeated runs, threshold 5 %).
             var changed = 0.0
             var after = before
-            for _ in 0..<3 {
+            for _ in 0..<8 {
+                if changed > 0.08 { break }
                 VisualCheckTests.spin(0.08)
                 let frame = try #require(view.texture(from: s.worldNode, crop: crop)?.cgImage())
                 let c = Self.changedFraction(before, frame)

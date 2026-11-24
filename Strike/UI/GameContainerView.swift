@@ -56,6 +56,12 @@ struct GameContainerView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
             #endif
 
+            if model.isWheelOpen {
+                WeaponWheelView()
+                    .transition(.opacity.combined(with: .scale(scale: 0.6)))
+                    .zIndex(4)
+            }
+
             if model.isIntroShowing, let level = model.data.levels[run.levelId] {
                 LevelIntroView(level: level)
                     .transition(.opacity)
@@ -75,10 +81,11 @@ struct GameContainerView: View {
             }
         }
         .animation(.easeOut(duration: 0.18), value: model.isInventoryOpen)
+        .animation(.spring(response: 0.15, dampingFraction: 0.7), value: model.isWheelOpen)
         .animation(.easeOut(duration: 0.2), value: model.isIntroShowing)
         .onAppear {
             guard scene == nil else { return }
-            let s = GameScene(data: model.data, levelId: run.levelId, seed: run.seed, run: model.progress)
+            let s = GameScene(data: model.data, levelId: run.levelId, seed: run.seed, run: model.progress, stage: run.stage)
             s.model = model
             scene = s
         }

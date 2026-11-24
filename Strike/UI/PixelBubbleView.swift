@@ -21,7 +21,8 @@ struct PixelBubbleView: View {
                 bubble(line)
                     .id(line.id)
                     .transition(.asymmetric(insertion: .scale(scale: 0.85).combined(with: .opacity).combined(with: .offset(y: -12)),
-                                            removal: .scale(scale: 0.92).combined(with: .opacity)))
+                                            // QA-020: the old line goes at once, so two lines never overlap.
+                                            removal: .identity))
             }
         }
         .animation(.easeOut(duration: 0.18), value: model.bubble?.id)

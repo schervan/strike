@@ -32,7 +32,7 @@ Owner: visual-artist. Source of truth for sprite names/sizes/frames: `tools/asse
 | Robot metal | #A9BCE0, #C9D2EA, #8FA3C8, dark #444B6B |
 | Slime green | #6FE06A / #8CF07F |
 | Spore pink | #E36BD8 / #FFB3F2 |
-| Weapon colors | starter #FF8A3D, spread #B05CFF, rapid #FFD93D (projectile, ammo crate and HUD icon share it); enemy shot #FF3B5C |
+| Weapon colors | starter #FF8A3D, spread #B05CFF, rapid #FFD93D (projectile, ammo crate and HUD icon share it); enemy shots see 15.16 (pink orb, lilac puffball, cartoon rocket) |
 | State colors | off/locked #FF3B5C, on/open #5FE08A |
 
 ### Per level theme (floor A / floor B / wall / wall top / accent)
@@ -621,3 +621,175 @@ Until art exists, use the SF Symbol `gearshape.fill` (white, 28 pt, on a 64 pt r
 - Every number here that is a gameplay timing (slow-mo, beam, lowHp threshold, hint durations, speech durations) is a default: `rules.json` wins if the designer set it differently.
 - All generated textures (star, chip, bolt, nut, gear, dashed outline, radial glow 13.9) are created once at launch and cached.
 - Reduce Motion (14.8) also disables the scan beam sweep, the lean and the side drift.
+
+## 15. Enemies, blasters, boss (M4)
+For swift-coder (M4-5/M4-6). Reference 1194 x 834 pt, colors from section 2, outline #2B2140, fonts and HUD rules from sections 7 and 14. Times are seconds. Every telegraph lasts at least the JSON `telegraphSec` (the effect may start earlier, never end earlier). Telegraph colors use the OVERMIND warning red #FF3B5C only as a soft glow or line, never as a splat, fire or burst. Shared rules: telegraphs are drawn under the sprite on z = enemy - 1 with a 1.5 pt #2B2140 outline so they read on all 5 floors; on L4/L5 (dark floors) add a white 1 pt inner line, on L1-L3 (light floors) keep the plum outline. Reduce Motion: pulses become a steady glow at the end alpha, shakes are removed. No sound or text is baked in.
+
+### 15.1 Telegraphs (wind-up before damage)
+| Enemy / attack | JSON | Visual (all values from start of wind-up) |
+|---|---|---|
+| Laserdrone shot | `telegraphSec` 0.5 | additive glow disc #FF3B5C, 28 pt, alpha 0.2 to 0.9 over 0.5, scale 0.6 to 1.1 at the barrel (sprite front, 14 pt from centre toward the hero); drone stops strafing and hovers still; thin aim dots (4 pt, 3 dots, 10 pt apart, #FF3B5C 60 %) toward the hero, fade at fire. Fires on t = 0.5, glow pops to 40 pt and fades in 0.1 |
+| Shield android dash | 0.7 | crouch: yScale 1.0 to 0.82, xScale 1.0 to 1.08 in 0.25, hold; shield arc glows #FFD93D alpha 0.5 to 1.0 pulsing 6 Hz; a dash lane preview: rounded strip 28 pt wide x 260 pt long from the android toward the hero, fill #FFD93D at 18 %, 2 pt dashed edge, drawn at t = 0.2 and locked at t = 0.45 (direction frozen) so the player can dodge. Two small dust puffs (#FFFFFF 50 %, 8 pt) at the feet |
+| Spore plant volley | 0.6 | petals open: the 4 petal parts (a code-drawn #E36BD8 / #FFB3F2 ellipse 16 x 26 pt, outline 1.5 pt) rotate outward 0 to 35 degrees in 0.4, a pink glow disc #FFB3F2 24 pt at the centre pulses 0.3 to 0.9; three tiny fan ticks (white 4 pt dots 40 pt out at -15, 0, +15 degrees) show the 30 degree fan; shot at t = 0.6, petals close in 0.2 |
+| Boss stomp ring | 0.8 | ground ring, 2 pt #FF3B5C stroke plus 5 pt #FF3B5C at 20 % fill disc, radius `telegraphRadius` 140 pt; an inner filled disc grows from 0 to 140 over 0.8 (easeIn) so the player sees when it lands; boss lifts 6 pt and squashes at the end; wave (15.6) then expands 140 to 220 pt |
+| Boss volley | 0.7 | 6 short warning lines from the boss toward the 6 rocket angles (length 90 pt, 3 pt, #FF3B5C 70 %, dashed 8/6), fade in over 0.3; star-shaped glow 36 pt #FFD93D on the mech's launchers |
+| Boss laser warning line | 1.0 | the beam's whole sweep sector as a pie of 5 % white fill; each gap is shown as a clearly green wedge (#5FE08A at 25 %), the beam positions as 4 pt #FF3B5C dashed lines that brighten 0.2 to 0.9 alpha over 1.0 s; beam then rotates at 45 degrees/s. Beam body: width 18 pt, core #FFFFFF, mid #FF8AA0, outer #FF3B5C at 40 % additive, rounded caps, soft not razor |
+| Boss dash arrow | 1.0 | a big arrow on the floor from the boss to the end of the dash line: shaft 36 pt wide, head 72 pt, fill #FFD93D at 30 %, 3 pt #FF3B5C outline, 3 chevrons marching along it at 2 Hz; pillars on the line get a ring 3 pt #FFD93D (the player can see where it will crash). Boss rears: yScale 1.0 to 1.1, eyes flash |
+| Alert exclamation (all, see 13) | `alertSec` 0.4 | unchanged |
+
+### 15.2 Shield (shield android)
+| Part | Value |
+|---|---|
+| Arc | `arcDeg` 120: a curved plate, centred on the facing, radius = enemy radius + 8 (28 pt), thickness 8 pt, fill #3DE3D0 at 55 % with a 1.5 pt #BFFFF7 inner edge and a 2 pt #2B2140 outer outline, additive shimmer stripe sweeping along the arc every 1.6 s. Drawn above the sprite. Rotates toward the hero at `turnRateDeg` 120 |
+| Raised idle | alpha 0.75 |
+| Block bounce | shot disc reflects on the shield normal at 60 % speed for 36 pt and turns into 6 sparkles (#BFFFF7 / #FFFFFF / #FFD93D, 8 to 12 pt, life 0.35, additive) with a 4-point star flash 24 pt at the contact point (0.12 s); arc flashes white alpha 1.0 for 0.08; a tiny "clink" ring (2 pt white stroke, radius 6 to 22 pt, 0.2 s). No damage number, enemy does not flinch, hero shots do not pass |
+| Dash | shield stays glowing #FFD93D (see 15.1) |
+| Dizzy (after the dash miss, `dizzySec` 1.5) | shield arc falls: alpha 0.75 to 0 and scales 0.8 over 0.2, cracks nothing; android sprite tints toward #FFD93D 25 %; dizzy stars (15.3); a small "x1.5" is NOT shown; hits get an extra bright white flash and a 20 pt star pop so the bonus is felt |
+| Recover | shield pops back 0 to 0.75, scale 1.15 to 1.0 in 0.2 |
+
+### 15.3 Dizzy stars (shield android, boss)
+3 stars (code-drawn five-point, #FFD93D, 1.5 pt plum outline), 12 pt for enemies and 22 pt for the boss, orbit on an ellipse (rx = radius x 0.9, ry = rx x 0.4) centred 6 pt above the head (boss 20 pt above the face), speed 1.4 rev/s, z above the sprite, each star also scales 0.85 to 1.1 with its depth (front stars are bigger, back stars are drawn under the head). They fade in/out in 0.12 s. Same look as the hero's rescue stars (14.7).
+
+### 15.4 Spore slow on the hero
+| Part | Value |
+|---|---|
+| Hit | spore shot (4 dmg) pops into 8 pink puffs (#E36BD8 / #FFB3F2, 6 to 12 pt, drift 40 pt/s up, life 0.5, alpha) |
+| Tint | hero sprite `colorBlend` #E36BD8 at 0.30 for `slowSec` 2.0 (the last 0.4 s fades out); refreshing on re-hit restarts the timer without stacking |
+| Aura | a soft pink ring on the ground under the hero: ellipse 56 x 20 pt, #E36BD8 at 35 %, 1.5 pt #FFB3F2 stroke, slowly pulsing 0.25 to 0.45 |
+| Particles | every 0.2 s a spore puff (4 pt) sinks from above the head, 5 at a time max; plus a tiny "snail" read through the walk: the hero's PoseAnimator step cadence x0.7 (matches the 0.7 multiplier) |
+| Icon | a 24 pt round badge #E36BD8 with a plum outline and a white down-arrow to the right of the HP bar for 2 s with a small ring timer sweeping off (clockwise, #FFFFFF 60 %) |
+| Pixel | optional line `pixel.generic.slow`, cooldown 30 s |
+| Rescue | cleared; no leftover tint |
+
+### 15.5 Slime split (slimemutant, `splitInto`)
+| Part | Value |
+|---|---|
+| On hit | squash: yScale 0.82, xScale 1.15 in 0.06, spring back with overshoot to 1.05 in 0.14; 3 green droplets (#8CF07F, 5 pt, 1 pt plum outline, 0.4 s) |
+| On power-down | 0.0: white flash 0.08, body shrinks and wobbles (xScale +-0.12 at 18 Hz) for 0.25; 0.25: plop ring (2 pt #8CF07F stroke, 20 to 60 pt, 0.25 s); poof reduced to 60 % particles (green, gold, white) |
+| Pop-out (t = 0.3, `spawnDelaySec`) | 2 smalls spawn at the body centre (scale 0.2) and arc out to `spawnOffset` 40 pt in opposite directions (`+-40` along a random axis) in 0.25 s with a 10 pt hop (easeOut), landing with a squash (yScale 0.8 to 1.0 in 0.1), scale 0.2 to 1.0 with a little overshoot to 1.15. A small "bloop" sparkle (#FFFFFF, 6 pt) at the origin. While popping, 0.4 s total: alpha blink 1.0 / 0.6 every 0.08 (harmless, not damageable, same as the hero invulnerability look) |
+| Small slime | same sprite at 0.55 scale (radius 11), a lighter green #8CF07F tint 15 %; never splits; plain poof |
+| Walls | spawn positions are chosen not inside walls (coder), the hop arc never crosses a wall corner |
+
+### 15.6 Blasters (feel per weapon)
+Weapon colors (section 2): starter #FF8A3D, spread #B05CFF, rapid #FFD93D. Muzzle flash is a 20 pt additive 4-point star in the weapon color at the muzzle, 0.06 s, scale 0.6 to 1.2. Projectile pool textures are code-drawn or from `projectiles` sheet; all projectiles have a 1.5 pt #2B2140 outline except trails.
+| Blaster | Projectile | Trail | Hit | Hero feel |
+|---|---|---|---|---|
+| Starter (`light_bolt`, r 6, 720 pt/s) | rounded capsule 20 x 10 pt, #FFB36B core with #FF8A3D rim, white 4 pt highlight | 3 fading afterimages at 14 pt spacing, alpha 0.5 / 0.3 / 0.15, additive | white flash + 4 orange sparkles (8 pt, 0.25) | recoil 2 pt backward 0.05 s, no shake |
+| Spread / Bubble (`bubble`, r 8, 560 pt/s, 5 pellets over 40 degrees) | round soap bubble 24 pt: fill #D9B8FF at 35 %, 2 pt #B05CFF rim, white crescent highlight top-left, a small rainbow tint stripe (#3DE3D0) on the lower right | wobble: scale oscillates 0.92 to 1.08 at 7 Hz (opposite phases per bubble) and the path sways +-3 pt sinusoid at 4 Hz perpendicular to travel; no trail | bubble pops: ring 1.5 pt white expanding 24 to 44 pt (0.18 s) + 6 purple droplets (#B05CFF / #E8D4FF, 6 pt); on a miss it pops at max range with a smaller ring (0.12 s) | muzzle: 5 small bubbles puff out 12 to 24 pt (0.25 s); recoil 4 pt, camera nudge 1 pt over 0.08 s; reload: three bubbles blown from the muzzle |
+| Rapid / Foam (`foam`, r 5, 820 pt/s) | foam blob 16 pt, lumpy outline of 3 overlapping circles, fill #FFF3A0, rim #FFD93D, 1.5 pt plum outline, 2 white speckles | continuous foam crumbs: a puff 6 pt every 22 pt of travel, #FFFFFF 70 %, life 0.25, shrinking; 3 pt random lateral offset so the stream looks bubbly | splat star: 6 yellow/white foam flecks (6 pt, 0.3 s) and a squash flash on the target | muzzle: small yellow puff 14 pt, 0.08; no recoil beyond 1 pt jitter, 10 shots per second so no camera effects |
+Spent shell/mag feedback: none (kid-safe, no casings). Empty magazine click: the HUD ammo number does a 1.0 to 1.15 to 1.0 pulse in #FFD93D; reload bar under the hero as 14 (unchanged).
+
+### 15.7 SWAP button and weapon wheel
+**SWAP button** (`ui_btn_swap`, 72 pt, right +24 / bottom +340 per section 7, visible once 2 or more blasters are owned):
+| State | Look |
+|---|---|
+| Hidden | with only the starter: not drawn and no touch area |
+| First appear | pops 0.0 to 1.2 to 1.0 in 0.25 and a ring pulse (2 pt #FFD93D, 72 to 104 pt, 0.4 s) once; Pixel hint only once (`pixel.l2.swap`) |
+| Idle | alpha 0.7; the next blaster's icon (22 pt, `ui_icon_blaster_*`) sits as a small badge at the top-right corner (radius 14 plate #2E2A55, 2 pt plum outline), so a kid sees what a tap gives |
+| Pressed | scale 0.92 and alpha 1.0 as section 7; short 0.25 s swap sequence: the current blaster icon in the ammo readout slides out left 16 pt, the new one slides in from the right (0.12 s each); hero blaster pose crossfade 0.1 s; a small star burst in the new weapon colour (4 sparkles) at the hero's hands |
+| Swapping (0.25 s) | the button shows a ring sweep (#FFFFFF 60 %, clockwise, 0.25 s) and taps are ignored without shaking |
+| Reloading | the button stays active (swap cancels reload); a slim 2 pt #FFD93D arc remains |
+| Long-press | hold 0.4 s: scale 1.0 to 1.15 as it fills a radial progress ring (3 pt #FFD93D) over 0.4, then the wheel opens with a 0.05 s haptic style tick (audio's job). Release before 0.4 s = a normal tap swap |
+| Disabled (swapping no-op: only 1 owned) | hidden, see above |
+**Weapon wheel** (`WeaponWheelView`, pauses nothing but slows time to 0.3x while open, 14.7 rule: UI is real time):
+| Part | Value |
+|---|---|
+| Layout | 3 slots in a quarter-arc up and to the left of the SWAP button (it sits on the right edge, so the fan must never go right of it). Centre = button centre (about x 1114, 376 pt above the bottom on 1194 wide); radius **140 pt**; angles measured counter-clockwise from +x: starter **180** (straight left), spread **135** (up-left), rapid **90** (straight up). Plates are **80 pt** and the chord between neighbours is 2 x 140 x sin(22.5) = 107 pt, so the gap between plates is 27 pt (at least 24) and hit areas (80 + 12 slop) do not overlap. The right-most plate edge is x 1154 (inside the 1158 safe limit); the top slot reaches 556 pt above the bottom, clear of pause/inventory. On other widths keep the same offsets from the button and clamp inside the safe area plus 16 pt. Ammo pills sit under each plate and clear the SWAP button |
+| Slot plate | circle #2E2A55 at 95 %, 3 pt #4A4585, inner icon `ui_icon_blaster_*` 48 pt, a coloured 4 pt arc of the weapon colour on the rim |
+| Ammo under the icon | magazine/reserve "12 / 96", SF Rounded Bold 14 pt, white with plum 2 pt stroke, in a 56 x 20 pill #1E1B3D at 85 % under the plate (y +52 from centre); reserve 0 shows the numbers in #FFD93D |
+| Equipped | plate scaled 1.1, rim glow 3 pt #FFD93D, tiny "tick" badge (#5FE08A circle 22 pt, plum outline, white check) at the top-right |
+| Locked / unowned | plate at 55 % alpha, icon as a silhouette (#8FA3C8, colorBlendFactor 1.0, alpha 50 %), a 22 pt padlock badge instead of the ammo pill, no response on tap except the "no" shake of 14.1 |
+| Selection | finger drag over a slot: scale 1.2, highlight ring 3 pt #FFFFFF; release on a slot = swap to it; release on the centre or the dim = close with no change; tap on a slot while the wheel is pinned also picks it |
+| Open / close | scale 0.6 to 1.0 with overshoot 1.08 in 0.15, the slots fan out from the button staggered 0.03 s; close 0.1 |
+| Dim | #1E1B3D at 35 % behind (just enough to focus, world remains visible) |
+| Rule | a pick plays the swap sequence of the SWAP button; swap takes `swapSec` 0.25 |
+
+### 15.8 Boss bar (HUD)
+| Part | Value |
+|---|---|
+| Position | top centre, top +64 (just under the Pixel bubble zone, below it in z; the bubble is at y 16 to about 106 when shown, so while a bubble is visible the bar slides down 36 pt to avoid it), width 420 pt, height 28 pt (display only) |
+| Frame | pill 28 pt tall: fill #1E1B3D at 90 %, 3 pt #2B2140 outline, a 2 pt #4A4585 inner line; icon plate on the left: circle 44 pt #D61F8F with a plum outline and the megamech head (the key pose cropped, or a white stylised round robot head) |
+| Fill | width 400 x HP fraction, colour gradient left #FF8AB8 to right #FF3B5C (a pink/red, not blood, with a top-left white 25 % gloss stripe 6 pt); no numbers, no percent text |
+| Phase notches | 2 notches at 1/3 and 2/3 (HP 800 and 400): a 4 pt wide white rounded tick with a plum outline, rising 6 pt above and below the bar; passed notches turn #FFD93D |
+| Immune (phase 2 shield) | fill is replaced by a bright #3DE3D0 hatch pattern (diagonal stripes 8 pt, scrolling 20 pt/s) at 80 %, the frame glows cyan 3 pt, and a small bubble-shield icon (24 pt) sits at the left; it returns to the pink fill when the shield breaks |
+| Damage feedback | on hit: a lighter "lag" band (#FFFFFF at 70 %) shows the lost HP and shrinks over 0.5 s after 0.2 s; the frame shakes 1 pt on hits >= 20 dmg |
+| Phase change | bar flashes white 0.15 s, notch bursts a star, the bar pops 1.0 to 1.06 to 1.0 in 0.3 |
+| Rescue reset | the fill refills to the phase top in 0.4 s (the heal feel), never an instant jump |
+| Appear / defeat | slides down from -40 pt in 0.3 s with a small overshoot when the boss wakes; on defeat the bar drains to 0, flashes #FFD93D, then fades in 0.4 s |
+| Accessibility | id `hud.bossBar`, VoiceOver label from Localizable ("Boss health", phase name), no numeric value |
+| Sits clear of | HP bar (left +16), minimap (right), inventory/pause (right), key chips (left) |
+
+### 15.9 Bubble shield (boss phase 2, `immune`)
+| Part | Value |
+|---|---|
+| Body | circle 2 x radius + 36 = about 180 pt around the mech (centre at the torso), fill radial from #BFFFF7 at 10 % (centre) to #3DE3D0 at 45 % (rim), 3 pt #BFFFF7 rim, 1.5 pt #2B2140 outer outline, additive shimmer: 3 white arc streaks of 40 degrees circling at 0.3 rev/s, and a hex pattern at 8 % alpha |
+| Idle | breathes: scale 1.0 to 1.04 over 1.6 s, alpha 0.9 to 1.0 |
+| Shot hits it | shots stop at the rim and pop with a cyan ring ripple (2 pt, expands 12 to 36 pt in 0.2 s) and 4 sparkles; no damage; a ripple travels across the bubble's surface (a bright arc spot at the contact angle, 0.25 s); Pixel hint `pixel.boss.shield` once |
+| Core socket links | thin beams (3 pt, #3DE3D0 at 60 %, dashed, flowing 80 pt/s) link each core machine to the bubble; a socket filled by an energycore turns its beam on and the bubble's rim gets a notch glow (#FFD93D) per filled socket (0 to 2) |
+| Break (all cores in) | bubble flickers 3 times (alpha 1.0 / 0.3 at 0.08 s), then bursts in 0.2 s: 12 cyan/white shards (rounded, 14 pt) fly out 160 pt and fade in 0.5, ring shock 4 pt #FFFFFF from 90 to 200 pt in 0.35; mech dizzy 4 s with stars (15.3) and a yellow "weak" glow ring #FFD93D 3 pt at the torso, pulsing 2 Hz; damage x2 flashes the star pop on every hit |
+| Back up (after dizzy if phase 2 still continues vulnerable) | does not come back: phase 2 continues vulnerable until 400 (designer rule); the bar shows pink fill |
+
+### 15.10 Core machine sockets (boss arena, 2 machines)
+Uses the `puzzle_machine` sprite. The socket is a code-drawn overlay 40 x 40 pt at the machine's front, z above the sprite.
+| State | Look |
+|---|---|
+| Empty / off | rounded-square hole #1E1B3D, 3 pt #4A4585 rim, a faint outline of the energycore (circle 22 pt dashed #8FA3C8, 2 pt) and a slowly blinking "off" dot #FF3B5C (alpha 0.4 to 1.0 at 1 Hz) top-right, as section 13 off-state |
+| Hero is near with a core in the bag | the dashed core pulses #FFD93D (0.4 to 1.0 at 1.2 Hz), the INTERACT button shows (existing rule), a 3 pt #FFD93D ring around the socket, plus the world arrow of 14.6 via Pixel |
+| Filling (0.4 s) | the energycore sprite (item icon) flies from the hero to the socket in an arc, scale 1.0 to 0.7, clicks in with 4 sparkles; the dot turns #5FE08A |
+| Filled / on | socket glows #3DE3D0, the core sits inside with a spin of its inner light (rotation 1 rev/2 s), the machine's state light #5FE08A, a beam to the boss bubble (15.9); the machine hums with a 6 pt tall light bar in front |
+| Counter | on the minimap and above the machine: 1/2 and 2/2 shown as 2 small circle pips (14 pt each, filled #5FE08A or hollow #8FA3C8) next to the boss bar; no text |
+| Refuse (no core) | machine shakes 3 pt, a quick hollow "no" ring; Pixel line `pixel.boss.core_needed` (cooldown 20 s) |
+| Core carriers | boltbots carrying an energycore wear a 20 pt core icon on their back (spinning 0.5 rev/s) with a #3DE3D0 additive glow 36 pt, so the player knows which one to hit; dropped core hops 10 pt and bobs with a halo |
+
+### 15.11 Phase-change flash
+0.0 boss pauses (no attack), white flash overlay on the sprite alpha 0 to 1 to 0 over 0.3; 0.0 to 0.5 a screen-wide soft ring (#FFFFFF 4 pt, radius 60 to 700 pt, alpha 0.7 to 0, additive) and 8 stars/bolts burst up and fall (power-down colours, #FFD93D, #3DE3D0, #D61F8F); face (15.13) switches mood on t = 0.2; camera 3 pt nudge 0.15 s (not in Reduce Motion); the stomp wave of the arena is cleared for 0.8 s; boss is invulnerable and enemy shots are removed for 0.8 s; boss bar notch burst (15.8). No red tint of the screen, no shake > 3 pt.
+
+### 15.12 Boss defeat: sparkle burst (no explosion look)
+Never: orange or red fireballs, smoke, shockwave debris, flashing full-screen white more than once. The mech powers down and goes out in stars.
+| t (s) | What happens |
+|---|---|
+| 0.00 | hit flash white, boss stops, face to `smiley`-style "dizzy" X eyes (@ code face "panic" then "smiley"), all enemy shots and spores popped into sparkles, boltbots poof |
+| 0.00 to 1.4 | 3 mini bursts at random torso points 0.45 s apart (poof v2 scaled 1.0, the section 14.9 stars/chips, colour mix #FFD93D, #3DE3D0, #FFFFFF, #D61F8F), the mech shakes +-3 pt at 14 Hz and its alpha stays 1.0; spark chips fall (bolts, gears, nuts only; no fire) |
+| 1.4 to 1.8 | the boss shrinks to scale 0.85 and the colour desaturates 30 %; stars spiral up from the body (16 stars 14 to 22 pt, 1.2 s, rising 160 pt then fading); Pixel flies to the boss |
+| 1.8 | single big burst: 40 stars/chips/sparkles radiating up to 260 pt (poof v2 x2 counts, x1.8 radius, 3 s limit on live particles 120 cap), ring 4 pt #FFFFFF from 80 to 300 pt in 0.5 s, 4-point twinkle 160 pt white at the centre (scale 0.4 to 1.3 to 0 in 0.4 s). Full-screen white overlay peaks at 35 % for 0.1 s, once (no strobe) |
+| 1.8 to 2.4 | the mech sprite scales 0.85 to 0 and fades; leaves a soft glow disc #BFFFF7 40 pt that fades in 0.6 s, no floor stain; loot (`loot_megamech`) bounces out with a cyan ring each (poof loot reveal 14.9) |
+| 2.4 to 3.4 | confetti: 40 ribbons/stars (#FFD93D, #3DE3D0, #D61F8F, #5FE08A, #B05CFF) fall from the top of the screen for 1.2 s; Pixel cheers (wiggle), the hero gets a victory hop; camera zooms 1.0 to 1.08 over 1.0 |
+| 3.4 | the Season complete card (15.14) slides in |
+Reduce Motion: no shake, no camera zoom, one burst only, confetti reduced to 12.
+
+### 15.13 Boss face overlay (code-drawn, no new art)
+Decision: code-drawn, so no Gemini prompt is added. The key pose `boss_megamech_idle_01` keeps its own printed screen; the overlay is a rounded screen patch on top that covers the printed face. Coder reads the face rectangle from `PoseAnimator` data once at build; if it needs an exact rect for the 192 pt key pose, use the screen area measured from the sprite (about 40 % width, 22 % height of the sprite, centred on the head). The 4 moods are Core Graphics shapes (SKShapeNode / pre-rendered `SKTexture` cache, the same approach as the section 14.9 stars):
+| Mood | When | Screen | Eyes | Mouth / extra |
+|---|---|---|---|---|
+| smug (default) | phase 1 idle, between attacks | #12304A with a 3 pt #D61F8F rim and 1.5 pt plum outline | two half-lidded ovals #FF3B5C 22 x 12 pt, a white 4 pt highlight each, lids flat on top, slightly narrowed | a lopsided grin: arc 36 pt, 3 pt #FF3B5C, one corner up 6 pt |
+| angry | stomp / volley / dash wind-up, phase 3 overload | same screen with the rim pulsing #FF3B5C at 1 Hz | eyes 24 x 14 pt slanted 18 degrees inward (V shape), pupils #FFFFFF 5 pt | small flat mouth 28 pt with 2 zig-zag teeth (still goofy, not scary); eyebrow bars 22 x 4 pt, #FF3B5C. Never more than that |
+| panic | phase change, hit while dizzy, shield break | screen rim #FFD93D | eyes round 22 pt white, pupils 6 pt dark, jittering +-1.5 pt at 12 Hz, a sweat drop (#8FD3FF 8 pt) | wobbly mouth, a wavy 3 pt line #FFFFFF; stars when dizzy |
+| smiley | defeat / intro / "friendly" end | rim #5FE08A | happy arcs `^ ^` 3 pt #5FE08A | open smile arc 30 pt #5FE08A with a tiny tongue #FF8AB8 ; this one shows during defeat and the Season card |
+Rules: the overlay blinks every 3.5 s (eyes squash to 2 pt for 0.12 s); the mood cross-fades in 0.12 s; eyes look toward the hero (pupils shift up to 4 pt); the overlay is scaled and bobbed with the boss pose (child node of the sprite, so it follows `PoseAnimator`); face is not damaged by hit flash: use the same white flash colour blend on the sprite and set the overlay to blend 1.0 white for 0.08 s too. Eye colour #FF3B5C reads as the OVERMIND red-eye motif but is flat and cartoonish; no glow rays.
+
+### 15.14 Season complete card
+| Part | Value |
+|---|---|
+| Style | full-screen dim #1E1B3D at 70 % fading in 0.3 s, one centred card 760 x 520 pt (on 1024 wide it scales to 0.85), fill #2E2A55 at 97 %, corner 28, 4 pt #FFD93D stroke, 3 pt offset plum shadow; a little confetti keeps falling behind (continuing from 15.12, 8 pieces at a time) |
+| Header | a gold ribbon banner 560 x 80 pt, fill #FFD93D, 3 pt plum outline, centred at the top overlapping the card by 40 pt; localized "Season complete!" SF Rounded Heavy 36 pt #2B2140; two 36 pt `ui_icon_star` at the sides rotating gently +-8 degrees |
+| Hero and Pixel | hero key pose 120 pt left of centre (victory hop every 2.4 s, 0.3 s), Pixel 72 pt hovering at the right of the hero with the talk wiggle, a #3DE3D0 additive halo; MEGA-MECH `smiley` face shown as a small 56 pt round icon in the corner (the friendly "thank you") optional |
+| Body | L5 outro line (2 lines, SF Rounded Semibold 20 pt, #FFFFFF, centred, max width 560); below it 3 stat chips in a row 160 x 72 pt (fill #1E1B3D, 2 pt #4A4585, icon 28 pt + number SF Rounded Bold 26 pt): total score (star icon), datachips (chip icon from `items`), time (clock, optional) |
+| Stars | optional later (M5): 3 big stars 56 pt pop one by one 0.25 s apart (scale 0.0 to 1.3 to 1.0, sparkle on each); in M4 show a row of 3 gold stars as decoration |
+| Button | one 220 x 72 pt pill "Title" (`seasonComplete.toTitle`): fill #5FE08A, 3 pt plum outline, label white 24 pt bold, press scale 0.92; appears 0.8 s after the card so a kid does not tap through it; the card cannot be dismissed by tapping outside |
+| Motion | card scales 0.8 to 1.05 to 1.0 in 0.35 (easeOut), content staggered 0.1 s; stats count up over 0.8 s; no flashing; Reduce Motion: no confetti, no scale overshoot |
+| Safe | no red, no "game over" or death words; text only through Localizable; ids `seasonComplete.view`, `seasonComplete.toTitle` |
+
+### 15.15 Prompts and assets in this section
+- New Gemini prompts: **none** (all of the above is code-drawn; the boss face is code-drawn per 15.13, so no face sprites are generated).
+- Open leftover from M3: prompt **#36** (`ui_icon_gear`, slicer name `ui_btn_settings`) is already in `art/prompts/gemini/PROMPTS.md` and the asset manifest and is still ungenerated. Main runs it; then `python3 tools/slice_atlas.py` and swap the SF Symbol out (14.10). I did not call Gemini.
+- Everything here must be created once and cached (star, ring, petal, arc, hex, ribbon textures), as in 14.11.
+
+### 15.16 Enemy projectile looks (QA-018 fix, supersedes "enemy shot #FF3B5C" in section 2)
+Owner decision: no glossy red discs. Red survives only as soft telegraph glows, warning lines and rings (15.1). All three enemy shots are flat, outlined, candy-coloured, and none is a plain round red. Outline for all: 2 pt #2B2140 (1.5 pt for the rocket parts). Verified by compositing at 2 pt/px on `tile_l1..l5_floor_01`: all three read on all five floors by their plum outline plus light fills (checked at 1:1 and 50 %). Tail stars and bubble bumps must not go below the sizes below.
+| Shot | Source | Size (pt) | Look |
+|---|---|---|---|
+| Spore (sporeplant, radius 12) | `proj_enemy_spore` | 28 incl. fuzz (body 22) | pastel puffball: 12 fuzz bumps (7 pt dots on the rim, alternating #D9C2FF lilac and #B8F5DC mint) around a body #D9C2FF; inner disc #B8F5DC (45 % of the radius); a white 6 x 6 pt highlight top-left; plum rim #4A3A70 under the bumps, then the 2 pt outline #2B2140. Matte, no gloss streak. Motion: scale 0.94 to 1.06 at 5 Hz and spin 1.0 rev/s so it feels fluffy; a faint trail of 3 mint puffs (#B8F5DC 50 %, 8 pt, life 0.3). Pop on walls/hero: 8 lilac/mint puffs (see 15.4, pink hero tint stays) |
+| Boss firework rocket (volley, radius 12) | `proj_boss_rocket` | 52 long x 24 high, points along travel | cartoon rocket: body capsule #3DE3D0 (outline 1.5 pt), nose cone #FFD93D, porthole #BFFFF7 6.4 pt with outline, fins #FFD93D, white 5 x 4 pt highlight; tail of 2 stars (outline 1.2 pt): near star #FFF3A0 12 pt, far star #FFD93D 10 pt, behind the fins at 8 and 20 pt; add a 3rd star #FFFFFF 8 pt at 32 pt (alpha 0.6) while flying. Tail stars twinkle (scale 0.8 to 1.1 at 10 Hz). Optional soft additive glow #FFD93D 30 pt at 20 %. Pop: 6 stars (#FFD93D / #3DE3D0 / #FFFFFF, 10 pt, 0.4 s). Aim telegraph keeps its red dashed line (15.1) |
+| Laserdrone ball (radius 10) | `proj_enemy` | 20 body (+ outline = 24) | candy-pink energy orb: ring #FF7AD9 (2 pt plum outline), inner #FFC2EF (60 % radius), white core #FFFFFF (28 %); no highlight streak; additive glow #FF7AD9 at 25 %, 36 pt, pulse 0.2 to 0.35 at 3 Hz. Trail: 3 pink sparkles (6 pt) each 12 pt. L4/L5 underglow (13.8) uses #FFC2EF at 35 %, not red |
+Palette change: **enemy shot colours are #FF7AD9 / #D9C2FF / #B8F5DC / #FFD93D / #3DE3D0**. #FF3B5C remains for states (off/locked lights, doors), telegraph glows, rings, lines and the boss face (section 15.13). The red hit spark on enemy shots (section 12 common rules) becomes a pink or white spark. Hero projectiles stay orange, purple and yellow: the drone orb (pink) is the only pink shot, the spore puffball (lilac/mint) is the only lilac/mint shot, and neither shares a hue with a hero shot.
+Delivery: code-drawn textures cached once (14.11); no new Gemini prompts. Hit radii are unchanged (JSON `projectileRadius`), the visuals may be larger than the radius but never smaller.

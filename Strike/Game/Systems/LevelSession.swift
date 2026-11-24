@@ -70,4 +70,19 @@ nonisolated struct LevelSession: Sendable, Equatable, Codable {
     mutating func complete() {
         isComplete = true
     }
+
+    /// The values carried into the boss arena (GDD §15 one session for both stages).
+    var arenaCarry: ArenaProgress {
+        ArenaProgress(levelId: levelId, elapsed: elapsed, score: score, bolts: bolts,
+                      datachipsFound: datachipsFound.sorted(), rescues: rescues)
+    }
+
+    /// Arena start: continue the level's time, score, datachips and rescues.
+    mutating func resume(_ c: ArenaProgress) {
+        elapsed = c.elapsed
+        score = c.score
+        bolts = c.bolts
+        datachipsFound = Set(c.datachipsFound)
+        rescues = c.rescues
+    }
 }

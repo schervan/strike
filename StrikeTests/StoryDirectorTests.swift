@@ -26,7 +26,7 @@ struct StoryDirectorTests {
                 .pickup(itemId: "fuse", stored: true), .pickup(itemId: "battery", stored: true),
                 .pickup(itemId: "keycard", stored: true), .pickup(itemId: "energycore", stored: true),
                 .elementSeen(.button), .elementSeen(.lever), .elementSeen(.machine), .elementSeen(.pressureplate),
-                .gateSeen, .lowHp, .zoneEntered(2), .zoneEntered(3), .allElementsOn, .doorOpen,
+                .gateSeen, .lowHp, .zoneEntered(2), .zoneEntered(3), .allElementsOn, .doorOpen, .swapVisible,
             ]
             for _ in 0..<3 {
                 for e in events { keys += d.handle(e).cues.filter { $0.kind == .story }.map(\.key) }
@@ -34,6 +34,17 @@ struct StoryDirectorTests {
             let beatKeys = l.effectiveStory.beats.filter { !$0.trigger.hasPrefix("boss") }.map(\.key)
             #expect(keys.sorted() == beatKeys.sorted(), "\(l.id)")       // all of them, each once
         }
+    }
+
+    /// QA-012: the swap line plays once, the first time SWAP appears; the generic line when the level has no beat.
+    @Test func swapLinePlaysOnceWhenSwapAppears() {
+        var l2 = Self.director("l2")
+        #expect(l2.handle(.swapVisible).cues.map(\.key) == ["pixel.l2.swap"])
+        #expect(l2.handle(.swapVisible).cues.isEmpty)
+        #expect(l2.handle(.pickup(itemId: "blaster_spread", stored: false)).cues.allSatisfy { $0.key != "pixel.l2.swap" })
+        var l3 = Self.director("l3")
+        #expect(l3.handle(.swapVisible).cues.map(\.key) == [StoryDirector.Key.swap])
+        #expect(l3.handle(.swapVisible).cues.isEmpty, "once per level")
     }
 
     @Test func firstEnemyFiresOnFirstSightWithTipAndScan() {
@@ -101,9 +112,21 @@ struct StoryDirectorTests {
         do { let v = d.handle(.rescue).cues.count; #expect(v == 1) }                     // every rescue
     }
 
-    @Test func bossTriggersAreIgnoredUntilM4() {
+    /// M4-6: `bossPhase:n` and `bossDefeated` play the L5 boss beats once each.
+    @Test func bossTriggersPlayTheBossBeatsOnce() {
         var d = Self.director("l5")
-        do { let v = d.handle(.bossPhase(1)); #expect(v == .silent) }
-        do { let v = d.handle(.bossDefeated); #expect(v == .silent) }
+        let p1 = d.handle(.bossPhase(1)).cues.map(\.key)
+        #expect(p1 == ["boss.megamech.intro.1", "boss.megamech.intro.2"])
+        let again = d.handle(.bossPhase(1)).cues
+        #expect(again.isEmpty, "once")
+        let p2 = d.handle(.bossPhase(2)).cues.map(\.key)
+        #expect(p2 == ["boss.megamech.phase2.1", "boss.megamech.phase2.2"])
+        let p3 = d.handle(.bossPhase(3)).cues.map(\.key)
+        #expect(p3 == ["boss.megamech.phase3.1", "boss.megamech.phase3.2"])
+        let end = d.handle(.bossDefeated).cues.map(\.key)
+        #expect(end == ["boss.megamech.defeated.1"])
+        var l1 = Self.director("l1")
+        let none = l1.handle(.bossPhase(1))
+        #expect(none == .silent, "no boss beats outside L5")
     }
 }

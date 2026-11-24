@@ -130,13 +130,30 @@ nonisolated struct ItemCountDef: Codable, Sendable, Equatable {
     let count: Int
 }
 
-/// `pickups` block. `fixed` (boss arena) is M4 and not decoded.
+/// A fixed boss-arena pickup (`pickups.fixed`, GDD §9): placed next to a pillar.
+nonisolated struct FixedPickupDef: Codable, Sendable, Equatable {
+    let itemId: String
+    let count: Int
+    /// Comes back when the boss enters a new phase.
+    let respawnOnBossPhase: Bool?
+}
+
+/// `pickups` block. `fixed` is used by the boss arena only.
 nonisolated struct PickupsDef: Codable, Sendable, Equatable {
     let perRoom: [PerRoomPickupDef]
     let crates: CratesDef
     let datachips: Int
     let weaponPickup: String?
     let startGift: [ItemCountDef]?
+    let fixed: [FixedPickupDef]?
+}
+
+/// The fixed boss arena (`bossArena`, GDD §9): size in tiles, core machines, pillars.
+nonisolated struct BossArenaDef: Codable, Sendable, Equatable {
+    let width: Int
+    let height: Int
+    let coreMachines: Int
+    let pillars: Int
 }
 
 /// One `story.beats` entry: Pixel says `key` the first time `trigger` happens in the level.
@@ -154,7 +171,7 @@ nonisolated struct StoryDef: Codable, Sendable, Equatable {
     static let empty = StoryDef(intro: [], outro: [], beats: [])
 }
 
-/// One level from `levels.json` (GDD §16.5). `bossArena` is M4 and not decoded.
+/// One level from `levels.json` (GDD §16.5).
 nonisolated struct LevelDef: Codable, Sendable, Equatable, Identifiable {
     let id: String
     let index: Int
@@ -173,6 +190,7 @@ nonisolated struct LevelDef: Codable, Sendable, Equatable, Identifiable {
     let puzzle: PuzzleDef
     let pickups: PickupsDef
     let bossId: String?
+    let bossArena: BossArenaDef?
     let story: StoryDef?
 
     /// GDD §16.5 default for `hintIdleSec`.

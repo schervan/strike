@@ -64,6 +64,17 @@ nonisolated struct LevelBest: Codable, Sendable, Equatable {
     }
 }
 
+/// The L5 session values when the boss arena was reached (DECISIONS 2026-11-24: the one exception
+/// to "no mid-level state"; GDD §15 one session for both stages).
+nonisolated struct ArenaProgress: Codable, Sendable, Equatable {
+    var levelId: String
+    var elapsed: Double = 0
+    var score = 0
+    var bolts = 0
+    var datachipsFound: [String] = []
+    var rescues = 0
+}
+
 /// Everything that carries over between levels (GDD §7 persistence, §16.10; DECISIONS: no
 /// mid-level state). Lives in `GameModel.run` and is saved through `SaveStore`.
 nonisolated struct RunState: Codable, Sendable, Equatable {
@@ -76,6 +87,10 @@ nonisolated struct RunState: Codable, Sendable, Equatable {
     var currentLevelId: String?
     var bestResults: [String: LevelBest]
     var settings: RunSettings
+    /// Set when the boss arena was reached; Continue starts there.
+    var arena: ArenaProgress?
+
+    var l5ArenaReached: Bool { arena != nil }
 
     init(loadout: Loadout, inventory: Inventory, unlockedLevelIndex: Int = 1, currentLevelId: String? = nil,
          bestResults: [String: LevelBest] = [:], settings: RunSettings) {
@@ -88,7 +103,7 @@ nonisolated struct RunState: Codable, Sendable, Equatable {
     }
 
     enum CodingKeys: String, CodingKey {
-        case loadout, inventory, unlockedLevelIndex, currentLevelId, bestResults, settings
+        case loadout, inventory, unlockedLevelIndex, currentLevelId, bestResults, settings, arena
     }
 
     /// Missing optional fields take their defaults (GDD §16.10); `loadout` is required.
@@ -101,6 +116,7 @@ nonisolated struct RunState: Codable, Sendable, Equatable {
         currentLevelId = try c.decodeIfPresent(String.self, forKey: .currentLevelId)
         bestResults = try c.decodeIfPresent([String: LevelBest].self, forKey: .bestResults) ?? [:]
         settings = try c.decodeIfPresent(RunSettings.self, forKey: .settings) ?? RunSettings(aimAssist: true)
+        arena = try? c.decodeIfPresent(ArenaProgress.self, forKey: .arena)
     }
 
     /// Fresh run: hero start loadout, empty bag, L1 unlocked. `settings` survive "New game".
@@ -119,6 +135,7 @@ nonisolated struct RunState: Codable, Sendable, Equatable {
         let maxIndex = data.levelOrder.last?.index ?? 1
         unlockedLevelIndex = min(max(1, unlockedLevelIndex), maxIndex)
         if let id = currentLevelId, data.levels[id] == nil { currentLevelId = nil }
+        if let a = arena, a.levelId != currentLevelId || data.levels[a.levelId]?.bossArena == nil { arena = nil }
     }
 
     /// Level start (GDD §16.10, §5.1): puzzle items from another layout are removed, each start-gift
@@ -126,6 +143,7 @@ nonisolated struct RunState: Codable, Sendable, Equatable {
     /// start loadout's magazine and reserve.
     mutating func startLevel(_ level: LevelDef, data: GameData) {
         currentLevelId = level.id
+        arena = nil
         inventory.removeAll(category: .puzzle)
         for g in level.pickups.startGift ?? [] {
             let missing = g.count - inventory.count(of: g.itemId)
@@ -141,6 +159,7 @@ nonisolated struct RunState: Codable, Sendable, Equatable {
     /// current (the last level stays current).
     mutating func completeLevel(_ level: LevelDef, result: LevelBest, data: GameData) {
         inventory.removeAll(category: .puzzle)
+        arena = nil
         if var b = bestResults[level.id] {
             b.merge(result)
             bestResults[level.id] = b

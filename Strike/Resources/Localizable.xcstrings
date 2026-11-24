@@ -929,7 +929,7 @@
       "comment": "Info panel: link the selected item to a quick slot",
       "extractionState": "manual",
       "localizations": {
-        "de": { "stringUnit": { "state": "translated", "value": "In Schnellplatz" } },
+        "de": { "stringUnit": { "state": "translated", "value": "Schnellplatz" } },
         "en": { "stringUnit": { "state": "translated", "value": "Put in quick slot" } }
       }
     },
@@ -1325,6 +1325,46 @@
         "en": { "stringUnit": { "state": "translated", "value": "Don't get too close. It sneezes!" } }
       }
     },
+    "pixel.tip.megamech": {
+      "comment": "Pixel scan tip on first sight of the boss MEGA-MECH (QA-011). Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Ein Riesenroboter! Versteck dich hinter Säulen." } },
+        "en": { "stringUnit": { "state": "translated", "value": "A giant robot! Hide behind the pillars." } }
+      }
+    },
+    "pixel.generic.swap": {
+      "comment": "Pixel line, generic: SWAP button appears for the first time in a level and the level has no firstSwapVisible beat. Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Neuer Blaster! Tipp auf die zwei Pfeile." } },
+        "en": { "stringUnit": { "state": "translated", "value": "New blaster! Tap the two arrows to swap." } }
+      }
+    },
+    "pixel.boss.shield": {
+      "comment": "Pixel line (optional, M4): the boss raises its bubble shield at the start of phase 2. Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Ein Blasenschild! Jetzt prallen Schüsse ab." } },
+        "en": { "stringUnit": { "state": "translated", "value": "A bubble shield! Our shots bounce off now." } }
+      }
+    },
+    "pixel.boss.core_needed": {
+      "comment": "Pixel line (optional, M4): hint in phase 2 to get a core from a carrier boltbot and put it in a socket. Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Zapp einen Roboter mit Kern. Steck ihn ein!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Zap a robot with a core. Put it in a socket!" } }
+      }
+    },
+    "pixel.generic.slow": {
+      "comment": "Pixel line (optional, M4): the hero is slowed by sporeplant spores. Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Hatschi! Sporen machen dich langsam. Weiter!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Achoo! Spores make you slow. Keep moving!" } }
+      }
+    },
     "story.l1.intro.1": {
       "comment": "L1 intro card line 1 (Pixel)",
       "extractionState": "manual",
@@ -1470,11 +1510,11 @@
       }
     },
     "pixel.l2.swap": {
-      "comment": "L2 beat: firstPickup:blaster_spread, second line (M4). Max 60 chars",
+      "comment": "L2 beat: firstSwapVisible (the icon-only SWAP button with two arrows appears). Max 60 chars",
       "extractionState": "manual",
       "localizations": {
-        "de": { "stringUnit": { "state": "translated", "value": "Tipp auf WECHSELN für andere Blaster." } },
-        "en": { "stringUnit": { "state": "translated", "value": "Tap SWAP to change blasters." } }
+        "de": { "stringUnit": { "state": "translated", "value": "Tipp auf die zwei Pfeile zum Wechseln!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Tap the two arrows to swap blasters!" } }
       }
     },
     "pixel.l2.gate": {
@@ -1555,6 +1595,14 @@
       "localizations": {
         "de": { "stringUnit": { "state": "translated", "value": "Ein Schaum-Blaster! Er schießt super schnell." } },
         "en": { "stringUnit": { "state": "translated", "value": "A foam blaster! It shoots super fast." } }
+      }
+    },
+    "pixel.l3.wheel": {
+      "comment": "L3 beat: firstPickup:blaster_rapid, second line: long-press SWAP opens the weapon wheel. Max 60 chars",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Halte die zwei Pfeile für alle Blaster!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Hold the two arrows to pick any blaster." } }
       }
     },
     "pixel.l3.plate": {
@@ -1771,6 +1819,190 @@
       "localizations": {
         "de": { "stringUnit": { "state": "translated", "value": "OVERMIND: „Das ist unfair! ... Okay, es ist fair.“" } },
         "en": { "stringUnit": { "state": "translated", "value": "OVERMIND: “This is not fair! ... Okay, it is fair.”" } }
+      }
+    },
+    "settings.aimAssist.on": {
+      "comment": "Settings: aim help switch state on (M4)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "An" } },
+        "en": { "stringUnit": { "state": "translated", "value": "On" } }
+      }
+    },
+    "settings.aimAssist.off": {
+      "comment": "Settings: aim help switch state off (M4)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Aus" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Off" } }
+      }
+    },
+    "settings.aimAssist.hint": {
+      "comment": "Settings: small help text under the aim help switch (M4)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Hilft dir beim Treffen." } },
+        "en": { "stringUnit": { "state": "translated", "value": "Helps your shots hit." } }
+      }
+    },
+    "settings.pixelTalk.hint": {
+      "comment": "Settings: small help text under the Pixel talk picker (M4)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Wie viel Pixel redet." } },
+        "en": { "stringUnit": { "state": "translated", "value": "How much Pixel talks." } }
+      }
+    },
+    "settings.section.sound": {
+      "comment": "Settings: header above the music and sound sliders (M4)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Ton" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Sound" } }
+      }
+    },
+    "settings.section.play": {
+      "comment": "Settings: header above Pixel talk and aim help (M4)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Spiel" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Play" } }
+      }
+    },
+    "hud.swap.accessibility": {
+      "comment": "VoiceOver label of the icon-only SWAP button (two arrows) (M4)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Blaster wechseln" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Swap blaster" } }
+      }
+    },
+    "hud.swap.accessibilityHint": {
+      "comment": "VoiceOver hint of the SWAP button: long-press opens the weapon wheel (M4)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Halten, um einen Blaster zu wählen." } },
+        "en": { "stringUnit": { "state": "translated", "value": "Hold to pick a blaster." } }
+      }
+    },
+    "hud.weapon.accessibility": {
+      "comment": "VoiceOver label of the blaster icon in the ammo readout. Arg = blaster name (M4)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Blaster: %@" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Blaster: %@" } }
+      }
+    },
+    "hud.weaponWheel.accessibility": {
+      "comment": "VoiceOver label of the open weapon wheel (M4)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Wähle einen Blaster" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Pick a blaster" } }
+      }
+    },
+    "hud.weaponWheel.slot.accessibility": {
+      "comment": "VoiceOver label of an owned weapon wheel slot. Arg 1 = blaster name, arg 2 = magazine, arg 3 = reserve (M4)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "%1$@: %2$lld Schüsse, %3$lld in Reserve" } },
+        "en": { "stringUnit": { "state": "translated", "value": "%1$@: %2$lld shots, %3$lld in reserve" } }
+      }
+    },
+    "hud.weaponWheel.locked.accessibility": {
+      "comment": "VoiceOver label of a locked (not found yet) weapon wheel slot (M4)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Noch nicht gefunden" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Not found yet" } }
+      }
+    },
+    "hud.weaponWheel.equipped.accessibility": {
+      "comment": "VoiceOver value of the weapon wheel slot of the blaster in use (M4)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "In deiner Hand" } },
+        "en": { "stringUnit": { "state": "translated", "value": "In your hands" } }
+      }
+    },
+    "hud.weaponWheel.ammo": {
+      "comment": "Ammo pill under a weapon wheel slot. Arg 1 = magazine, arg 2 = reserve (M4)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "%1$lld / %2$lld" } },
+        "en": { "stringUnit": { "state": "translated", "value": "%1$lld / %2$lld" } }
+      }
+    },
+    "hud.bossBar.accessibility": {
+      "comment": "VoiceOver label of the boss bar (no numbers on screen). Arg 1 = boss name, arg 2 = phase, arg 3 = phase count (M4)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "%1$@: Phase %2$lld von %3$lld" } },
+        "en": { "stringUnit": { "state": "translated", "value": "%1$@: phase %2$lld of %3$lld" } }
+      }
+    },
+    "hud.bossBar.shield.accessibility": {
+      "comment": "VoiceOver value of the boss bar while the phase 2 bubble shield is up (M4)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Der Schild ist an" } },
+        "en": { "stringUnit": { "state": "translated", "value": "The shield is on" } }
+      }
+    },
+    "seasonComplete.title": {
+      "comment": "Season complete card: gold ribbon header (M4)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Staffel geschafft!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Season complete!" } }
+      }
+    },
+    "seasonComplete.subtitle": {
+      "comment": "Season complete card: line under the header (M4)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Du hast OVERMIND ausgeschaltet!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "You switched OVERMIND off!" } }
+      }
+    },
+    "seasonComplete.score": {
+      "comment": "Season complete stat chip: total score of L1–L5 (best per level). Arg = points (M4)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Punkte: %1$lld" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Score: %1$lld" } }
+      }
+    },
+    "seasonComplete.datachips": {
+      "comment": "Season complete stat chip: data chips found in all levels. Arg 1 = found, arg 2 = total (15) (M4)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Datenchips: %1$lld / %2$lld" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Data Chips: %1$lld / %2$lld" } }
+      }
+    },
+    "seasonComplete.time": {
+      "comment": "Season complete stat chip (optional): total play time of this run. Arg 1 = minutes, arg 2 = seconds (M4)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Zeit: %1$lld:%2$02lld" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Time: %1$lld:%2$02lld" } }
+      }
+    },
+    "seasonComplete.thanks": {
+      "comment": "Season complete card: small line above the button (M4)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Danke fürs Spielen!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Thanks for playing!" } }
+      }
+    },
+    "seasonComplete.toTitle": {
+      "comment": "Season complete card: the only button, back to the title screen (M4)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Hauptmenü" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Main menu" } }
       }
     }
   },

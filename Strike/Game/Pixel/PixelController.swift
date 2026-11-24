@@ -40,8 +40,14 @@ final class PixelController {
     @discardableResult
     func handle(_ event: StoryEvent) -> String? {
         let r = story.handle(event)
-        for c in r.cues { say(c.key, kind: c.kind) }
+        // QA-011: a tip without a string (e.g. a new enemy) is skipped, never shown as a raw key.
+        for c in r.cues where !(c.key.hasPrefix("pixel.tip.") && localize(c.key) == c.key) { say(c.key, kind: c.kind) }
         return r.scanEnemyId
+    }
+
+    /// Settings → Pixel talk, live.
+    func setTalk(_ t: PixelTalk) {
+        speech.talk = t
     }
 
     @discardableResult

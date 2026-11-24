@@ -16,6 +16,8 @@ nonisolated struct WeaponState: Sendable, Equatable {
     private var safetyNetTimer: Double = 0
     /// Net blaster's mag + reserve after the last tick/shot; a rise means ammo was picked up.
     private var lastNetTotal: Int?
+    /// Seconds left of a blaster swap (`rules.weapons.swapSec`): no fire and no reload meanwhile.
+    private(set) var swapRemaining: Double = 0
 
     /// `safetyNetWeapon` defaults to `def` when a net is given (the starter).
     init(def: WeaponDef, safetyNet: SafetyNetDef? = nil, safetyNetWeapon: WeaponDef? = nil) {
@@ -25,6 +27,7 @@ nonisolated struct WeaponState: Sendable, Equatable {
     }
 
     var isReloading: Bool { reloadRemaining != nil }
+    var isSwapping: Bool { swapRemaining > 0 }
 
     /// 0…1 while reloading, 0 otherwise.
     var reloadProgress: Double {
@@ -40,7 +43,7 @@ nonisolated struct WeaponState: Sendable, Equatable {
 
     /// True when a reload would move ammo.
     func canReload(in loadout: Loadout) -> Bool {
-        !isReloading && magazine(in: loadout) < def.magazineSize && reserve(in: loadout) > 0
+        !isReloading && !isSwapping && magazine(in: loadout) < def.magazineSize && reserve(in: loadout) > 0
     }
 
     /// Switches the equipped blaster (M4 swap). A running reload is cancelled; nothing is lost.
@@ -51,9 +54,18 @@ nonisolated struct WeaponState: Sendable, Equatable {
         cooldown = 0
     }
 
+    /// SWAP / wheel (GDD §5.1): switches to `weapon` (already equipped in the `Loadout`), cancels a
+    /// running reload with no ammo lost, and blocks fire for `swapSec`.
+    mutating func beginSwap(to weapon: WeaponDef, swapSec: Double) {
+        guard weapon.id != def.id else { return }
+        equip(weapon)
+        swapRemaining = max(0, swapSec)
+    }
+
     mutating func tick(dt: Double, loadout: inout Loadout) {
         guard dt > 0 else { return }
         cooldown = max(0, cooldown - dt)
+        swapRemaining = max(0, swapRemaining - dt)
         if let r = reloadRemaining {
             let left = r - dt
             if left <= 0 {
@@ -69,7 +81,7 @@ nonisolated struct WeaponState: Sendable, Equatable {
     /// Fires one shot if the trigger is held and the blaster is ready. Starts an auto-reload
     /// when the magazine is empty and the trigger is held.
     mutating func tryFire(triggerHeld: Bool, loadout: inout Loadout) -> Bool {
-        guard triggerHeld, !isReloading, cooldown <= 0 else { return false }
+        guard triggerHeld, !isReloading, !isSwapping, cooldown <= 0 else { return false }
         guard loadout.consumeRound(def) else {
             _ = startReload(loadout: loadout)
             return false

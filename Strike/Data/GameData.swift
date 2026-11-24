@@ -133,8 +133,31 @@ nonisolated struct GameData: Sendable {
             problems.append("hero startLoadout.weaponId \(hero.startLoadout.weaponId) not in weapons")
         }
         if items[LootRoller.boltItemId] == nil { problems.append("items lacks \(LootRoller.boltItemId)") }
+        problems += validateEnemies()
         problems += validateLevels()
         return problems.sorted()
+    }
+
+    /// Behaviour blocks (M4): boss phase chain, split / spawn / unlock references.
+    func validateEnemies() -> [String] {
+        var problems: [String] = []
+        for e in enemies.values {
+            problems += e.phaseChainProblems
+            if let s = e.splitInto {
+                if enemies[s.enemyId] == nil { problems.append("enemy \(e.id): splitInto \(s.enemyId) not in enemies") }
+                else if enemies[s.enemyId]?.splitInto != nil { problems.append("enemy \(e.id): \(s.enemyId) would split again") }
+            }
+            for p in e.phases ?? [] {
+                if let s = p.spawn {
+                    if enemies[s.enemyId] == nil { problems.append("enemy \(e.id) \(p.id): spawn \(s.enemyId) not in enemies") }
+                    if let c = s.carryItemFirst, items[c] == nil { problems.append("enemy \(e.id) \(p.id): carry \(c) not in items") }
+                }
+                if let u = p.unlockBy, items[u.requiresItem] == nil {
+                    problems.append("enemy \(e.id) \(p.id): unlockBy \(u.requiresItem) not in items")
+                }
+            }
+        }
+        return problems
     }
 
     /// Level references (enemies, items, loot tables, weapons) and puzzle/zone consistency.
@@ -151,6 +174,8 @@ nonisolated struct GameData: Sendable {
             }
             if let f = l.firstEncounterRoom, enemies[f] == nil { problems.append("\(p): firstEncounterRoom \(f) not in enemies") }
             if let b = l.bossId, enemies[b] == nil { problems.append("\(p): bossId \(b) not in enemies") }
+            if l.bossId != nil, l.bossArena == nil { problems.append("\(p): bossId without bossArena") }
+            for f in l.pickups.fixed ?? [] where items[f.itemId] == nil { problems.append("\(p): fixed \(f.itemId) not in items") }
             for e in l.puzzle.elements {
                 if case .index(let z) = e.zone, z < 1 || z > g.zones { problems.append("\(p): element \(e.type) zone \(z) out of range") }
                 problems += checkMachineItem(p, e.type, e.requiresItem)

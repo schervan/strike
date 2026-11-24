@@ -14,6 +14,10 @@ final class DoorNode: SKNode {
     private var lights: [SKShapeNode] = []
     private var halos: [SKSpriteNode] = []
     private var shownOn = -1
+    /// A sealed door with no elements (the boss arena entrance) never shows "on / total".
+    var hidesCounter = false {
+        didSet { info.removeAllActions(); info.isHidden = hidesCounter }
+    }
 
     enum Style {
         static let infoAbove: CGFloat = 40
@@ -115,6 +119,7 @@ final class DoorNode: SKNode {
     /// Counter fades in near a closed door; after opening it shows at 50 % for 1 s, then fades.
     func updateInfo(heroDistance: CGFloat) {
         guard !isOpen else { return }
+        if hidesCounter { return }
         let want: CGFloat = heroDistance <= Style.showWithinTiles * TileGrid.tileSize ? 1 : 0
         if abs(info.alpha - want) > 0.01, info.action(forKey: "fade") == nil {
             info.run(.fadeAlpha(to: want, duration: 0.2), withKey: "fade")

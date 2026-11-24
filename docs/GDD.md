@@ -91,7 +91,7 @@ All touch targets ≥ 64 × 64 pt (kids' fingers), 12 pt gap.
 | (no Fire button) | – | firing = right stick ≥ aim dead zone |
 | RELOAD | reload current blaster | auto-reload also starts when the magazine hits 0 and fire is held |
 | INTERACT | press button / pull lever / insert item into machine / pick up item when bag was full / open door | glows + icon changes when an interactable is within 64 pt; greyed out otherwise |
-| SWAP | next owned blaster (starter → spread → rapid → starter) | long-press (0.4 s) opens a 3-slot weapon wheel |
+| SWAP | next owned blaster (starter → spread → rapid → starter, unowned skipped) | icon only (two arrows, `ui_btn_swap`). **Hidden until 2 or more blasters are owned** (QA-012). Long-press (`rules.json → weapons.wheelLongPressSec` 0.4 s) opens a 3-slot weapon wheel; game time runs at `weapons.wheelTimeScale` 0.3 × while it is open. Swap takes `weapons.swapSec` 0.25 s |
 | Q1–Q4 | use the item assigned to the quick slot | shows icon + stack count; empty = dashed outline |
 | Tap on Pixel | ask Pixel for a hint (§11) | hit box 80 pt around Pixel |
 | Pause | pause menu: resume, inventory, settings, quit to map | game time stops |
@@ -143,18 +143,27 @@ zone-1 treasure room), `blaster_rapid` in L3. Owned blasters carry over between 
 | id | Fires | Damage | Pellets | Spread / jitter | Fire rate | Proj. speed | Range | Magazine | Reserve max | Reload | Ammo |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | `blaster_starter` "Light Blaster" | orange light bolt | 10 | 1 | 0° / 2° | 4.0 /s | 720 | 520 | 12 | 96 | 1.0 s | `ammo_starter` |
-| `blaster_spread` "Bubble Blaster" | 5 purple bubbles in a fan | 7 each (35 max) | 5 | 40° / 0° | 1.4 /s | 560 | 330 | 6 | 36 | 1.6 s | `ammo_spread` |
+| `blaster_spread` "Bubble Blaster" | 5 purple bubbles in a fan | 8 each (40 max) | 5 | 40° / 0° | 1.6 /s | 560 | 330 | 6 | 36 | 1.6 s | `ammo_spread` |
 | `blaster_rapid` "Foam Blaster" | yellow foam pellets | 5 | 1 | 0° / 7° | 10.0 /s | 820 | 470 | 40 | 200 | 1.8 s | `ammo_rapid` |
 
-DPS (sustained, incl. reload): starter ≈ 30, spread ≈ 40 at close range, rapid ≈ 38.
-Roles: starter = precise all-rounder, spread = close crowd and slimes, rapid = shields-from-the-side
-and the boss.
+DPS (sustained, incl. reload, every shot hits): starter 30.0, spread 44.9 (all 5 bubbles, point
+blank) / 26.9 (3 bubbles, ≈ 120 pt), rapid 34.5. At kid aim quality see §8.3.
+Roles (backed by §8.3): starter = precise, best against drones at range; spread = close range:
+slimes and their smalls, dizzy shield androids (against boltbots all three are about equal) (worst at mid range: one bubble lands);
+rapid = big targets and long fights (boss, sporeplants), big magazine, weak against small targets
+far away (7° jitter).
+
+**Blaster pickup** (L2 spread, L3 rapid): adds the blaster with one full magazine. It is **not**
+equipped automatically: the SWAP button pops in and Pixel says how to swap (§13), so the kid
+learns the button with a reason to press it. If the blaster is **already owned** (replay), the pickup adds one
+`magazineSize` of its ammo to the reserve (overflow → ammo packs, §5.1) and no Pixel line plays.
 
 ### 5.1 Ammo rules
 
 - One **magazine** per blaster and one **reserve** per ammo type. Shots use the magazine.
 - Reload moves `min(magazineSize − mag, reserve)` from reserve to mag. Reload is cancelled by
-  swapping (no ammo lost). Swap time 0.25 s.
+  swapping (no ammo lost). Swap time `rules.json → weapons.swapSec` 0.25 s (no fire while
+  swapping).
 - Ammo pickups add to the reserve directly (even for a blaster not owned yet). Overflow above
   `reserveMax` becomes ammo-pack items in the inventory (§7) if a slot is free, else stays on the
   floor.
@@ -233,6 +242,12 @@ All enemies power down into sparkles + their loot. Common rules:
   `knockbackSec` (0.1 s for all in S1).
 - Contact damage triggers on touch, max once per hero invulnerability window.
 - Every attack that can hurt has a telegraph ≥ 0.4 s (glow, wind-up pose, or warning line).
+- **Cooldown rule (M4):** `cooldownSec` is measured **start to start**: from one attack's
+  telegraph start to the next attack's telegraph start. It must be ≥ telegraph + active part
+  (dash, wave, sweep). Same for boss attacks (× `cooldownMultiplier`). **Dizzy pauses the
+  attack scheduler:** no attack starts while the enemy or boss is dizzy, even if the cooldown is
+  over (e.g. the phase 3 dash: 3.75 s cooldown < 1.0 + 1.73 + 2.5 s pillar dizzy, which is fine).
+  The shield android's 4.0 s is chosen so that it also covers its own 1.5 s dizzy (§8.1).
 - Enemy projectiles are big, slow and colourful (min radius 8 pt, max speed 300 pt/s).
 
 | id | Look | HP | Speed | Contact | Attack | Detect | Score | Loot table |
@@ -241,7 +256,7 @@ All enemies power down into sparkles + their loot. Common rules:
 | `laserdrone` | hovering eye drone | 20 | 140 | 0 | laser ball 6 dmg, 1.8 s cd, 220 pt/s, telegraph 0.5 s | 420 | 75 | `loot_laserdrone` |
 | `slimemutant` | wobbly green slime with goggles | 40 | 80 | 10 | none; splits on power-down | 300 | 60 | `loot_slimemutant` |
 | `slimemutant_small` | mini slime | 12 | 130 | 5 | none | 300 | 20 | `loot_slimemutant_small` |
-| `shieldandroid` | android with a big shiny front shield | 60 | 90 | 8 | shield bash dash 12 dmg, 3.5 s cd, telegraph 0.7 s | 380 | 120 | `loot_shieldandroid` |
+| `shieldandroid` | android with a big shiny front shield | 60 | 90 | 8 | shield bash dash 12 dmg, 4.0 s cd, telegraph 0.7 s | 380 | 120 | `loot_shieldandroid` |
 | `sporeplant` | grumpy flower in a pot | 45 | 0 (static) | 6 | 3 spore puffs in 30° fan, 4 dmg + slow, 2.6 s cd, 180 pt/s, telegraph 0.6 s | 320 | 80 | `loot_sporeplant` |
 | `megamech` | giant cartoon robot, OVERMIND face screen | 1200 | 60 | 12 | see §9 | 900 | 3000 | `loot_megamech` |
 
@@ -260,10 +275,12 @@ ball. Retreats if hero closer than 160 pt.
 don't damage either). Smalls do not split again. Spread blaster is great here.
 
 **shieldandroid – shielded bruiser.** Front shield covers a 120° arc and blocks 100 % of
-projectiles (they bounce off as sparkles). Turns toward the hero at 120°/s, so circling works.
-Attack: crouch + shield glow 0.7 s → dash 260 pt at 420 pt/s. After the dash it is **dizzy for
-1.5 s** (stars over head, shield lowered, takes 1.5 × damage). Pixel hint on first meet: "Hit it
-from behind!".
+projectiles (they bounce off as sparkles). Turns toward the hero at 90°/s, so circling works:
+a hero at full speed (220 pt/s) out-turns it at any distance below 220 / (π/2) ≈ 140 pt
+(2.2 tiles). Attack: crouch + shield glow 0.7 s → dash 260 pt at 420 pt/s (0.62 s). After the
+dash it is **dizzy for 1.5 s** (stars over head, shield lowered, takes 1.5 × damage). Next
+telegraph at the earliest 4.0 s after the last one started (≈ 1.2 s of walking between dizzy and
+the next crouch). Pixel hint on first meet: "Big shield! Hit it from behind!".
 
 **sporeplant – turret.** Never moves. Opens petals (telegraph 0.6 s) and sneezes 3 spore puffs.
 Spores: 4 dmg + slow (§4), pop on walls. When the hero is closer than 80 pt it closes its petals
@@ -279,6 +296,116 @@ and takes 0.5 × damage for 1 s ("shy"), so kids learn to shoot from mid range.
 | `sporeplant` | 2 |
 | `shieldandroid` | 3 |
 
+Check against §8.3 (starter time-to-power-down, boltbot = 1.67 s = 1 point): drone 1.11 s but
+ranged and evasive → 2; slime family 3.86 s → 2 (slow, melee only); sporeplant 2.50 s, static and
+avoidable → 2; shield android 4.44 s + 12-dmg dash → 3. The costs stay as they are (M4-1).
+
+### 8.3 Time to power down (M4-1 balance reference)
+
+The model is a formula so QA can recompute it from the JSON (`BalanceSmokeTests`, ±10 %).
+Inputs from JSON: weapon `damage`, `pellets`, `spreadDeg`, `jitterDeg`, `fireRate`,
+`magazineSize`, `reloadSec`, `projectileRadius`; enemy `hp`, `radius`, `shield.*`,
+`attack.cooldownSec`. Fixed assumptions (not in JSON, design reference only):
+
+| Assumption | Value | Why |
+|---|---|---|
+| Kid accuracy `a`, starter and rapid | 0.6 of shots aimed on target (aim assist on) | 7–12-year-olds on a touch stick while moving |
+| Kid accuracy `aS`, spread volley | 0.85 | a 40° fan forgives aim errors; this is the point of the blaster |
+| Fight distance `d` | boltbot 120, laserdrone 270 (middle of its 220–320 band), slimemutant 120, small 100, shieldandroid 140 (right after its dash), sporeplant 200 (outside shy range), megamech 250 pt | typical spacing per behaviour |
+| Shield android | the kid hits only while it is dizzy (1.5 s at × 1.5) plus 30 % of the other 2.5 s of each 4.0 s cycle from the side/back | "Hit it from behind!" is learned slowly |
+| Boss uptime | share of time the kid can shoot while dodging: phases 1 and 2 0.7, phase 3 0.6; dizzy windows 1.0 | telegraphs force breaks |
+
+Formulas:
+- sustained rate `R = magazineSize / (magazineSize / fireRate + reloadSec)` (shots or volleys/s):
+  starter 3.00, spread 1.121, rapid 6.897.
+- jitter factor `j = min(1, (radius + projectileRadius) / (d × tan(jitterDeg)))` (1 for the spread).
+- bubbles on target `n = min(pellets, 1 + 2 × floor((radius + projectileRadius) / (d × tan(spreadDeg / (pellets − 1)))))`;
+  `n = 1` for single-pellet blasters.
+- kid DPS `= R × accuracy × j × n × damage × m`; `m` = enemy multiplier (shield android:
+  `(dizzySec × dizzyDamageMultiplier + (cooldownSec − dizzySec) × 0.3) / cooldownSec` = 0.75;
+  everyone else 1).
+- **time to power down `T = hp / kid DPS`**, seconds. "Hits" = hits needed with perfect aim,
+  `ceil(hp / (n × damage))`.
+
+| Enemy (hp) | Starter T / hits | Spread T / volleys (n) | Rapid T / hits (j) | Best |
+|---|---|---|---|---|
+| `boltbot` (30) | **1.67 s** / 3 | **1.31 s** / 2 (3) | **1.45 s** / 6 | any (measured: rapid 1.37, starter 1.48, spread 1.51; QA-017) |
+| `laserdrone` (20) | **1.11 s** / 2 | **2.62 s** / 3 (1) | **1.69 s** / 4 (0.57) | starter |
+| `slimemutant` (40) | **2.22 s** / 4 | **1.75 s** / 2 (3) | **1.93 s** / 8 | spread |
+| `slimemutant_small` (12) | **0.67 s** / 2 | **0.52 s** / 1 (3) | **0.58 s** / 3 | spread |
+| slime family (big + 0.3 s pop-out + 2 smalls) | **3.86 s** | **3.10 s** | **3.39 s** | spread |
+| `shieldandroid` (60, m 0.75) | **4.44 s** / 4 dizzy | **3.50 s** / 2 dizzy (3) | **3.87 s** / 8 dizzy | spread |
+| `sporeplant` (45) | **2.50 s** / 5 | **5.90 s** / 6 (1) | **2.32 s** / 9 (0.94) | rapid |
+| crate (20, `rules.crate.hp`) | 2 hits | 1 volley | 4 hits | – |
+
+**Measured check (QA `BalanceSmokeTests`, M4-7).** QA samples the real pellet fan, damage model
+and magazine/reload timing over 3,000 trials per pair. All 18 pairs are within 25 % of the table,
+except where whole hits overshoot the HP (overkill = hits × damage ÷ HP > 1.3, tolerance 40 %).
+Pairs that differ by more than 15 %:
+
+| Pair | Formula | Measured | Why |
+|---|---|---|---|
+| `slimemutant_small` × starter | 0.67 s | 0.92 s (+37 %) | 2 hits of 10 on 12 HP (overkill 1.67) |
+| `laserdrone` × starter | 1.11 s | 0.92 s (−17 %) | 2 hits of 10 = 20 HP exactly; the first shot comes at once |
+| `boltbot` × spread | 1.31 s | 1.51 s (+16 %) | 2 volleys of 24 on 30 HP (overkill 1.6); a reload often falls in between |
+
+The shield android is within 5 % for all three blasters. No pair misses with low overkill, so
+nothing is retuned. Against boltbots all three blasters are about equal in play.
+
+Kid DPS used: starter 18.0; spread 22.9 (n 3) / 7.63 (n 1); rapid 20.7 (j 1) / 11.9 (drone) /
+19.4 (sporeplant). Every blaster powers down every enemy in under 6 s; the "wrong" blaster costs
+at most 2.5 × the best one (spread vs. sporeplant), so a kid who never swaps still wins.
+
+**Boss** (`megamech`, 3 × 400 HP, d 250 pt, n 3, j 1). Phase 2 = 4 s dizzy at × 2 (uptime 1),
+then the rest at uptime 0.7. Damage time only; add ≈ 25 s for the core puzzle (2 carriers spawn
+8 s apart, walk to the side walls) and ≈ 15 s of lines and phase changes.
+
+| Phase | Starter | Spread | Rapid |
+|---|---|---|---|
+| 1 Stomp (400, uptime 0.7) | 31.7 s | 25.0 s | 27.6 s |
+| 2 Shield (dizzy 4 s × 2, then 0.7) | 24.3 s | 17.6 s | 20.2 s |
+| 3 Overload (400, uptime 0.6) | 37.0 s | 29.1 s | 32.2 s |
+| **Total damage time** | **93 s** | **72 s** | **80 s** |
+
+Whole fight without rescues ≈ 112–133 s (damage + puzzle + lines).
+
+**Rescues (QA-016 rule, boss keeps damage).** A rescue now only costs time (≈ 6 s) and never
+undoes damage, so the fight length is `T = base / (1 − 6 / secondsBetweenRescues)`:
+
+| Kid | Rescue every | Rescues | Fight length |
+|---|---|---|---|
+| good (dodges ≈ 75 %) | ≈ 60 s | 2 | 125–148 s ≈ 2.1–2.5 min |
+| average (≈ 50 %) | ≈ 30 s | 4–5 | 140–166 s ≈ 2.3–2.8 min |
+| struggling (≈ 25 %) | ≈ 15 s | 9–10 | 187–222 s ≈ 3.1–3.7 min |
+| never dodges (0 %) | ≈ 11 s (QA bot) | 20–25 | 246–293 s ≈ 4–5 min, but always finishes |
+
+Old rule for comparison (reset to the phase top): QA's bot at 75 % dodge needed 2.5–8.6 min, and
+at 0 % it never cleared phase 1. The target of 2–3 min for a typical kid is met. L5 `parTimeSec`
+keeps 120 s for the boss (§20); ★3 allows par × 1.5, which covers the average kid.
+
+**Ammo for the boss** (kid aim, damage per unit: starter 6, spread 20.4 per volley, rapid 3):
+full reserves of all three = 648 + 857 + 720 = 2,225. Each phase the 5 pillar pickups
+(`pickups.fixed`: 2 healpack, 1 `ammo_rapid` = 180, 1 `ammo_spread` = 245, 1 `ammo_starter` =
+144) give 569, × 3 phases = 1,707 ≥ 1,200 HP. With the starter pack (QA-019), a kid who never
+swaps still gets 144 per phase plus the starter safety net (2 shots/s while empty = 12 kid-DPS).
+A kid who arrives with empty reserves can win from the pillars alone, with or without swapping.
+The carrier boltbots' loot is extra.
+
+**Level combat budget** (expected values; per-room threat = mean room area × `enemyDensity` / 40,
+rooms with enemies = mean rooms − start − checkpoint rooms; time = starter T per enemy):
+
+| Level | Threat | Enemies (by mix) | Shooting time | × 3 for approach / dodge | Par | Floor-ammo damage ÷ enemy HP (incl. crates) |
+|---|---|---|---|---|---|---|
+| L1 | 8.1 | 6 boltbot, 1 drone | 11 s | 33 s | 360 | 432 ÷ 230 = 1.9 |
+| L2 | 18.6 | 6.7 bolt, 4.0 drone, 1.3 shield | 21 s | 64 s | 480 | 1,175 ÷ 435 = 2.7 |
+| L3 | 25.8 | 6.1 slime, 4.6 plant, 4.6 bolt | 43 s | 128 s | 540 | 1,604 ÷ 785 = 2.0 |
+| L4 | 38.1 (was 41.3) | 5.6 shield, 5.6 drone, 4.6 bolt, 2.8 slime | 50 s (was 53) | 149 s | 660 | 2,070 ÷ 947 = 2.2 |
+| L5 | 34.5 | 4.4 bolt, 3.5 drone, 3.5 shield, 3.5 slime, 2.7 plant | 47 s + boss 72–93 s | 141 s + boss | 900 (was 780) | 1,961 ÷ 898 = 2.2 |
+
+Floor ammo alone covers every level about 2 × at 60 % accuracy, so a kid at 30 % still finishes on
+floor ammo plus enemy loot, crates, `ammo_rescue` and the starter safety net. `loot.json` stays
+unchanged in M4-1.
+
 ---
 
 ## 9. Boss – MEGA-MECH Unit Zero (`megamech`)
@@ -288,18 +415,37 @@ Arena: fixed 22 × 16 tile room at the end of L5 (not generated), 4 pillars for 
 the arena entrance. HP 1200, collision radius 72 pt. Contact 12. It is "OVERMIND's body":
 its face screen shows OVERMIND's emoji-like expressions.
 
+Arena numbers confirmed in M4-1 (`levels.json → l5.bossArena`): 22 × 16 tiles (1408 × 1024 pt,
+≈ 1.2 × 1.2 screens, so the boss and a pillar are always near the view), 4 pillars, 2 core
+machines. `pickups.fixed`: 2 `healpack`, 1 `ammo_rapid`, 1 `ammo_spread`, 1 `ammo_starter`
+(QA-019) at the 4 pillars (one pillar holds two), respawned at each phase start (ammo check in §8.3). The L5 level time keeps running in the arena
+(one `LevelSession`), so `parTimeSec` includes the boss. Boss fight length at kid aim ≈ 2 min (§8.3).
+First sight of the boss plays `pixel.tip.megamech` like any tip (QA-011); the `bossPhase:1` beats
+follow (queue: 1 shown + 2 waiting, nothing is dropped).
+
 | Phase | HP range | Attacks | Notes |
 |---|---|---|---|
 | 1 "Stomp" | 1200 → 800 | **Stomp**: lifts foot 0.8 s (red ring telegraph 140 pt) → shockwave ring 10 dmg, expands to 220 pt; jump over not possible, step out. **Firework volley**: 6 slow star rockets in a fan, 8 dmg, 0.7 s telegraph, cd 4 s | walks slowly toward hero |
-| 2 "Shield" | 800 → 400 | at 800 HP: raises a bubble shield (immune). Spawns 2 `boltbot` every 8 s (max 4 alive). The first two boltbots each carry 1 `energycore` (guaranteed drop). Laser sweep: rotating beam with 2 gaps, 10 dmg, 1.0 s telegraph line, cd 6 s | **Puzzle:** insert 1 `energycore` in each of the 2 core machines → shield pops, mech is dizzy 4 s (2 × damage). If a core is lost, the next boltbots carry new ones (always ≥ 1 core reachable) |
+| 2 "Shield" | 800 → 400 | at 800 HP: raises a bubble shield (immune). Spawns 2 `boltbot` every 8 s (max 4 alive). The first two boltbots each carry 1 `energycore` (guaranteed drop). Laser sweep: rotating beam with 2 safe gaps of 60°, turns 30°/s for 4 s (120°), 10 dmg, 1.0 s telegraph line, cd 6 s. A gap moves 0.52 rad/s, so the hero (220 pt/s) can walk with it anywhere within 420 pt of the boss (about 6.5 tiles; most of the 22 × 16 arena). Lesson: "stay close and walk with the gap" (Pixel's phase 2 line points at the cores, the telegraph line shows the gaps) | **Puzzle:** insert 1 `energycore` in each of the 2 core machines → shield pops, mech is dizzy 4 s (2 × damage). If a core is lost, the next boltbots carry new ones (always ≥ 1 core reachable) |
 | 3 "Overload" | 400 → 0 | all phase 1 attacks, cd × 0.75. **Dash**: telegraph 1.0 s arrow, dash across arena 12 dmg, hits a pillar → dizzy 2.5 s | face screen glitches, funny panic expressions |
 
 Power-down: big sparkle explosion, OVERMIND face says "This is not fair! … Okay, it is fair."
 and the screen goes to a smiley. Drop: `loot_megamech` (bolts shower + datachip-like trophy).
 
-**Kid-safety retries:** on rescue in the arena, the hero returns to the arena checkpoint; the boss
-returns to the **start of its current phase** (HP = phase top) and keeps phase progress, inserted
-cores stay inserted.
+**Kid-safety retries (QA-016, owner decision 2026-11-24):** on rescue in the arena, the hero
+returns to the arena checkpoint and the boss **keeps all damage** (HP, phase, shield state).
+Inserted cores stay inserted, and carried or dropped cores stay where they are. Only the attack
+timing resets:
+1. a running telegraph or attack is cancelled, and enemy shots in flight are removed (§12);
+2. every boss attack cooldown restarts from full, as if each attack had just started, so the next
+   attack comes ≥ 3.0 s × the phase `cooldownMultiplier` after the hero reappears (on top of the
+   hero's 2 s invulnerability);
+3. the boss walks back toward the arena centre; carrier boltbots keep their HP (they are part of
+   the puzzle, not a room to reset).
+Data: `enemies.json → megamech.rescueResetsToPhaseTop: false` (true would be the old
+phase-top reset). Every try makes progress, so a kid who keeps getting hit still wins. The cost of
+a rescue is about 6 s (0.6 s slow-mo + 0.8 s beam + ≈ 4 s back into the fight) and the L5 ★3
+rescue limit (2).
 
 ---
 
@@ -389,7 +535,8 @@ zone or an earlier zone and never behind the gate it opens. Verified by simulati
   4. Inventory, quick slots, blasters, ammo, collected datachips: kept.
   5. Starter ammo topped to at least one full magazine.
   6. Puzzle states kept. Powered-down enemies stay down. Living enemies get full HP and return to
-     their home rooms.
+     their home rooms. **Exception, the boss arena (§9):** the boss keeps its damage and only its
+     attack timing resets; carrier boltbots keep their HP.
   7. `rescues` counter + 1 (affects 3rd star, §15).
 - No lives, no restart penalty besides the star.
 - M3 numbers: `rules.json → rescue` (§16.9): slow-mo `slowMoScale` 0.3 for `slowMoSec` 0.6
@@ -413,7 +560,7 @@ All numbers in this section live in `rules.json → pixel / hints / lowHp` (§16
 | Repeat guard | the same `pixel.*` key is not queued again within `pixel.repeatCooldownSec` (10 s). Low HP: `lowHp.lineCooldownSec` (60 s). Story beats, intro and outro are exempt (each beat fires once per level anyway) |
 | Hint (tap Pixel or idle) | see "Hints" below. Fly 2 s, dotted arrow 6 s, then return. Cooldown 10 s |
 | Pointer | minimap pings unactivated reachable required elements (and the exit pad once the door is open) as blinking dots after `hints.pointerAfterSec` (60 s) in the level. Ping style: ART_BIBLE §14 |
-| Scan | first time an enemy type is **seen** (on screen and in line of sight, not first contact): short scan beam + tip line (`pixel.tip.<enemyId>`). The boss has no tip; its lines are the `boss.*` beats |
+| Scan | first time an enemy type is **seen** (on screen and in line of sight, not first contact): short scan beam + tip line (`pixel.tip.<enemyId>`). The boss has a tip too (`pixel.tip.megamech`, QA-011); its story lines are the `boss.*` beats. A missing `pixel.tip.*` key is skipped, never shown raw |
 | Rescue | at 0 HP performs the rescue (§12), then says `pixel.generic.rescue` |
 | Combat | Pixel never attacks and can't be hurt |
 | Silence | Settings → "Pixel talk: lots / some / quiet" (default lots). **lots** = everything. **some** = story beats + hint lines (`hint_*`, `need_*`, `idle`, `rescue`). **quiet** = story beats, intro/outro and `rescue` only. Hints still fly and point in every mode |
@@ -484,6 +631,18 @@ timer are separate; an idle hint during the tap cooldown waits until the cooldow
 | `pixel.tip.slimemutant_small` | first sight | lots | Mini slimes! They are quick. | Mini-Schleime! Die sind flott. |
 | `pixel.tip.shieldandroid` | first sight | lots | Big shield! Hit it from behind! | Großer Schild! Triff ihn von hinten! |
 | `pixel.tip.sporeplant` | first sight | lots | Don't get too close. It sneezes! | Nicht zu nah. Sie niest! |
+| `pixel.tip.megamech` | first sight (arena entry) | lots | A giant robot! Hide behind the pillars. | Ein Riesenroboter! Versteck dich hinter Säulen. |
+| `pixel.generic.swap` | `firstSwapVisible`, no level beat for it | lots | New blaster! Tap the two arrows to swap. | Neuer Blaster! Tipp auf die zwei Pfeile. |
+
+**SWAP line gate (QA-012).** Swap lines never point at a button that is not there. New trigger
+`firstSwapVisible` = the first moment in a level when the SWAP button appears (owned blasters
+1 → 2, right after the blaster pickup, together with the button's pop-in). It does not fire when
+SWAP is already visible at level start (replays, L3–L5 with 2+ blasters). L2 has the beat
+`pixel.l2.swap` on it ("Tap the two arrows to swap blasters!": the button is icon-only, two white
+arrows); in any other level the generic `pixel.generic.swap` plays (e.g. a kid skipped the L2
+treasure room and the rapid in L3 is their second blaster). The wheel hint `pixel.l3.wheel`
+("Hold the two arrows to pick any blaster.") is an L3 beat on `firstPickup:blaster_rapid`; by then
+SWAP is always visible (starter + rapid ≥ 2).
 
 Level beats (`pixel.l<n>.*`, `boss.*`) and intro/outro (`story.*`) are "story" in the filter.
 "First" triggers (first item, first reload, tips) are once per **level**, so a replay teaches again.
@@ -532,8 +691,8 @@ Algorithm: **BSP rooms + corridors** with a zone lock-and-key pass (GameplayKit
 | `corridorWidth` | int | tiles | 2 |
 | `loopChance` | 0…1 | extra corridors | 0.1–0.35 |
 | `zones` | int | zones on critical path | 1–3 |
-| `enemyDensity` | float | threat multiplier | 0.6–1.6 |
-| `maxThreatPerRoom` | int | cap | 3–10 |
+| `enemyDensity` | float | threat multiplier | 0.6–1.2 |
+| `maxThreatPerRoom` | int | cap; M4-1 sets it so it bites only in the biggest rooms (max room 14 × 14 = 196 tiles) | 2–6 |
 | `minElementSpacing` | int | tiles between element anchor cells | 7–8 |
 | `decorDensity` | 0…1 | prop chance per free floor tile (step 8 is Later) | 0.03–0.08 |
 | `maxAttempts` | int | regenerate tries | 50 |
@@ -562,7 +721,7 @@ puzzles and kids exploring. `parTimeSec` is unchanged.
 | L2 | 60 × 44 | 9.5 | 16.7 | 238 | 69 | 480 | 14 % |
 | L3 | 64 × 48 | 10.5 | 17.1 | 269 | 78 | 540 | 14 % |
 | L4 | 72 × 56 | 13.5 | 17.3 | 350 | 102 | 660 | 15 % (80 × 60: 111 s) |
-| L5 | 72 × 54 | 11.5 | 18.4 | 317 | 92 | 780 | 12 % (+ boss) |
+| L5 | 72 × 54 | 11.5 | 18.4 | 317 | 92 | 900 (M4-1, was 780; includes 120 s boss) | 10 % (12 % of the 780 s without the boss) |
 
 ### 14.3 Validation (must pass, else regenerate with seed + 1)
 
@@ -594,6 +753,11 @@ puzzles and kids exploring. `parTimeSec` is unchanged.
 | ★1 | Finish the level |
 | ★2 | Find all 3 datachips |
 | ★3 | Finish with `rescues ≤ starRescueMax` (L1–L4: 1, L5: 2) **and** `timeSec ≤ parTimeSec × 1.5` |
+
+L5 `timeSec` and `rescues` cover the generated part **and** the boss arena (one session); L5 par
+900 s includes about 120 s for the boss (§8.3). When the arena is reached, the save stores
+the session's time, score, rescues and datachips together with `l5ArenaReached`, and Continue at
+the arena checkpoint resumes from those values (coder: fields next to `l5ArenaReached`).
 
 15 stars max in Season 1. Stars only decorate the map; nothing is locked behind stars (levels unlock
 by finishing the previous one).
@@ -664,8 +828,8 @@ other and are validated at load (debug assert + unit test).
 | `hopChance?`, `hopEverySec?`, `hopPauseSec?` | float | chaser breather pauses (boltbot) |
 | `separation?` | float | pt kept from same-type allies |
 | `retreatRange?`, `strafeSec?` | float | kiter: back off below this distance; strafe time between shots |
-| `rescueResetsToPhaseTop?` | bool | boss: on hero rescue, HP returns to current phase's `hpFrom` |
-| `phases?` | [Phase] | boss only: `{ "id", "hpFrom", "hpTo", "immune", "cooldownMultiplier?", "attacks": [ {"type": "stomp"/"volley"/"laser_sweep"/"dash", "damage", "cooldownSec", "telegraphSec", "range", "telegraphRadius?", "projectileSpeed?", "projectileCount?", "spreadDeg?", "projectileRadius?", "gaps?", "sweepDegPerSec?", "dashSpeed?", "pillarDizzySec?"} ], "spawn?": {"enemyId","everySec","maxAlive","carryItemFirst?","carryCount?"}, "unlockBy?": {"elementType","requiresItem","count","dizzySec","dizzyDamageMultiplier"} }` |
+| `rescueResetsToPhaseTop?` | bool | boss: `true` = on hero rescue, HP returns to the current phase's `hpFrom`; `false` = HP is kept and only the attack timing resets (§9). S1 megamech: `false` (QA-016) |
+| `phases?` | [Phase] | boss only: `{ "id", "hpFrom", "hpTo", "immune", "cooldownMultiplier?", "attacks": [ {"type": "stomp"/"volley"/"laser_sweep"/"dash", "damage", "cooldownSec", "telegraphSec", "range", "telegraphRadius?", "projectileSpeed?", "projectileCount?", "spreadDeg?", "projectileRadius?", "gaps?", "sweepDegPerSec?", "gapDeg?", "sweepSec?", "waveSec?", "dashSpeed?", "pillarDizzySec?"} ], "spawn?": {"enemyId","everySec","maxAlive","carryItemFirst?","carryCount?"}, "unlockBy?": {"elementType","requiresItem","count","dizzySec","dizzyDamageMultiplier"} }` |
 
 ### 16.3 `items.json`
 
@@ -741,7 +905,7 @@ other and are validated at load (debug assert + unit test).
 | `hintIdleSec` | int | seconds without progress before Pixel auto-hints (default 30, L1 20) |
 | `bossId?` | string | `megamech` for L5 |
 | `bossArena?` | {width, height, coreMachines, pillars} | fixed arena |
-| `story` | {intro: [key], outro: [key], beats: [{trigger, key}]} | Pixel lines; triggers: `start`, `firstEnemy:<id>`, `firstPickup:<id>`, `firstSeen:<elementType or gate>`, `firstLowHp`, `zone:<n>`, `allElementsOn`, `doorOpen`, `bossPhase:<n>`, `bossDefeated`. `intro`/`outro` lines play on the level card before/after play |
+| `story` | {intro: [key], outro: [key], beats: [{trigger, key}]} | Pixel lines; triggers: `start`, `firstEnemy:<id>`, `firstPickup:<id>`, `firstSeen:<elementType or gate>`, `firstLowHp`, `zone:<n>`, `allElementsOn`, `doorOpen`, `firstSwapVisible` (M4, §13), `bossPhase:<n>`, `bossDefeated`. `intro`/`outro` lines play on the level card before/after play |
 
 ### 16.6 `hero.json`
 
@@ -871,7 +1035,47 @@ Aim-assist cone per blaster stays in `weapons.json → aimAssistConeDeg`.
 | `settings.aimAssist` | – | Aim help | Zielhilfe |
 
 The pause button keeps `game.menu`; the pause menu's settings entry uses `settings.title`.
-"Put in quick slot" is "In Schnellplatz" in German so it fits a 64 pt high button in one line.
+"Put in quick slot" is "Schnellplatz" in German so it fits a 64 pt high button in one line at
+the same font size as "Benutzen" / "Ablegen" (QA-014; was "In Schnellplatz", which was shrunk).
+
+**M4 keys** (added in M4-1; Pixel lines in §13 and `docs/levels/L2.md`, `L3.md`):
+
+| Key | Args | EN | DE |
+|---|---|---|---|
+| `pixel.l2.swap` (changed) | – | Tap the two arrows to swap blasters! | Tipp auf die zwei Pfeile zum Wechseln! |
+| `pixel.l3.wheel` | – | Hold the two arrows to pick any blaster. | Halte die zwei Pfeile für alle Blaster! |
+| `pixel.generic.swap` | – | New blaster! Tap the two arrows to swap. | Neuer Blaster! Tipp auf die zwei Pfeile. |
+| `pixel.tip.megamech` | – | A giant robot! Hide behind the pillars. | Ein Riesenroboter! Versteck dich hinter Säulen. |
+| `pixel.boss.shield` (optional) | – | A bubble shield! Our shots bounce off now. | Ein Blasenschild! Jetzt prallen Schüsse ab. |
+| `pixel.boss.core_needed` (optional) | – | Zap a robot with a core. Put it in a socket! | Zapp einen Roboter mit Kern. Steck ihn ein! |
+| `pixel.generic.slow` (optional) | – | Achoo! Spores make you slow. Keep moving! | Hatschi! Sporen machen dich langsam. Weiter! |
+| `inventory.assign` (changed DE) | – | Put in quick slot | Schnellplatz |
+| `settings.aimAssist.on` / `.off` | – | On / Off | An / Aus |
+| `settings.aimAssist.hint` | – | Helps your shots hit. | Hilft dir beim Treffen. |
+| `settings.pixelTalk.hint` | – | How much Pixel talks. | Wie viel Pixel redet. |
+| `settings.section.sound` | – | Sound | Ton |
+| `settings.section.play` | – | Play | Spiel |
+| `hud.swap.accessibility` | – | Swap blaster | Blaster wechseln |
+| `hud.swap.accessibilityHint` | – | Hold to pick a blaster. | Halten, um einen Blaster zu wählen. |
+| `hud.weapon.accessibility` | blaster name | Blaster: %@ | Blaster: %@ |
+| `hud.weaponWheel.accessibility` | – | Pick a blaster | Wähle einen Blaster |
+| `hud.weaponWheel.slot.accessibility` | name, mag, reserve | %1$@: %2$lld shots, %3$lld in reserve | %1$@: %2$lld Schüsse, %3$lld in Reserve |
+| `hud.weaponWheel.locked.accessibility` | – | Not found yet | Noch nicht gefunden |
+| `hud.weaponWheel.equipped.accessibility` | – | In your hands | In deiner Hand |
+| `hud.weaponWheel.ammo` | mag, reserve | %1$lld / %2$lld | %1$lld / %2$lld |
+| `hud.bossBar.accessibility` | boss name, phase, phases | %1$@: phase %2$lld of %3$lld | %1$@: Phase %2$lld von %3$lld |
+| `hud.bossBar.shield.accessibility` | – | The shield is on | Der Schild ist an |
+| `seasonComplete.title` | – | Season complete! | Staffel geschafft! |
+| `seasonComplete.subtitle` | – | You switched OVERMIND off! | Du hast OVERMIND ausgeschaltet! |
+| `seasonComplete.score` | points | Score: %1$lld | Punkte: %1$lld |
+| `seasonComplete.datachips` | found, total | Data Chips: %1$lld / %2$lld | Datenchips: %1$lld / %2$lld |
+| `seasonComplete.time` | min, sec | Time: %1$lld:%2$02lld | Zeit: %1$lld:%2$02lld |
+| `seasonComplete.thanks` | – | Thanks for playing! | Danke fürs Spielen! |
+| `seasonComplete.toTitle` | – | Main menu | Hauptmenü |
+
+Season complete card values: score = sum of `bestResults[l1…l5].bestScore`; datachips = sum of
+the best datachips per level, total 15; time (optional chip) = the L5 run time. The boss bar shows
+the boss name `enemy.megamech.name` only to VoiceOver; on screen it has no text or numbers.
 
 `need_item` / `got_item` use "label: name" so German needs no article (eine Sicherung / einen
 Energiekern). The item name comes from `item.<id>.name`. The door counter itself shows only digits
@@ -884,7 +1088,8 @@ is required in the file; the decoder keeps `RulesDef.fallback` (same values) if 
 
 ```json
 { "version": 1, "puzzle": Puzzle, "leash": Leash, "minimap": Minimap, "crate": Crate, "toast": Toast,
-  "inventory": Inventory, "rescue": Rescue, "pixel": Pixel, "hints": Hints, "lowHp": LowHp }
+  "inventory": Inventory, "rescue": Rescue, "pixel": Pixel, "hints": Hints, "lowHp": LowHp,
+  "weapons": Weapons }
 ```
 
 M2 blocks below; the M3 blocks (`inventory`, `rescue`, `pixel`, `hints`, `lowHp`) and the M3
@@ -900,7 +1105,7 @@ fields of `puzzle` and `minimap` are in §16.9.
 | `leash.returnAfterSec` | float | 4.0 | time beyond that range before the enemy walks home; at home it heals to full |
 | `minimap.revealOnEnter` | bool | true | a room is revealed when the hero's centre enters its rect; a corridor when it is entered |
 | `minimap.updateHz` | float | 10 | max minimap pushes per second from the scene |
-| `crate.hp` | int | 20 | supply crate HP: 2 starter shots, 1 spread volley (3 × 7), 4 rapid shots. On 0 it poofs and rolls `pickups.crates.lootTableId`. Crates never hurt and never move |
+| `crate.hp` | int | 20 | supply crate HP: 2 starter shots, 1 spread volley (3 × 8), 4 rapid shots. On 0 it poofs and rolls `pickups.crates.lootTableId`. Crates never hurt and never move |
 | `toast.showSec` | float | 2.5 | how long a `ui.toast.*` line stays (fade in/out included) |
 | `toast.repeatCooldownSec` | float | 3.0 | the same toast key is not shown again inside this time |
 
@@ -945,6 +1150,14 @@ INTERACT range is not here: it is `hero.json → hero.interactRadius` (64 pt).
 
 The idle hint time is per level: `levels.json → hintIdleSec` (§16.5). The rescue invulnerability
 is `hero.json → respawnInvulnerableSec`.
+
+### 16.11 `rules.json` M4 block `weapons`
+
+| Field | Type | Value | Meaning |
+|---|---|---|---|
+| `weapons.swapSec` | float | 0.25 | swap time: no fire while swapping; a running reload is cancelled with no ammo lost (§5.1) |
+| `weapons.wheelLongPressSec` | float | 0.4 | holding SWAP this long opens the weapon wheel; a shorter press is a normal swap |
+| `weapons.wheelTimeScale` | 0…1 | 0.3 | game speed while the wheel is open (ART_BIBLE §15.7); UI animations stay real time |
 
 ### 16.10 Save game (`save.json`)
 
@@ -1065,6 +1278,16 @@ Details: `docs/levels/L1.md` … `L5.md`.
     the right (ART_BIBLE §13.3), which is true whatever the icon shows.
 12. (M3-1) Datachips "unlock a Pixel fact" (§6): the fact texts are not written yet; they need a
     screen to show them (M5 stars/map screen). OK to postpone to M5?
+13. (M4-1) The first shield android in L2 is not guaranteed to be alone, and in some seeds L2 may
+    have none (expected 1.3 per run). A generator option "first encounter per zone"
+    (`firstEncounterRoom` for zone 2) would make the intro reliable. Recommendation: add it in M5
+    polish; M4 uses `maxPerRoom 1` and weight 20 instead. OK?
+14. (M4-1) Question 6 (Easy setting) again, now that enemies shoot: the §8.3 numbers assume 60 %
+    accuracy and the rescue rule. An "Easy" toggle would be enemy damage × 0.5 and telegraphs
+    × 1.25, no other change. Recommendation: wait for the M4-7 hand pass with real behaviours.
+15. (M4-1) A new blaster is **not** auto-equipped on pickup, so the kid presses SWAP once on
+    purpose (Pixel says how). Alternative: auto-equip and let the line say "Tap the arrows to go
+    back". Recommendation: no auto-equip.
 
 ---
 
@@ -1110,6 +1333,36 @@ Details: `docs/levels/L1.md` … `L5.md`.
 | 2026-11-24 | §7 drop + persistence | – → drop scatter 24 pt, no instant re-pickup, puzzle items cleared at level start/end | A kept fuse would skip a puzzle on replay |
 | 2026-11-24 | §12 rescue | – → numbers from `rules.json → rescue`, top-up formula, input lock, enemy shots removed at the beam | M3-1 |
 | 2026-11-24 | new §16.10 save game | – → `save.json` v1 schema; audio volumes stay in `SettingsStore`; start gift = top up to `count` | DECISIONS 2026-11-22 save basics |
+| 2026-11-24 | M4-1 new §8.3 time-to-power-down model + tables (enemy × blaster, boss phases, boss ammo, level combat budget) | – | Balance must be traceable; QA `BalanceSmokeTests` recompute it from JSON |
+| 2026-11-24 | M4-1 `blaster_spread.damage` | 7 → 8 | At kid aim (§8.3) the spread tied the starter at close range (18.2 vs 18.0 DPS), so the L2 reward felt like nothing. With 8 dmg + 1.6/s it is +27 % close up (22.9) and still weak at mid range (7.6). 4 bubbles point blank (32) now pop a boltbot (30) in one volley. Crate still 1 volley (3 × 8 = 24 ≥ 20) |
+| 2026-11-24 | M4-1 `blaster_spread.fireRate` | 1.4 → 1.6 /s | Same reason; sustained 35.7 → 44.9 DPS at 5 bubbles. Ammo per volley unchanged, so a full spread reserve (42 volleys) still lasts ≈ 37 s of fire |
+| 2026-11-24 | §5 DPS text and roles | "starter ≈ 30, spread ≈ 40, rapid ≈ 38; rapid = shields from the side" → 30.0 / 44.9 / 34.5 and roles from §8.3 | Old rapid number was wrong (40 / (4 + 1.8) × 5 = 34.5); roles now follow the model |
+| 2026-11-24 | M4-1 `shieldandroid.shield.turnRateDeg` | 120 → 90 °/s | At 120 °/s the hero (220 pt/s) only out-turns it inside 105 pt, too close to a dashing bruiser for 7-year-olds; at 90 °/s circling works inside 140 pt. "Hit it from behind!" must be doable |
+| 2026-11-24 | M4-1 `shieldandroid.attack.cooldownSec` | 3.5 → 4.0 s | New start-to-start cooldown rule (§8): telegraph 0.7 + dash 0.62 + dizzy 1.5 = 2.82 s left only 0.68 s between dizzy and the next crouch; 4.0 s gives 1.2 s to reposition |
+| 2026-11-24 | §8 cooldown rule | undefined → `cooldownSec` is telegraph start to telegraph start, for enemies and boss | Coder and QA need one meaning |
+| 2026-11-24 | M4-1 `maxThreatPerRoom` | L1 3 → 2, L2 5 → 4, L3 6 → 5, L4 8 → 5, L5 8 → 6 | Old caps were never reached (max room 196 tiles × density / 40 = 2.2 / 3.8 / 4.9 / 6.4 / 5.9). L1–L3 and L5 now equal the real maximum; L4 caps the biggest rooms at 5 (no shield + drone + boltbot pile-up, no 2 shields) |
+| 2026-11-24 | M4-1 L4 `enemyDensity` | 1.3 → 1.2 | Real behaviours: L4 is the shield + drone level. Expected threat 41.3 → 38.1, ≈ 20 → 18.6 enemies, shooting time 53 → 50 s |
+| 2026-11-24 | M4-1 `enemyMix.maxPerRoom` | – → L1 laserdrone 1; L2 laserdrone 2, shieldandroid 1; L4 laserdrone 2; L5 laserdrone 2, shieldandroid 1 | Drones now really shoot; 3 drones cross-firing or 2 shields covering each other is too much for 7–12. L1 meets at most one drone per room |
+| 2026-11-24 | M4-1 L2 weights | boltbot 55 / drone 30 / shield 15 → 50 / 30 / 20 | Shield only spawns in zone 2 (≈ half the rooms): expected 0.9 → 1.3 per run, so most runs teach it once |
+| 2026-11-24 | M4-1 L5 `parTimeSec` | 780 → 900 s | L5 time runs through the boss arena; the fight takes ≈ 2 min at kid aim (§8.3). Without this, ★3 (par × 1.5) would lose ≈ 120 s to the boss |
+| 2026-11-24 | M4-1 new `rules.json → weapons` (§16.11) | GDD text "swap 0.25 s, long-press 0.4 s" → JSON `swapSec` 0.25, `wheelLongPressSec` 0.4; new `wheelTimeScale` 0.3 | CLAUDE.md: balance in JSON. 0.3 × comes from ART_BIBLE §15.7 and is a gameplay number |
+| 2026-11-24 | M4-1 §5 blaster pickup | "adds the blaster + one full magazine" → also: not auto-equipped; already owned → + 1 magazine of its ammo to the reserve | Replays of L2/L3 place the pickup again; auto-equip would skip learning SWAP (open question 15) |
+| 2026-11-24 | M4-1 QA-012: `pixel.l2.swap` | trigger `firstPickup:blaster_spread` → new `firstSwapVisible`; "Tap SWAP to change blasters." / „Tipp auf WECHSELN für andere Blaster." → "Tap the two arrows to swap blasters!" / „Tipp auf die zwei Pfeile zum Wechseln!" | The button is icon-only and hidden with 1 blaster; the line must match what the kid sees and only play when the button is there. New generic `pixel.generic.swap` for runs that get SWAP elsewhere |
+| 2026-11-24 | M4-1 new L3 beat `pixel.l3.wheel` | – → "Hold the two arrows to pick any blaster." on `firstPickup:blaster_rapid` | The wheel is a hidden long-press; with 3 blasters it is worth one hint |
+| 2026-11-24 | M4-1 QA-011: `pixel.tip.megamech` | missing (raw key risk) → "A giant robot! Hide behind the pillars." / „Ein Riesenroboter! Versteck dich hinter Säulen." | §13 said "the boss has no tip", but `StoryDirector` asks for every enemy's tip. The line also points at the pillar cover |
+| 2026-11-24 | M4-1 QA-014: `inventory.assign` (de) | „In Schnellplatz" → „Schnellplatz" | The longer label was shrunk below its neighbours |
+| 2026-11-24 | M4-1 §16.7 M4 keys | 26 new + 2 changed keys (incl. the 3 Pixel lines above): settings (on/off, 2 hints, 2 section headers), SWAP + weapon wheel + boss bar accessibility, Season complete card | M4-5/M4-6 UI; all de + en, Pixel lines ≤ 60 chars |
+| 2026-11-24 | M4-1 §9 arena + `pickups.fixed` | confirmed unchanged (22 × 16, 4 pillars, 2 core machines; 2 healpack + 1 rapid + 1 spread, respawn per phase) | §8.3 ammo check: 425 kid-damage per phase × 3 ≥ 1,200 HP even with empty reserves |
+| 2026-11-24 | M4-1 new boss attack fields (coder request) | code fallbacks → JSON: stomp `waveSec` 0.4 (ring 140 → 220 pt at 200 pt/s, slower than the hero's 220); laser_sweep `gapDeg` 50 (a gap is 175 pt wide at 200 pt, about 5 × the hero), `sweepSec` 4.0 (180° turn; telegraph 1.0 + 4.0 = 5.0 s fits in cooldown 6.0 s). The pillar dizzy in phase 3 gives × 1.0 damage (no new field): it is a free shooting window, and §8.3 already counts on it | Balance in JSON, not in code |
+| 2026-11-24 | M4-1 laser_sweep `sweepDegPerSec` | 45 → 30 °/s | Coder check: at 45 °/s a gap outruns the hero (220 pt/s) beyond 280 pt from the boss, which is most of the arena. At 30 °/s the hero can keep up within 420 pt |
+| 2026-11-24 | M4-1 laser_sweep `gapDeg` | 50 → 60 | More room for kid steering while walking with the gap (a gap is 210 pt wide at 200 pt). 2 × 60° safe out of 360° |
+| 2026-11-24 | §8 cooldown rule | "≥ telegraph + attack + recovery" → "≥ telegraph + active part; dizzy pauses the scheduler" | Phase 3 dash: 3.75 s < 5.2 s with the pillar dizzy; the brain already never attacks while dizzy, so the rule now says what the code does |
+| 2026-11-24 | M4-1 3 optional Pixel lines | – → `pixel.boss.shield`, `pixel.boss.core_needed`, `pixel.generic.slow` (de + en, ≤ 60 chars) | coder-m4 hooks: phase 2 shield up, core hint, spore slow |
+| 2026-11-24 | §8.3 measured check + §5 roles (QA-017) | "spread best vs boltbot" → "any"; new table of measured pairs that differ > 15 % | QA Monte Carlo: rapid 1.37 / starter 1.48 / spread 1.51 s against boltbots. These are whole-hit overshoot effects, not balance errors; no JSON change |
+| 2026-11-24 | QA-016 boss retry rule: `megamech.rescueResetsToPhaseTop` | true → false: the boss keeps its damage on a rescue; only the attack timing resets (telegraph cancelled, cooldowns restart, boss walks to the centre); cores and carriers stay | Owner decision (DECISIONS 2026-11-24). Old rule: a phase had to be cleared on one life (QA bot 2.5–8.6 min, 0 % dodge never cleared phase 1). New estimate 2.1–2.8 min for good and average kids, < 5 min worst case, always finishes. No new `rules.json` field: the existing per-boss flag holds the rule |
+| 2026-11-24 | QA-019 `l5.pickups.fixed` | 2 healpack + 1 rapid + 1 spread → + 1 `ammo_starter` (respawns each phase) | A kid who never swaps had only the starter safety net at the pillars; + 144 kid-damage per phase. Pillars now give 569 per phase, 1,707 in total |
+| 2026-11-24 | §8.3 measured check | the measured table now covers the whole-hit overshoot pairs (mini slime × starter +37 %, boltbot × spread +16 %, overkill 1.67 / 1.6) | QA-017 close-out; QA's corrected overkill value for boltbot × spread is 1.6 |
+| 2026-11-24 | M4-1 `loot.json`, threat costs, other enemies | unchanged | §8.3: floor ammo alone covers each level ≈ 2 × at 60 % accuracy; threat costs match the power-down times |
 | 2026-11-24 | §16.7 keys, xcstrings | 90 keys → 214 (+56 story/level-beat/boss keys from `levels.json`, +21 `pixel.generic.*`, +6 `pixel.tip.*`, +41 UI: 16 inventory, 5 hud, 5 pause, 6 title, 2 levelIntro, 2 ui.toast, 5 settings) | M3-1; M2 leftover 9 |
 | 2026-11-24 | `pixel.l1.heal` | "Tap the heart to heal." / „Tipp auf das Herz zum Heilen." → "Tap the heal pack or apple below to heal!" / „Tipp unten auf Heilpaket oder Apfel zum Heilen!" | The HUD heart can't be tapped; healing is a quick slot (ART_BIBLE §14.1). L1 start gift puts a heal pack in Q1 and apples in Q2, so both words match what the kid sees |
 | 2026-11-24 | `pixel.l1.button` | "A button! Go close and tap the hand." / „… tipp die Hand." → "A button! Walk to it, then tap the glow on the right." / „Ein Knopf! Geh hin und tipp rechts aufs Leuchten." | Same mistake class: the interact icon is not specified as a hand; the yellow pulse ring on the right is (ART_BIBLE §13.3) |

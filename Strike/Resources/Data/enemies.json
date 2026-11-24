@@ -131,7 +131,7 @@
       "attack": {
         "type": "dash",
         "damage": 12,
-        "cooldownSec": 3.5,
+        "cooldownSec": 4.0,
         "telegraphSec": 0.7,
         "range": 260,
         "dashDistance": 260,
@@ -139,7 +139,7 @@
       },
       "shield": {
         "arcDeg": 120,
-        "turnRateDeg": 120,
+        "turnRateDeg": 90,
         "dizzySec": 1.5,
         "dizzyDamageMultiplier": 1.5
       }
@@ -204,7 +204,8 @@
               "cooldownSec": 3.0,
               "telegraphSec": 0.8,
               "range": 220,
-              "telegraphRadius": 140
+              "telegraphRadius": 140,
+              "waveSec": 0.4
             },
             {
               "type": "volley",
@@ -232,7 +233,9 @@
               "telegraphSec": 1.0,
               "range": 700,
               "gaps": 2,
-              "sweepDegPerSec": 45
+              "sweepDegPerSec": 30,
+              "gapDeg": 60,
+              "sweepSec": 4.0
             }
           ],
           "spawn": {
@@ -263,7 +266,8 @@
               "cooldownSec": 3.0,
               "telegraphSec": 0.8,
               "range": 220,
-              "telegraphRadius": 140
+              "telegraphRadius": 140,
+              "waveSec": 0.4
             },
             {
               "type": "volley",
@@ -288,7 +292,7 @@
           ]
         }
       ],
-      "rescueResetsToPhaseTop": true
+      "rescueResetsToPhaseTop": false
     }
   ]
 }

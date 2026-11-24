@@ -1,8 +1,9 @@
 import SwiftUI
 
-/// Settings panel (owner request): Music and Sound effects volume (0–100 %) plus "Mute all".
-/// Opens over the title screen (gear) or the pause menu. Values apply live and persist through
-/// `SettingsStore`. Kid-friendly: every control is at least 64 pt, icons plus text.
+/// Settings panel: Sound (Music and Sound effects volume, "Mute all"; `SettingsStore`) and Play
+/// (Pixel talk lots/some/quiet and Aim help on/off; saved in the run, applied live — M4-6).
+/// Opens over the title screen (gear) or the pause menu. Kid-friendly: every control is at least
+/// 64 pt, icons plus text.
 struct SettingsView: View {
     @Environment(GameModel.self) private var model
     var settings: SettingsStore = .shared
@@ -10,7 +11,8 @@ struct SettingsView: View {
 
     private enum Layout {
         static let target: CGFloat = 64
-        static let panelWidth: CGFloat = 720
+        static let panelWidth: CGFloat = 1040
+        static let columnWidth: CGFloat = 460
         static let step = 0.1
     }
 
@@ -33,20 +35,31 @@ struct SettingsView: View {
                 .foregroundStyle(Self.star)
                 .accessibilityAddTraits(.isHeader)
 
-                volumeRow(title: "settings.music", icon: "music.note", id: "settings.musicSlider",
-                          value: settings.musicVolume, set: settings.setMusicVolume, sample: false)
-                volumeRow(title: "settings.sfx", icon: "speaker.wave.2.fill", id: "settings.sfxSlider",
-                          value: settings.sfxVolume, set: settings.setSFXVolume, sample: true)
-
-                Toggle(isOn: Binding(get: { settings.muteAll }, set: { settings.setMuteAll($0) })) {
-                    Label {
-                        Text("settings.muteAll")
-                    } icon: {
-                        Image(systemName: settings.muteAll ? "speaker.slash.fill" : "speaker.fill")
+                HStack(alignment: .top, spacing: 40) {
+                    VStack(alignment: .leading, spacing: 20) {
+                        sectionHeader("settings.section.sound")
+                        volumeRow(title: "settings.music", icon: "music.note", id: "settings.musicSlider",
+                                  value: settings.musicVolume, set: settings.setMusicVolume, sample: false)
+                        volumeRow(title: "settings.sfx", icon: "speaker.wave.2.fill", id: "settings.sfxSlider",
+                                  value: settings.sfxVolume, set: settings.setSFXVolume, sample: true)
+                        Toggle(isOn: Binding(get: { settings.muteAll }, set: { settings.setMuteAll($0) })) {
+                            Label {
+                                Text("settings.muteAll")
+                            } icon: {
+                                Image(systemName: settings.muteAll ? "speaker.slash.fill" : "speaker.fill")
+                            }
+                        }
+                        .toggleStyle(BigToggleStyle(height: Layout.target, accent: Self.star))
+                        .accessibilityIdentifier("settings.muteToggle")
                     }
+                    .frame(width: Layout.columnWidth)
+                    VStack(alignment: .leading, spacing: 20) {
+                        sectionHeader("settings.section.play")
+                        pixelTalkRow
+                        aimAssistRow
+                    }
+                    .frame(width: Layout.columnWidth)
                 }
-                .toggleStyle(BigToggleStyle(height: Layout.target, accent: Self.star))
-                .accessibilityIdentifier("settings.muteToggle")
 
                 Button {
                     audio.play(.uiBack)
@@ -68,6 +81,62 @@ struct SettingsView: View {
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("settings.view")
+    }
+
+    private func sectionHeader(_ key: LocalizedStringKey) -> some View {
+        Text(key)
+            .font(.system(size: 22, weight: .heavy, design: .rounded))
+            .foregroundStyle(Self.star.opacity(0.9))
+            .textCase(.uppercase)
+            .accessibilityAddTraits(.isHeader)
+    }
+
+    // MARK: Play (saved in the run, applied live)
+
+    private var pixelTalkRow: some View {
+        let current = model.progress.settings.pixelTalk
+        return VStack(alignment: .leading, spacing: 8) {
+            Label { Text("settings.pixelTalk") } icon: { Image(systemName: "bubble.left.fill") }
+                .font(.system(size: 28, weight: .bold, design: .rounded))
+                .foregroundStyle(.white)
+            Text("settings.pixelTalk.hint")
+                .font(.system(size: 18, weight: .semibold, design: .rounded))
+                .foregroundStyle(.white.opacity(0.7))
+            HStack(spacing: 10) {
+                ForEach(PixelTalk.allCases, id: \.self) { t in
+                    Button {
+                        audio.play(.uiTap)
+                        model.setPixelTalk(t)
+                    } label: {
+                        Text(LocalizedStringKey("settings.pixelTalk.\(t.rawValue)"))
+                            .font(.system(size: 24, weight: .bold, design: .rounded))
+                            .frame(maxWidth: .infinity, minHeight: Layout.target)
+                            .background(Capsule().fill(t == current ? Self.star : .white.opacity(0.15)))
+                            .foregroundStyle(t == current ? Self.outline : .white)
+                            .contentShape(Capsule())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("settings.pixelTalk.\(t.rawValue)")
+                    .accessibilityAddTraits(t == current ? .isSelected : [])
+                }
+            }
+            .accessibilityElement(children: .contain)
+            .accessibilityIdentifier("settings.pixelTalk")
+        }
+    }
+
+    private var aimAssistRow: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Toggle(isOn: Binding(get: { model.progress.settings.aimAssist }, set: { audio.play(.uiTap); model.setAimAssist($0) })) {
+                Label { Text("settings.aimAssist") } icon: { Image(systemName: "scope") }
+            }
+            .toggleStyle(BigToggleStyle(height: Layout.target, accent: Self.star))
+            .accessibilityIdentifier("settings.aimAssist")
+            .accessibilityValue(Text(model.progress.settings.aimAssist ? "settings.aimAssist.on" : "settings.aimAssist.off"))
+            Text("settings.aimAssist.hint")
+                .font(.system(size: 18, weight: .semibold, design: .rounded))
+                .foregroundStyle(.white.opacity(0.7))
+        }
     }
 
     private func volumeRow(title: LocalizedStringKey, icon: String, id: String, value: Double,

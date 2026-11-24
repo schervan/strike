@@ -62,3 +62,15 @@
 | 2026-11-24 | Boss uses the lite key pose + `PoseAnimator`; the OVERMIND face screen is an overlay (generated sprites or code-drawn, max 4 moods); boss power-down is a "sparkle burst", never an explosion look | Lite-set decision; kid safety and the audio bible's "no explosions" rule |
 | 2026-11-24 | SWAP button appears once 2 or more blasters are owned; Pixel's swap line plays only then | QA-012: never point kids at a button that is not there |
 | 2026-11-24 | QA-013 (orientations) goes to the owner with a recommendation: support all orientations and window sizes with a "Turn me sideways" pause card, scheduled in M5 | Platform requirement ahead of the M6 submission; product choice belongs to the owner |
+| 2026-11-24 | QA-013 orientation: support all orientations and window sizes; in portrait the game pauses and Pixel shows a "Turn me sideways!" card; gameplay stays landscape. Scheduled in M5 | Owner choice; App Store compliance before M6 TestFlight |
+| 2026-11-24 | QA-016: a rescue in the boss arena keeps the boss's damage; only attack timing resets (inserted cores stay) | Owner choice; every try makes progress, no frustration for kids |
+| 2026-11-24 | QA-018: no glossy red projectiles; spore shots and boss rockets get non-red kid-safe colours | Kid safety ("red only as soft glow") |
+| 2026-11-24 | M4 "Content" accepted (branch `m4-content` @ 9ccbacd; 327 unit + 23 UI tests, boss fuzz 0/10,000, balance smoke within tolerance, all enemy types and the boss checked by hand) | All M4 done-when criteria met; leftovers carried into M5/M6 |
+| 2026-11-24 | Generator option `firstEncounterPerZone` (L2 zone 1: one shield android alone) is added in M5 | Accepts the designer's GDD §19 q13 recommendation; reliable intro of the shield mechanic |
+| 2026-11-24 | Boss length (65–98 s for the QA bot vs ~2 min in the GDD) is not tuned before an owner/kid playtest; it is an M6 balancing item | Bot skill is not kid skill; tuning on bot data alone risks making it too hard |
+| 2026-11-24 | All settings (audio, Pixel talk, aim help, left-handed, Easy) move to one device-level `AppSettings` store; the save keeps progress only (save v2 with a v1 migration) | "New game" must not reset a kid's settings; one place for the Settings screen |
+| 2026-11-24 | Save migration never deletes data: v1 is backed up before the first v2 write, and a save from an unknown future version is left untouched | Kids' progress is the most valuable data in the app |
+| 2026-11-24 | Gameplay stays landscape; all menus (title, level map, facts, settings) also lay out in portrait; only the game screen shows the turn-me card | Implements the QA-013 owner decision without a portrait gameplay layout |
+| 2026-11-24 | Easy mode is built behind a feature flag in M5 and enabled only after the owner accepts it | Open owner question (GDD §19 q6/q14); avoids blocking M5 |
+| 2026-11-24 | Credits/licenses are shown as static in-app text (no outbound links) | Kids category: no links out without a parental gate |
+| 2026-11-24 | Audio tasks go to the sound-designer agent (owner of AUDIO_BIBLE and `audio.json`) | Agent added with the audio run (CLAUDE.md) |
