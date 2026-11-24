@@ -62,3 +62,4 @@
 | 2026-11-24 | Boss uses the lite key pose + `PoseAnimator`; the OVERMIND face screen is an overlay (generated sprites or code-drawn, max 4 moods); boss power-down is a "sparkle burst", never an explosion look | Lite-set decision; kid safety and the audio bible's "no explosions" rule |
 | 2026-11-24 | SWAP button appears once 2 or more blasters are owned; Pixel's swap line plays only then | QA-012: never point kids at a button that is not there |
 | 2026-11-24 | QA-013 (orientations) goes to the owner with a recommendation: support all orientations and window sizes with a "Turn me sideways" pause card, scheduled in M5 | Platform requirement ahead of the M6 submission; product choice belongs to the owner |
+| 2026-11-24 | QA-013 orientation: support all orientations and window sizes; in portrait the game pauses and Pixel shows a "Turn me sideways!" card; gameplay stays landscape. Scheduled in M5 | Owner choice; App Store compliance before M6 TestFlight |
