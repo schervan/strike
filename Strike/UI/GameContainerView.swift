@@ -14,6 +14,7 @@ struct GameContainerView: View {
             if let scene {
                 SpriteView(
                     scene: scene,
+                    isPaused: model.isPaused,
                     preferredFramesPerSecond: 60,
                     options: [.ignoresSiblingOrder],
                     debugOptions: debugOptions
@@ -33,7 +34,8 @@ struct GameContainerView: View {
                 .padding(.top, MinimapView.Layout.top)
 
             Button {
-                model.returnToTitle()
+                AudioManager.shared.play(.uiTap)
+                model.pause()
             } label: {
                 AtlasImage("ui_btn_pause")
                     .frame(width: 64, height: 64)
@@ -48,6 +50,11 @@ struct GameContainerView: View {
                 .padding(.bottom, 16)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
             #endif
+
+            if model.isPaused {
+                PauseMenuView()
+                    .transition(.opacity)
+            }
         }
         .onAppear {
             guard scene == nil else { return }

@@ -50,6 +50,11 @@ final class GameScene: SKScene, @preconcurrency SKPhysicsContactDelegate, EnemyW
     private var lastHUD: HUDState?
     private var pendingHits: [(ProjectileNode, SKNode?)] = []
     private let lightHaptic = UIImpactFeedbackGenerator(style: .light)
+    /// Sound effects and jingles (tests swap in a recorder).
+    var audio: AudioSink? = AudioManager.shared
+    private var playedLevelStart = false
+    private var wasReloading = false
+    private var wasTriggerHeld = false
     private let mediumHaptic = UIImpactFeedbackGenerator(style: .medium)
 
     // Door pan, exit, minimap, toasts.
@@ -178,6 +183,10 @@ final class GameScene: SKScene, @preconcurrency SKPhysicsContactDelegate, EnemyW
         cameraController.snap(to: hero.position, visibleSize: visibleSize)
         lightHaptic.prepare()
         mediumHaptic.prepare()
+        if !playedLevelStart {
+            playedLevelStart = true
+            audio?.play(.levelStart)
+        }
     }
 
     /// Part of the scene actually on screen with `.aspectFill`.
@@ -191,6 +200,10 @@ final class GameScene: SKScene, @preconcurrency SKPhysicsContactDelegate, EnemyW
 
     var heroPosition: CGPoint { hero.position }
     var activeEnemies: [EnemyNode] { enemies.filter { !$0.isPoweredDown } }
+
+    func enemyDidSpotHero(_ enemy: EnemyNode) {
+        audio?.play(.enemyAlert)
+    }
 
     // MARK: Commands
 
@@ -209,6 +222,9 @@ final class GameScene: SKScene, @preconcurrency SKPhysicsContactDelegate, EnemyW
         case .debugRevealMap:
             revealAll()
             pushMinimap(force: true)
+        case .resetInput:
+            sticks.reset()
+            hero.drive(direction: .zero, magnitude: 0, dt: 0)
         }
         pushHUD()
     }
@@ -305,9 +321,18 @@ final class GameScene: SKScene, @preconcurrency SKPhysicsContactDelegate, EnemyW
             hero.animator.face(along: m.direction)
         }
         hero.tick(dt: dt)
-        if hero.weapon.tryFire(triggerHeld: sticks.fireHeld) {
+        let held = sticks.fireHeld
+        let pressed = held && !wasTriggerHeld
+        wasTriggerHeld = held
+        if hero.weapon.tryFire(triggerHeld: held) {
             fire()
+        } else if pressed, hero.weapon.magazine == 0, !hero.weapon.isReloading {
+            // Trigger pulled with nothing to fire and nothing to reload.
+            audio?.play(.emptyClick)
         }
+        let reloading = hero.weapon.isReloading
+        if reloading, !wasReloading { audio?.play(.reload) }
+        wasReloading = reloading
     }
 
     private func fire() {
@@ -335,6 +360,7 @@ final class GameScene: SKScene, @preconcurrency SKPhysicsContactDelegate, EnemyW
             _ = pool.spawn(weapon: w, texture: texture, at: muzzle, angle: angle + offset, in: worldNode)
         }
         hero.animator.playRecoil(angle: angle)
+        audio?.play(.shot(weaponId: w.id))
         worldNode.addChild(Particles.muzzle(color: Palette.projectile(style: w.projectileStyle), at: muzzle, angle: angle))
     }
 
@@ -385,6 +411,7 @@ final class GameScene: SKScene, @preconcurrency SKPhysicsContactDelegate, EnemyW
         case .hit:
             enemy.knockBack(along: dir, distance: shot.knockback)
             enemy.animator.playHit(from: dir)
+            audio?.play(.enemyHit)
             if enemy.brain.currentState is IdleState { enemy.brain.enter(AlertState.self) }
         case .depleted:
             powerDown(enemy)
@@ -394,6 +421,7 @@ final class GameScene: SKScene, @preconcurrency SKPhysicsContactDelegate, EnemyW
     private func powerDown(_ enemy: EnemyNode) {
         session.addScore(enemy.def.scoreValue)
         mediumHaptic.impactOccurred()
+        audio?.play(.enemyPowerDown)
         let origin = enemy.position
         worldNode.addChild(Particles.poof(at: origin))
         let drops = LootRoller.roll(tableId: enemy.def.lootTableId, data: data, context: lootContext, random: random)
@@ -406,6 +434,7 @@ final class GameScene: SKScene, @preconcurrency SKPhysicsContactDelegate, EnemyW
     }
 
     private func breakCrate(_ crate: CrateNode) {
+        audio?.play(.crateBreak)
         worldNode.addChild(Particles.poof(at: crate.position, bodyColors: [Palette.star, Palette.robotMetalLight]))
         let drops = LootRoller.roll(tableId: crate.lootTableId, data: data, context: lootContext, random: random)
         spawnLoot(drops, at: crate.position)
@@ -464,6 +493,7 @@ final class GameScene: SKScene, @preconcurrency SKPhysicsContactDelegate, EnemyW
             }
         }
         for p in collected {
+            audio?.play(Self.pickupSound(p.item))
             worldNode.addChild(Particles.collect(at: p.position))
             p.collect()
             pickups.removeAll { $0 === p }
@@ -500,6 +530,15 @@ final class GameScene: SKScene, @preconcurrency SKPhysicsContactDelegate, EnemyW
         default:
             collectedCounts[item.id, default: 0] += 1
             return true
+        }
+    }
+
+    static func pickupSound(_ item: ItemDef) -> AudioEvent {
+        switch item.category {
+        case .ammo: .pickupAmmo
+        case .heal, .food: .pickupHeal
+        case .collectible where item.id == LootRoller.boltItemId: .pickupBolt
+        default: .pickupItem
         }
     }
 
@@ -544,10 +583,12 @@ final class GameScene: SKScene, @preconcurrency SKPhysicsContactDelegate, EnemyW
         switch result {
         case .activated:
             lightHaptic.impactOccurred()
+            audio?.play(node.type == .machine ? .machineOn : .buttonPress)
             node.setOn(true, animated: true)
             elementChanged(id)
         case .toggled:
             lightHaptic.impactOccurred()
+            audio?.play(.leverPull)
             (node as? LeverNode)?.playPull(to: puzzle.isOn(id), duration: data.rules.puzzle.leverPullSec)
             elementChanged(id)
         case .needsItem(let item):
@@ -564,6 +605,7 @@ final class GameScene: SKScene, @preconcurrency SKPhysicsContactDelegate, EnemyW
             guard let node = built.interactables[e.id] as? PressurePlateNode else { continue }
             let held = e.cells.contains(heroCell)
             if puzzle.updatePlate(e.id, occupied: held, dt: dt) == .activated {
+                audio?.play(.plateOn)
                 node.setOn(true, animated: true)
                 elementChanged(e.id)
             } else {
@@ -651,6 +693,7 @@ final class GameScene: SKScene, @preconcurrency SKPhysicsContactDelegate, EnemyW
         for c in door.cells { solidGrid[c] = .floor }
         pathfinder.setCells(door.cells, walkable: true)
         for e in enemies { e.clearPath() }
+        audio?.play(door === built.exitDoor ? .doorOpen : .gateUnlocked)
         if door === built.exitDoor {
             built.exitPad.setOn(true)
             showToast("ui.toast.door_open")
@@ -680,6 +723,7 @@ final class GameScene: SKScene, @preconcurrency SKPhysicsContactDelegate, EnemyW
             else { continue }
             if session.touchCheckpoint(c.id) {
                 node.setOn(true, animated: true)
+                audio?.play(.checkpoint)
                 showToast("ui.toast.checkpoint")
                 pushMinimap(force: true)
             }
@@ -701,6 +745,7 @@ final class GameScene: SKScene, @preconcurrency SKPhysicsContactDelegate, EnemyW
         isComplete = true
         session.complete()
         built.exitPad.playReached()
+        audio?.playJingle(data.level(after: levelDef.id) == nil ? MusicID.seasonComplete : MusicID.levelComplete)
         hero.drive(direction: .zero, magnitude: 0, dt: 0)
         let result = LevelResult(levelId: levelDef.id, nameKey: levelDef.nameKey, timeSec: Int(session.elapsed.rounded()),
                                  score: session.score, datachips: session.datachipsFound.count,
@@ -726,6 +771,7 @@ final class GameScene: SKScene, @preconcurrency SKPhysicsContactDelegate, EnemyW
                 hero.animator.playHit(from: dir)
                 worldNode.addChild(Particles.heroHit(at: hero.position))
                 lightHaptic.impactOccurred()
+                audio?.play(.heroHurt)
             case .depleted:
                 lightHaptic.impactOccurred()
                 rescueHero()
@@ -743,6 +789,7 @@ final class GameScene: SKScene, @preconcurrency SKPhysicsContactDelegate, EnemyW
     /// M2 rescue (the Pixel beam is M3): sparkle out, reappear at the last checkpoint with full HP
     /// and a short invulnerability window; living enemies walk home. No "game over".
     func rescueHero() {
+        audio?.play(.rescue)
         worldNode.addChild(Particles.teleport(at: hero.position))
         hero.clearKnockback()
         hero.position = respawnPoint

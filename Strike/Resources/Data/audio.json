@@ -1,0 +1,286 @@
+{
+  "version": 1,
+  "music": {
+    "crossfadeSec": 1.5,
+    "fadeInSec": 0.8,
+    "fadeOutSec": 1.0,
+    "jingleDuckLevel": 0.2,
+    "duckAttackSec": 0.2,
+    "duckReleaseSec": 1.2,
+    "masterVolume": 1.0,
+    "tracks": {
+      "music_title": {
+        "file": "mus_title.m4a",
+        "volume": 0.9,
+        "loop": true,
+        "bpm": 120,
+        "lengthSec": 64
+      },
+      "music_rooftop": {
+        "file": "mus_l1.m4a",
+        "volume": 0.8,
+        "loop": true,
+        "bpm": 124,
+        "lengthSec": 76
+      },
+      "music_factory": {
+        "file": "mus_l2.m4a",
+        "volume": 0.8,
+        "loop": true,
+        "bpm": 120,
+        "lengthSec": 76
+      },
+      "music_greenhouse": {
+        "file": "mus_l3.m4a",
+        "volume": 0.8,
+        "loop": true,
+        "bpm": 112,
+        "lengthSec": 80
+      },
+      "music_server": {
+        "file": "mus_l4.m4a",
+        "volume": 0.8,
+        "loop": true,
+        "bpm": 132,
+        "lengthSec": 80
+      },
+      "music_core": {
+        "file": "mus_l5.m4a",
+        "volume": 0.8,
+        "loop": true,
+        "bpm": 136,
+        "lengthSec": 84
+      },
+      "music_boss": {
+        "file": "mus_boss.m4a",
+        "volume": 0.85,
+        "loop": true,
+        "bpm": 140,
+        "lengthSec": 64
+      },
+      "music_level_complete": {
+        "file": "mus_level_complete.m4a",
+        "volume": 0.9,
+        "loop": false,
+        "bpm": 120,
+        "lengthSec": 4
+      },
+      "music_season_complete": {
+        "file": "mus_season_complete.m4a",
+        "volume": 0.9,
+        "loop": false,
+        "bpm": 120,
+        "lengthSec": 8
+      }
+    }
+  },
+  "sfx": {
+    "masterVolume": 1.0,
+    "maxTotalVoices": 16,
+    "sounds": {
+      "sfx_shot_starter": {
+        "file": "sfx_shot_starter.caf",
+        "volume": 0.7,
+        "pitchVariance": 0.05,
+        "maxVoices": 4,
+        "cooldownSec": 0.05
+      },
+      "sfx_shot_spread": {
+        "file": "sfx_shot_spread.caf",
+        "volume": 0.7,
+        "pitchVariance": 0.05,
+        "maxVoices": 3,
+        "cooldownSec": 0.12
+      },
+      "sfx_shot_rapid": {
+        "file": "sfx_shot_rapid.caf",
+        "volume": 0.5,
+        "pitchVariance": 0.06,
+        "maxVoices": 6,
+        "cooldownSec": 0.04
+      },
+      "sfx_shot_enemy": {
+        "file": "sfx_shot_enemy.caf",
+        "volume": 0.55,
+        "pitchVariance": 0.05,
+        "maxVoices": 3,
+        "cooldownSec": 0.1
+      },
+      "sfx_alert": {
+        "file": "sfx_alert.caf",
+        "volume": 0.6,
+        "pitchVariance": 0.02,
+        "maxVoices": 2,
+        "cooldownSec": 0.4
+      },
+      "sfx_powerdown_poof": {
+        "file": "sfx_powerdown_poof.caf",
+        "volume": 0.75,
+        "pitchVariance": 0.04,
+        "maxVoices": 4,
+        "cooldownSec": 0.08
+      },
+      "sfx_hit_enemy": {
+        "file": "sfx_hit_enemy.caf",
+        "volume": 0.6,
+        "pitchVariance": 0.05,
+        "maxVoices": 5,
+        "cooldownSec": 0.04
+      },
+      "sfx_hero_hurt": {
+        "file": "sfx_hero_hurt.caf",
+        "volume": 0.7,
+        "pitchVariance": 0.03,
+        "maxVoices": 2,
+        "cooldownSec": 0.3
+      },
+      "sfx_rescue_teleport": {
+        "file": "sfx_rescue_teleport.caf",
+        "volume": 0.75,
+        "pitchVariance": 0.0,
+        "maxVoices": 1,
+        "cooldownSec": 0.5
+      },
+      "sfx_reload": {
+        "file": "sfx_reload.caf",
+        "volume": 0.6,
+        "pitchVariance": 0.02,
+        "maxVoices": 1,
+        "cooldownSec": 0.2
+      },
+      "sfx_empty_click": {
+        "file": "sfx_empty_click.caf",
+        "volume": 0.45,
+        "pitchVariance": 0.03,
+        "maxVoices": 1,
+        "cooldownSec": 0.15
+      },
+      "sfx_pickup_ammo": {
+        "file": "sfx_pickup_ammo.caf",
+        "volume": 0.65,
+        "pitchVariance": 0.03,
+        "maxVoices": 2,
+        "cooldownSec": 0.08
+      },
+      "sfx_pickup_heal": {
+        "file": "sfx_pickup_heal.caf",
+        "volume": 0.7,
+        "pitchVariance": 0.0,
+        "maxVoices": 1,
+        "cooldownSec": 0.2
+      },
+      "sfx_pickup_item": {
+        "file": "sfx_pickup_item.caf",
+        "volume": 0.65,
+        "pitchVariance": 0.03,
+        "maxVoices": 2,
+        "cooldownSec": 0.08
+      },
+      "sfx_pickup_bolt": {
+        "file": "sfx_pickup_bolt.caf",
+        "volume": 0.55,
+        "pitchVariance": 0.06,
+        "maxVoices": 4,
+        "cooldownSec": 0.03
+      },
+      "sfx_button_press": {
+        "file": "sfx_button_press.caf",
+        "volume": 0.7,
+        "pitchVariance": 0.02,
+        "maxVoices": 2,
+        "cooldownSec": 0.1
+      },
+      "sfx_lever_pull": {
+        "file": "sfx_lever_pull.caf",
+        "volume": 0.7,
+        "pitchVariance": 0.02,
+        "maxVoices": 1,
+        "cooldownSec": 0.2
+      },
+      "sfx_plate_on": {
+        "file": "sfx_plate_on.caf",
+        "volume": 0.65,
+        "pitchVariance": 0.0,
+        "maxVoices": 1,
+        "cooldownSec": 0.2
+      },
+      "sfx_machine_on": {
+        "file": "sfx_machine_on.caf",
+        "volume": 0.7,
+        "pitchVariance": 0.0,
+        "maxVoices": 1,
+        "cooldownSec": 0.5
+      },
+      "sfx_door_open": {
+        "file": "sfx_door_open.caf",
+        "volume": 0.75,
+        "pitchVariance": 0.0,
+        "maxVoices": 1,
+        "cooldownSec": 0.5
+      },
+      "sfx_gate_unlocked": {
+        "file": "sfx_gate_unlocked.caf",
+        "volume": 0.75,
+        "pitchVariance": 0.0,
+        "maxVoices": 1,
+        "cooldownSec": 0.5
+      },
+      "sfx_checkpoint": {
+        "file": "sfx_checkpoint.caf",
+        "volume": 0.7,
+        "pitchVariance": 0.0,
+        "maxVoices": 1,
+        "cooldownSec": 0.5
+      },
+      "sfx_crate_break": {
+        "file": "sfx_crate_break.caf",
+        "volume": 0.7,
+        "pitchVariance": 0.05,
+        "maxVoices": 3,
+        "cooldownSec": 0.1
+      },
+      "sfx_ui_tap": {
+        "file": "sfx_ui_tap.caf",
+        "volume": 0.6,
+        "pitchVariance": 0.02,
+        "maxVoices": 2,
+        "cooldownSec": 0.05
+      },
+      "sfx_ui_back": {
+        "file": "sfx_ui_back.caf",
+        "volume": 0.6,
+        "pitchVariance": 0.02,
+        "maxVoices": 2,
+        "cooldownSec": 0.05
+      },
+      "sfx_level_start": {
+        "file": "sfx_level_start.caf",
+        "volume": 0.7,
+        "pitchVariance": 0.0,
+        "maxVoices": 1,
+        "cooldownSec": 0.5
+      },
+      "sfx_pixel_beep_1": {
+        "file": "sfx_pixel_beep_1.caf",
+        "volume": 0.6,
+        "pitchVariance": 0.04,
+        "maxVoices": 1,
+        "cooldownSec": 0.1
+      },
+      "sfx_pixel_beep_2": {
+        "file": "sfx_pixel_beep_2.caf",
+        "volume": 0.6,
+        "pitchVariance": 0.04,
+        "maxVoices": 1,
+        "cooldownSec": 0.1
+      },
+      "sfx_pixel_beep_3": {
+        "file": "sfx_pixel_beep_3.caf",
+        "volume": 0.6,
+        "pitchVariance": 0.04,
+        "maxVoices": 1,
+        "cooldownSec": 0.1
+      }
+    }
+  }
+}

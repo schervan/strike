@@ -29,11 +29,13 @@ nonisolated struct GameData: Sendable {
     let levelOrder: [LevelDef]
     /// `rules.json` (or `RulesDef.fallback` while the file is missing).
     let rules: RulesDef
+    /// `audio.json` (or `AudioDef.empty` while the file is missing).
+    let audio: AudioDef
     /// Ids that appeared more than once in their file (reported by `validate()`).
     let duplicateIds: [String]
 
     init(weapons: [WeaponDef], enemies: [EnemyDef], items: [ItemDef], loot: LootFile, hero: HeroFile,
-         levels: [LevelDef] = [], rules: RulesDef = .fallback) {
+         levels: [LevelDef] = [], rules: RulesDef = .fallback, audio: AudioDef = .empty) {
         var dupes: [String] = []
         func index<T: Identifiable>(_ list: [T], _ file: String) -> [String: T] where T.ID == String {
             var out: [String: T] = [:]
@@ -53,6 +55,7 @@ nonisolated struct GameData: Sendable {
         self.levels = index(levels, "levels")
         self.levelOrder = self.levels.values.sorted { $0.index < $1.index }
         self.rules = rules
+        self.audio = audio
         self.duplicateIds = dupes
     }
 
@@ -64,7 +67,18 @@ nonisolated struct GameData: Sendable {
         let hero: HeroFile = try decode("hero", bundle)
         let levels: LevelsFile = try decode("levels", bundle)
         return GameData(weapons: weapons.weapons, enemies: enemies.enemies, items: items.items, loot: loot, hero: hero,
-                        levels: levels.levels, rules: try loadRules(bundle))
+                        levels: levels.levels, rules: try loadRules(bundle), audio: try loadAudio(bundle))
+    }
+
+    /// `audio.json`, tolerant while the file is missing (silent game). A file that exists but does
+    /// not decode still throws.
+    static func loadAudio(_ bundle: Bundle) throws -> AudioDef {
+        do {
+            return try decode("audio", bundle)
+        } catch GameDataError.missingFile {
+            Logger(subsystem: "io.schervan.strike", category: "data").warning("audio.json missing, audio is silent")
+            return .empty
+        }
     }
 
     /// `rules.json`, tolerant while the file is not in the bundle yet (TASKS M2-3): falls back to

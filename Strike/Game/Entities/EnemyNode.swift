@@ -10,6 +10,12 @@ protocol EnemyWorld: AnyObject {
     var pathfinder: Pathfinder { get }
     var activeEnemies: [EnemyNode] { get }
     var random: GKRandom { get }
+    /// An idle enemy noticed the hero (alert "!" starts).
+    func enemyDidSpotHero(_ enemy: EnemyNode)
+}
+
+extension EnemyWorld {
+    func enemyDidSpotHero(_ enemy: EnemyNode) {}
 }
 
 /// Generic enemy built from an `EnemyDef`: key-pose sprite, `PoseAnimator`, `Health` and a

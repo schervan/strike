@@ -28,7 +28,7 @@ struct LevelCompleteView: View {
                 .padding(24)
                 .background(RoundedRectangle(cornerRadius: 20).fill(Self.panel.opacity(0.85)))
                 HStack(spacing: 24) {
-                    Button { model.returnToTitle() } label: {
+                    Button { AudioManager.shared.play(.uiBack); model.returnToTitle() } label: {
                         Text("levelComplete.toTitle")
                             .font(.system(size: 26, weight: .bold, design: .rounded))
                             .padding(.horizontal, 32).padding(.vertical, 16)
@@ -37,7 +37,7 @@ struct LevelCompleteView: View {
                     .buttonBorderShape(.capsule)
                     .tint(.white)
                     .accessibilityIdentifier("levelComplete.toTitle")
-                    Button { model.nextLevel() } label: {
+                    Button { AudioManager.shared.play(.uiTap); model.nextLevel() } label: {
                         Text("levelComplete.continue")
                             .font(.system(size: 32, weight: .bold, design: .rounded))
                             .padding(.horizontal, 48).padding(.vertical, 16)

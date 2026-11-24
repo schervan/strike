@@ -60,6 +60,7 @@ final class AlertState: EnemyState, @unchecked Sendable {
         remaining = enemy.def.effectiveAlertSec
         enemy.desiredVelocity = .zero
         enemy.showAlert(duration: remaining)
+        enemy.world?.enemyDidSpotHero(enemy)
         if let w = enemy.world {
             enemy.animator.face(along: CGVector(dx: w.heroPosition.x - enemy.position.x, dy: 0))
         }

@@ -50,3 +50,5 @@
 | 2026-11-22 | Settings values (Pixel talk level, aim assist) live in the save from M3 with defaults; the Settings screen is M5 | Pixel's talk filter is needed now, the menu is presentation work |
 | 2026-11-22 | M3 pause menu = Resume, Inventory, Quit to title | Settings and the level map arrive in M5 |
 | 2026-11-22 | Story/Pixel text keys referenced by `levels.json` must be covered by `LocalizationKeyTests` | 56 keys were missing and no test caught it |
+| 2026-11-23 | Music from Lyria 3.5 (title = v1, owner pick); SFX are synthesized by our own script (`tools/synth_sfx.py`) because Lyria only produces music, not usable short SFX | Owner listened to the Lyria SFX output and rejected it |
+| 2026-11-23 | Settings screen with separate Music and Sound effects volume (owner request) | Owner request |

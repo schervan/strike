@@ -1,0 +1,85 @@
+{"id": "music_title", "model": "lyria-3.5", "status": 200, "attempt": 1, "call": 1, "sec": 31.0, "modalities": ["AUDIO", "TEXT"], "error": "", "ts": "2026-11-23T20:33:45"}
+{"id": "music_title", "model": "lyria-3.5", "mime": "audio/mpeg", "bytes": 1558763, "ext": "mp3", "seconds": 64.63, "ts": "2026-11-23T20:33:46"}
+{"id": "music_title", "model": "lyria-3.5", "status": 200, "attempt": 1, "call": 2, "sec": 30.4, "modalities": ["AUDIO", "TEXT"], "error": "", "ts": "2026-11-23T20:34:16"}
+{"id": "music_title", "model": "lyria-3.5", "mime": "audio/mpeg", "bytes": 1608918, "ext": "mp3", "seconds": 66.72, "ts": "2026-11-23T20:34:16"}
+{"id": "music_title", "model": "lyria-3.5", "status": 200, "attempt": 1, "call": 3, "sec": 30.3, "modalities": ["AUDIO", "TEXT"], "error": "", "ts": "2026-11-23T20:34:46"}
+{"id": "music_title", "model": "lyria-3.5", "mime": "audio/mpeg", "bytes": 1553748, "ext": "mp3", "seconds": 64.42, "ts": "2026-11-23T20:34:47"}
+{"id": "music_rooftop", "model": "lyria-3.5", "status": 200, "attempt": 1, "call": 1, "sec": 29.6, "modalities": ["AUDIO", "TEXT"], "error": "", "ts": "2026-11-23T20:38:29"}
+{"id": "music_rooftop", "model": "lyria-3.5", "mime": "audio/mpeg", "bytes": 1906714, "ext": "mp3", "seconds": 79.12, "ts": "2026-11-23T20:38:29"}
+{"id": "music_factory", "model": "lyria-3.5", "status": 200, "attempt": 1, "call": 2, "sec": 32.7, "modalities": ["AUDIO", "TEXT"], "error": "", "ts": "2026-11-23T20:39:01"}
+{"id": "music_factory", "model": "lyria-3.5", "mime": "audio/mpeg", "bytes": 1854051, "ext": "mp3", "seconds": 76.93, "ts": "2026-11-23T20:39:02"}
+{"id": "music_greenhouse", "model": "lyria-3.5", "status": 200, "attempt": 1, "call": 3, "sec": 31.0, "modalities": ["AUDIO", "TEXT"], "error": "", "ts": "2026-11-23T20:39:33"}
+{"id": "music_greenhouse", "model": "lyria-3.5", "mime": "audio/mpeg", "bytes": 1961885, "ext": "mp3", "seconds": 81.42, "ts": "2026-11-23T20:39:33"}
+{"id": "music_server", "model": "lyria-3.5", "status": 200, "attempt": 1, "call": 4, "sec": 29.5, "modalities": ["AUDIO", "TEXT"], "error": "", "ts": "2026-11-23T20:40:02"}
+{"id": "music_server", "model": "lyria-3.5", "mime": "audio/mpeg", "bytes": 1953108, "ext": "mp3", "seconds": 81.06, "ts": "2026-11-23T20:40:03"}
+{"id": "music_core", "model": "lyria-3.5", "status": 200, "attempt": 1, "call": 5, "sec": 32.2, "modalities": ["AUDIO", "TEXT"], "error": "", "ts": "2026-11-23T20:40:35"}
+{"id": "music_core", "model": "lyria-3.5", "mime": "audio/mpeg", "bytes": 2083511, "ext": "mp3", "seconds": 86.49, "ts": "2026-11-23T20:40:35"}
+{"id": "music_boss", "model": "lyria-3.5", "status": 200, "attempt": 1, "call": 6, "sec": 28.5, "modalities": ["AUDIO", "TEXT"], "error": "", "ts": "2026-11-23T20:41:03"}
+{"id": "music_boss", "model": "lyria-3.5", "mime": "audio/mpeg", "bytes": 1570048, "ext": "mp3", "seconds": 65.1, "ts": "2026-11-23T20:41:04"}
+{"id": "music_level_complete", "model": "lyria-3.5", "status": 200, "attempt": 1, "call": 7, "sec": 29.5, "modalities": ["AUDIO", "TEXT"], "error": "", "ts": "2026-11-23T20:41:33"}
+{"id": "music_level_complete", "model": "lyria-3.5", "mime": "audio/mpeg", "bytes": 1511116, "ext": "mp3", "seconds": 62.64, "ts": "2026-11-23T20:41:33"}
+{"id": "music_season_complete", "model": "lyria-3.5", "status": 200, "attempt": 1, "call": 8, "sec": 30.1, "modalities": ["AUDIO", "TEXT"], "error": "", "ts": "2026-11-23T20:42:03"}
+{"id": "music_season_complete", "model": "lyria-3.5", "mime": "audio/mpeg", "bytes": 1519893, "ext": "mp3", "seconds": 63.01, "ts": "2026-11-23T20:42:03"}
+{"id": "sfx_shot_starter", "model": "lyria-3-clip-preview", "status": 200, "attempt": 1, "call": 1, "sec": 15.5, "modalities": ["AUDIO", "TEXT"], "error": "", "ts": "2026-11-23T20:42:19"}
+{"id": "sfx_shot_starter", "model": "lyria-3-clip-preview", "mime": "audio/mpeg", "bytes": 656598, "ext": "mp3", "seconds": 27.04, "ts": "2026-11-23T20:42:19"}
+{"id": "sfx_shot_spread", "model": "lyria-3-clip-preview", "status": 200, "attempt": 1, "call": 2, "sec": 15.8, "modalities": ["AUDIO", "TEXT"], "error": "", "ts": "2026-11-23T20:42:35"}
+{"id": "sfx_shot_spread", "model": "lyria-3-clip-preview", "mime": "audio/mpeg", "bytes": 730577, "ext": "mp3", "seconds": 30.12, "ts": "2026-11-23T20:42:35"}
+{"id": "sfx_shot_rapid", "model": "lyria-3-clip-preview", "status": 200, "attempt": 1, "call": 3, "sec": 15.5, "modalities": ["AUDIO", "TEXT"], "error": "", "ts": "2026-11-23T20:42:51"}
+{"id": "sfx_shot_rapid", "model": "lyria-3-clip-preview", "mime": "audio/mpeg", "bytes": 692961, "ext": "mp3", "seconds": 28.55, "ts": "2026-11-23T20:42:51"}
+{"id": "sfx_shot_enemy", "model": "lyria-3-clip-preview", "status": 200, "attempt": 1, "call": 4, "sec": 15.8, "modalities": ["AUDIO", "TEXT"], "error": "", "ts": "2026-11-23T20:43:06"}
+{"id": "sfx_shot_enemy", "model": "lyria-3-clip-preview", "mime": "audio/mpeg", "bytes": 658479, "ext": "mp3", "seconds": 27.12, "ts": "2026-11-23T20:43:07"}
+{"id": "sfx_alert", "model": "lyria-3-clip-preview", "status": 200, "attempt": 1, "call": 5, "sec": 9.6, "modalities": ["AUDIO", "TEXT"], "error": "", "ts": "2026-11-23T20:43:16"}
+{"id": "sfx_alert", "model": "lyria-3-clip-preview", "mime": "audio/mpeg", "bytes": 697349, "ext": "mp3", "seconds": 28.73, "ts": "2026-11-23T20:43:16"}
+{"id": "sfx_powerdown_poof", "model": "lyria-3-clip-preview", "status": 200, "attempt": 1, "call": 6, "sec": 8.7, "modalities": ["AUDIO", "TEXT"], "error": "", "ts": "2026-11-23T20:43:25"}
+{"id": "sfx_powerdown_poof", "model": "lyria-3-clip-preview", "mime": "audio/mpeg", "bytes": 677914, "ext": "mp3", "seconds": 27.92, "ts": "2026-11-23T20:43:25"}
+{"id": "sfx_hit_enemy", "model": "lyria-3-clip-preview", "status": 200, "attempt": 1, "call": 7, "sec": 11.1, "modalities": ["AUDIO", "TEXT"], "error": "", "ts": "2026-11-23T20:43:36"}
+{"id": "sfx_hit_enemy", "model": "lyria-3-clip-preview", "mime": "audio/mpeg", "bytes": 684810, "ext": "mp3", "seconds": 28.21, "ts": "2026-11-23T20:43:36"}
+{"id": "sfx_hero_hurt", "model": "lyria-3-clip-preview", "status": 200, "attempt": 1, "call": 8, "sec": 15.8, "modalities": ["AUDIO", "TEXT"], "error": "", "ts": "2026-11-23T20:43:52"}
+{"id": "sfx_hero_hurt", "model": "lyria-3-clip-preview", "mime": "audio/mpeg", "bytes": 703619, "ext": "mp3", "seconds": 29.0, "ts": "2026-11-23T20:43:52"}
+{"id": "sfx_rescue_teleport", "model": "lyria-3-clip-preview", "status": 200, "attempt": 1, "call": 9, "sec": 16.4, "modalities": ["AUDIO", "TEXT"], "error": "", "ts": "2026-11-23T20:44:09"}
+{"id": "sfx_rescue_teleport", "model": "lyria-3-clip-preview", "mime": "audio/mpeg", "bytes": 644059, "ext": "mp3", "seconds": 26.51, "ts": "2026-11-23T20:44:09"}
+{"id": "sfx_reload", "model": "lyria-3-clip-preview", "status": 200, "attempt": 1, "call": 10, "sec": 16.6, "modalities": ["AUDIO", "TEXT"], "error": "", "ts": "2026-11-23T20:44:25"}
+{"id": "sfx_reload", "model": "lyria-3-clip-preview", "mime": "audio/mpeg", "bytes": 746250, "ext": "mp3", "seconds": 30.77, "ts": "2026-11-23T20:44:25"}
+{"id": "sfx_empty_click", "model": "lyria-3-clip-preview", "status": 200, "attempt": 1, "call": 11, "sec": 16.2, "modalities": ["AUDIO", "TEXT"], "error": "", "ts": "2026-11-23T20:44:42"}
+{"id": "sfx_empty_click", "model": "lyria-3-clip-preview", "mime": "audio/mpeg", "bytes": 721173, "ext": "mp3", "seconds": 29.73, "ts": "2026-11-23T20:44:42"}
+{"id": "sfx_pickup_ammo", "model": "lyria-3-clip-preview", "status": 200, "attempt": 1, "call": 12, "sec": 16.9, "modalities": ["AUDIO", "TEXT"], "error": "", "ts": "2026-11-23T20:44:59"}
+{"id": "sfx_pickup_ammo", "model": "lyria-3-clip-preview", "mime": "audio/mpeg", "bytes": 746250, "ext": "mp3", "seconds": 30.77, "ts": "2026-11-23T20:44:59"}
+{"id": "sfx_pickup_heal", "model": "lyria-3-clip-preview", "status": 200, "attempt": 1, "call": 13, "sec": 9.4, "modalities": ["AUDIO", "TEXT"], "error": "", "ts": "2026-11-23T20:45:08"}
+{"id": "sfx_pickup_heal", "model": "lyria-3-clip-preview", "mime": "audio/mpeg", "bytes": 593277, "ext": "mp3", "seconds": 24.4, "ts": "2026-11-23T20:45:08"}
+{"id": "sfx_pickup_item", "model": "lyria-3-clip-preview", "status": 0, "attempt": 1, "call": 14, "sec": 300.1, "modalities": ["AUDIO", "TEXT"], "error": "network: timeout", "ts": "2026-11-23T20:50:08"}
+{"id": "sfx_pickup_item", "model": "lyria-3-clip-preview", "status": 0, "attempt": 2, "call": 15, "sec": 0.0, "modalities": ["AUDIO", "TEXT"], "error": "network: URLError", "ts": "2026-11-23T20:50:16"}
+{"id": "sfx_pickup_item", "model": "lyria-3-clip-preview", "status": 0, "attempt": 3, "call": 16, "sec": 0.0, "modalities": ["AUDIO", "TEXT"], "error": "network: URLError", "ts": "2026-11-23T20:50:40"}
+{"id": "sfx_pickup_bolt", "model": "lyria-3-clip-preview", "status": 0, "attempt": 1, "call": 17, "sec": 0.0, "modalities": ["AUDIO", "TEXT"], "error": "network: URLError", "ts": "2026-11-23T20:50:40"}
+{"id": "sfx_pickup_bolt", "model": "lyria-3-clip-preview", "status": 0, "attempt": 2, "call": 18, "sec": 0.0, "modalities": ["AUDIO", "TEXT"], "error": "network: URLError", "ts": "2026-11-23T20:50:48"}
+{"id": "sfx_pickup_bolt", "model": "lyria-3-clip-preview", "status": 0, "attempt": 3, "call": 19, "sec": 0.0, "modalities": ["AUDIO", "TEXT"], "error": "network: URLError", "ts": "2026-11-23T20:51:12"}
+{"id": "sfx_button_press", "model": "lyria-3-clip-preview", "status": 0, "attempt": 1, "call": 20, "sec": 0.0, "modalities": ["AUDIO", "TEXT"], "error": "network: URLError", "ts": "2026-11-23T20:51:12"}
+{"id": "sfx_button_press", "model": "lyria-3-clip-preview", "status": 0, "attempt": 2, "call": 21, "sec": 0.0, "modalities": ["AUDIO", "TEXT"], "error": "network: URLError", "ts": "2026-11-23T20:51:20"}
+{"id": "sfx_button_press", "model": "lyria-3-clip-preview", "status": 0, "attempt": 3, "call": 22, "sec": 0.0, "modalities": ["AUDIO", "TEXT"], "error": "network: URLError", "ts": "2026-11-23T20:51:44"}
+{"id": "sfx_lever_pull", "model": "lyria-3-clip-preview", "status": 0, "attempt": 1, "call": 23, "sec": 0.0, "modalities": ["AUDIO", "TEXT"], "error": "network: URLError", "ts": "2026-11-23T20:51:44"}
+{"id": "sfx_lever_pull", "model": "lyria-3-clip-preview", "status": 0, "attempt": 2, "call": 24, "sec": 0.0, "modalities": ["AUDIO", "TEXT"], "error": "network: URLError", "ts": "2026-11-23T20:51:52"}
+{"id": "sfx_lever_pull", "model": "lyria-3-clip-preview", "status": 0, "attempt": 3, "call": 25, "sec": 0.0, "modalities": ["AUDIO", "TEXT"], "error": "network: URLError", "ts": "2026-11-23T20:52:16"}
+{"id": "sfx_plate_on", "model": "lyria-3-clip-preview", "status": 0, "attempt": 1, "call": 26, "sec": 0.0, "modalities": ["AUDIO", "TEXT"], "error": "network: URLError", "ts": "2026-11-23T20:52:16"}
+{"id": "sfx_plate_on", "model": "lyria-3-clip-preview", "status": 0, "attempt": 2, "call": 27, "sec": 0.0, "modalities": ["AUDIO", "TEXT"], "error": "network: URLError", "ts": "2026-11-23T20:52:24"}
+{"id": "sfx_plate_on", "model": "lyria-3-clip-preview", "status": 0, "attempt": 3, "call": 28, "sec": 0.0, "modalities": ["AUDIO", "TEXT"], "error": "network: URLError", "ts": "2026-11-23T20:52:49"}
+{"id": "sfx_machine_on", "model": "lyria-3-clip-preview", "status": 0, "attempt": 1, "call": 29, "sec": 0.0, "modalities": ["AUDIO", "TEXT"], "error": "network: URLError", "ts": "2026-11-23T20:52:49"}
+{"id": "sfx_machine_on", "model": "lyria-3-clip-preview", "status": 0, "attempt": 2, "call": 30, "sec": 0.0, "modalities": ["AUDIO", "TEXT"], "error": "network: URLError", "ts": "2026-11-23T20:52:57"}
+{"id": "sfx_machine_on", "model": "lyria-3-clip-preview", "status": 200, "attempt": 3, "call": 31, "sec": 11.5, "modalities": ["AUDIO", "TEXT"], "error": "", "ts": "2026-11-23T20:53:32"}
+{"id": "sfx_machine_on", "model": "lyria-3-clip-preview", "mime": "audio/mpeg", "bytes": 746250, "ext": "mp3", "seconds": 30.77, "ts": "2026-11-23T20:53:32"}
+{"id": "sfx_door_open", "model": "lyria-3-clip-preview", "status": 200, "attempt": 1, "call": 32, "sec": 15.8, "modalities": ["AUDIO", "TEXT"], "error": "", "ts": "2026-11-23T20:53:48"}
+{"id": "sfx_door_open", "model": "lyria-3-clip-preview", "mime": "audio/mpeg", "bytes": 730577, "ext": "mp3", "seconds": 30.12, "ts": "2026-11-23T20:53:48"}
+{"id": "sfx_gate_unlocked", "model": "lyria-3-clip-preview", "status": 200, "attempt": 1, "call": 33, "sec": 11.1, "modalities": ["AUDIO", "TEXT"], "error": "", "ts": "2026-11-23T20:53:59"}
+{"id": "sfx_gate_unlocked", "model": "lyria-3-clip-preview", "mime": "audio/mpeg", "bytes": 728696, "ext": "mp3", "seconds": 30.04, "ts": "2026-11-23T20:54:00"}
+{"id": "sfx_checkpoint", "model": "lyria-3-clip-preview", "status": 200, "attempt": 1, "call": 34, "sec": 15.4, "modalities": ["AUDIO", "TEXT"], "error": "", "ts": "2026-11-23T20:54:15"}
+{"id": "sfx_checkpoint", "model": "lyria-3-clip-preview", "mime": "audio/mpeg", "bytes": 715530, "ext": "mp3", "seconds": 29.49, "ts": "2026-11-23T20:54:15"}
+{"id": "sfx_crate_break", "model": "lyria-3-clip-preview", "status": 200, "attempt": 1, "call": 35, "sec": 14.7, "modalities": ["AUDIO", "TEXT"], "error": "", "ts": "2026-11-23T20:54:30"}
+{"id": "sfx_crate_break", "model": "lyria-3-clip-preview", "mime": "audio/mpeg", "bytes": 723054, "ext": "mp3", "seconds": 29.81, "ts": "2026-11-23T20:54:30"}
+{"id": "sfx_ui_tap", "model": "lyria-3-clip-preview", "status": 200, "attempt": 1, "call": 36, "sec": 14.8, "modalities": ["AUDIO", "TEXT"], "error": "", "ts": "2026-11-23T20:54:45"}
+{"id": "sfx_ui_tap", "model": "lyria-3-clip-preview", "mime": "audio/mpeg", "bytes": 744370, "ext": "mp3", "seconds": 30.69, "ts": "2026-11-23T20:54:45"}
+{"id": "sfx_ui_back", "model": "lyria-3-clip-preview", "status": 200, "attempt": 1, "call": 37, "sec": 15.2, "modalities": ["AUDIO", "TEXT"], "error": "", "ts": "2026-11-23T20:55:00"}
+{"id": "sfx_ui_back", "model": "lyria-3-clip-preview", "mime": "audio/mpeg", "bytes": 629013, "ext": "mp3", "seconds": 25.89, "ts": "2026-11-23T20:55:00"}
+{"id": "sfx_level_start", "model": "lyria-3-clip-preview", "status": 200, "attempt": 1, "call": 38, "sec": 15.6, "modalities": ["AUDIO", "TEXT"], "error": "", "ts": "2026-11-23T20:55:16"}
+{"id": "sfx_level_start", "model": "lyria-3-clip-preview", "mime": "audio/mpeg", "bytes": 715530, "ext": "mp3", "seconds": 29.49, "ts": "2026-11-23T20:55:16"}
+{"id": "sfx_pixel_beep_1", "model": "lyria-3-clip-preview", "status": 200, "attempt": 1, "call": 39, "sec": 14.9, "modalities": ["AUDIO", "TEXT"], "error": "", "ts": "2026-11-23T20:55:31"}
+{"id": "sfx_pixel_beep_1", "model": "lyria-3-clip-preview", "mime": "audio/mpeg", "bytes": 705499, "ext": "mp3", "seconds": 29.07, "ts": "2026-11-23T20:55:31"}
+{"id": "sfx_pixel_beep_2", "model": "lyria-3-clip-preview", "status": 200, "attempt": 1, "call": 40, "sec": 16.1, "modalities": ["AUDIO", "TEXT"], "error": "", "ts": "2026-11-23T20:55:47"}
+{"id": "sfx_pixel_beep_2", "model": "lyria-3-clip-preview", "mime": "audio/mpeg", "bytes": 633402, "ext": "mp3", "seconds": 26.07, "ts": "2026-11-23T20:55:47"}

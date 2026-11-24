@@ -6,7 +6,10 @@ struct StrikeApp: App {
     /// `-StrikeSeed 1234` pick the first level and its seed (QA, UI tests, screenshots).
     @State private var model: GameModel = {
         let launch = LaunchOptions.current
-        return GameModel(screen: launch.autoStart ? .game : .title, launch: launch)
+        if launch.resetSettings { SettingsStore.shared.reset() }
+        let model = GameModel(screen: launch.autoStart ? .game : .title, launch: launch)
+        AudioManager.shared.start(audio: model.data.audio, settings: .shared)
+        return model
     }()
 
     var body: some Scene {

@@ -1,0 +1,8 @@
+{
+ "http_status": 0,
+ "response": {
+  "error": {
+   "message": "network: URLError"
+  }
+ }
+}

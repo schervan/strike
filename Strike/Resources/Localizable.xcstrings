@@ -692,6 +692,94 @@
         "de": { "stringUnit": { "state": "translated", "value": "Hauptmenü" } },
         "en": { "stringUnit": { "state": "translated", "value": "Main menu" } }
       }
+    },
+    "settings.title": {
+      "comment": "Settings screen title (also the pause menu button)",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Einstellungen" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Settings" } }
+      }
+    },
+    "settings.music": {
+      "comment": "Settings: music volume slider",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Musik" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Music" } }
+      }
+    },
+    "settings.sfx": {
+      "comment": "Settings: sound effects volume slider",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Geräusche" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Sound effects" } }
+      }
+    },
+    "settings.muteAll": {
+      "comment": "Settings: turn all sound off",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Alles stumm" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Mute all" } }
+      }
+    },
+    "settings.done": {
+      "comment": "Settings: close the panel",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Fertig" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Done" } }
+      }
+    },
+    "settings.open": {
+      "comment": "Accessibility label of the gear button on the title screen",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Einstellungen öffnen" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Open settings" } }
+      }
+    },
+    "settings.quieter": {
+      "comment": "Accessibility label of the minus button next to a volume slider",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Leiser" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Quieter" } }
+      }
+    },
+    "settings.louder": {
+      "comment": "Accessibility label of the plus button next to a volume slider",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Lauter" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Louder" } }
+      }
+    },
+    "pause.title": {
+      "comment": "Pause menu title",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Pause" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Paused" } }
+      }
+    },
+    "pause.resume": {
+      "comment": "Pause menu: back to the game",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Weiterspielen" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Resume" } }
+      }
+    },
+    "pause.toTitle": {
+      "comment": "Pause menu: back to the title screen",
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Hauptmenü" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Main menu" } }
+      }
     }
   },
   "version": "1.0"
