@@ -40,11 +40,8 @@ final class EnemyNode: SKNode {
 
     private let alertBubble: SKLabelNode
 
-    /// Re-plan interval for grid paths (AI cadence, not balance).
-    static let repathSec = 0.25
-    private var waypoint: CGPoint?
-    private var waypointTarget: CGPoint?
-    private var repathTimer: Double = 0
+    /// Seek, grid path and steering (pure, M4-4).
+    private var chaser = ChaserPolicy()
 
     init(def: EnemyDef, at point: CGPoint, world: EnemyWorld, homeRoomId: Int? = nil, leash: LeashRulesDef) {
         self.def = def
@@ -147,79 +144,36 @@ final class EnemyNode: SKNode {
     }
 
     /// Walks toward `target`: straight when a body-wide line is clear, else along the grid path
-    /// (`Pathfinder`, re-planned every `repathSec`). Returns false when no path exists.
+    /// (`Pathfinder`, re-planned every `ChaserPolicy.repathSec`). Returns false when no path exists.
     @discardableResult
     func moveToward(_ target: CGPoint, dt: Double) -> Bool {
         guard let world, def.moveSpeed > 0 else { desiredVelocity = .zero; return true }
-        let grid = world.solidGrid
-        if grid.isSweepClear(from: position, to: target, radius: radius * 0.9) {
-            waypoint = nil
-            steer(toward: target)
-            return true
-        }
-        repathTimer -= dt
-        let reached = waypoint.map { hypot($0.x - position.x, $0.y - position.y) < radius } ?? true
-        if waypoint == nil || reached || repathTimer <= 0 || waypointTarget.map({ grid.cell(at: $0) != grid.cell(at: target) }) ?? true {
-            repathTimer = Self.repathSec
-            waypointTarget = target
-            waypoint = world.pathfinder.nextWaypoint(from: position, to: target, radius: radius)
-        }
-        guard let w = waypoint else { desiredVelocity = .zero; return false }
-        steer(toward: w)
-        return true
+        let pathfinder = world.pathfinder
+        let r = chaser.velocity(from: position, toward: target, dt: dt, speed: CGFloat(def.moveSpeed), radius: radius,
+                                separation: CGFloat(def.separation ?? 0), grid: world.solidGrid,
+                                allies: { self.allyPositions(world) },
+                                nextWaypoint: { pathfinder.nextWaypoint(from: $0, to: $1, radius: $2) })
+        desiredVelocity = r.velocity
+        return r.found
     }
 
     /// Drops the cached waypoint (doors changed, teleported).
     func clearPath() {
-        waypoint = nil
-        waypointTarget = nil
+        chaser.clearPath()
     }
 
     /// Steering toward `target`: seek + wall avoidance (feelers) + separation from allies.
     func steer(toward target: CGPoint) {
         guard let world else { desiredVelocity = .zero; return }
-        let speed = CGFloat(def.moveSpeed)
-        var dx = target.x - position.x, dy = target.y - position.y
-        let d = hypot(dx, dy)
-        guard d > radius * 0.5 else { desiredVelocity = .zero; return }
-        dx /= d; dy /= d
+        let grid = world.solidGrid
+        desiredVelocity = ChaserPolicy.steer(from: position, toward: target, speed: CGFloat(def.moveSpeed), radius: radius,
+                                             separation: CGFloat(def.separation ?? 0), allies: { self.allyPositions(world) },
+                                             isBlocked: { grid.isBlocked($0, radius: $1) })
+    }
 
-        // Separation from same-type allies.
-        let sepDist = CGFloat(def.separation ?? 0)
-        if sepDist > 0 {
-            var sx: CGFloat = 0, sy: CGFloat = 0
-            for other in world.activeEnemies where other !== self && other.def.id == def.id {
-                let ox = position.x - other.position.x, oy = position.y - other.position.y
-                let od = hypot(ox, oy)
-                if od > 0, od < sepDist {
-                    let w = (sepDist - od) / sepDist
-                    sx += ox / od * w; sy += oy / od * w
-                }
-            }
-            dx += sx * 1.5; dy += sy * 1.5
-            let l = hypot(dx, dy)
-            if l > 0 { dx /= l; dy /= l }
-        }
-
-        // Wall avoidance: probe ahead; if blocked, try rotated headings.
-        let geo = world.solidGrid
-        let probe = radius + 20
-        func free(_ a: CGFloat) -> Bool {
-            let p = CGPoint(x: position.x + cos(a) * probe, y: position.y + sin(a) * probe)
-            return !geo.isBlocked(p, radius: radius * 0.8)
-        }
-        var heading = atan2(dy, dx)
-        if !free(heading) {
-            let toTarget = atan2(target.y - position.y, target.x - position.x)
-            let options: [CGFloat] = [0.6, -0.6, 1.2, -1.2, 1.8, -1.8]
-            // Prefer the side closer to the direct line to the target.
-            let sorted = options.sorted {
-                abs(AimAssist.angleDifference(from: toTarget, to: heading + $0))
-                    < abs(AimAssist.angleDifference(from: toTarget, to: heading + $1))
-            }
-            if let alt = sorted.first(where: { free(heading + $0) }) { heading += alt }
-        }
-        desiredVelocity = CGVector(dx: cos(heading) * speed, dy: sin(heading) * speed)
+    /// Living same-type allies (separation).
+    private func allyPositions(_ world: EnemyWorld) -> [CGPoint] {
+        world.activeEnemies.filter { $0 !== self && $0.def.id == def.id }.map(\.position)
     }
 
     func powerDown(completion: @escaping @MainActor () -> Void) {

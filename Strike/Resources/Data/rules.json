@@ -65,5 +65,10 @@
   "lowHp": {
     "threshold": 25,
     "lineCooldownSec": 60
+  },
+  "weapons": {
+    "swapSec": 0.25,
+    "wheelLongPressSec": 0.4,
+    "wheelTimeScale": 0.3
   }
 }

@@ -1,0 +1,213 @@
+import SpriteKit
+
+/// Pixel in the running scene (GDD §13): follow, hints (fly + dotted arrow + minimap ping),
+/// first-sight story cues, low-HP and zone lines, minimap pointer pings. The decisions live in
+/// `PixelController`, `HintPlanner` and `StoryDirector`; this class feeds them from the scene.
+/// Split out of `GameScene` in M4-3 with no behaviour change.
+@MainActor
+final class PixelDirector {
+    unowned let scene: GameScene
+
+    /// The hint that is running (arrow, minimap ping).
+    private struct ActiveHint {
+        let target: CGPoint
+        let elementId: String?
+        let floorId: String?
+        var remaining: Double
+    }
+
+    private var hint: ActiveHint?
+    private(set) var arrow: HintArrowNode?
+    private(set) var bagHintUntil: Double = 0
+    private(set) var pointerPings: [String] = []
+    private(set) var pointerExit = false
+    var wasLowHp = false
+    private var startedStory = false
+    private var sightTimer: Double = 0
+    private var sightedEnemyTypes = Set<String>()
+    private var sightedElements = Set<String>()
+    private var sightedGate = false
+    private var lastZone = 1
+    private var pointerTimer: Double = 0
+
+    /// Sight checks for "first seen" run at this rate (presentation cadence, not balance).
+    static let sightHz = 6.0
+    /// The arrow ends when the hero gets this close to the target (ART_BIBLE §14.6).
+    static let hintReachedDistance: CGFloat = 128
+    /// The bag glow for a hint whose item is in the bag (ART_BIBLE §14.6).
+    static let bagHintSec = 4.0
+
+    init(scene: GameScene) {
+        self.scene = scene
+    }
+
+    /// Target of the running hint (minimap ping).
+    var hintTarget: CGPoint? { hint?.target }
+
+    /// Level start: bubble wiring and the start zone.
+    func setUp() {
+        let pixel = scene.pixel
+        pixel.snap(to: scene.hero.position)
+        pixel.zPosition = 30
+        scene.worldNode.addChild(pixel)
+        scene.pixelBrain.onBubble = { [weak scene] line in
+            scene?.model?.bubble = line
+            scene?.pixel.setTalking(line != nil)
+        }
+        scene.pixelBrain.onLineShown = { [weak scene] _ in scene?.audio?.playPixelBeep(index: nil) }
+        lastZone = scene.level.room(at: scene.level.heroStart)?.zone ?? 1
+    }
+
+    /// The `start` story beat, once, on the first live step.
+    func startStoryIfNeeded() {
+        guard !startedStory else { return }
+        startedStory = true
+        scene.pixelBrain.handle(.levelStart)
+    }
+
+    /// An element turned on: a hint that pointed at it ends.
+    func elementTurnedOn(_ id: String) {
+        if hint?.elementId == id { endHint() }
+    }
+
+    func update(dt: Double) {
+        let hero = scene.hero, level = scene.level, data = scene.data, brain = scene.pixelBrain
+        scene.pixel.update(dt: dt, hero: hero.position)
+        if var h = hint {
+            h.remaining -= dt
+            arrow?.update(dt: dt, hero: hero.position)
+            let reached = hypot(h.target.x - hero.position.x, h.target.y - hero.position.y) <= Self.hintReachedDistance
+            let pickedUp = h.floorId.map { id in !scene.pickups.contains { floorId($0) == id } } ?? false
+            hint = h
+            if h.remaining <= 0 || reached || pickedUp { endHint() }
+        }
+        if brain.tickIdle(gameDt: dt) { runHint(.idle) }
+
+        // Low HP (GDD §4): line + heart pulse on the way down.
+        let low = hero.health.current > 0 && hero.health.current <= data.rules.lowHp.threshold
+        if low, !wasLowHp { brain.handle(.lowHp) }
+        wasLowHp = low
+
+        // New zone.
+        if let room = level.room(at: level.grid.cell(at: hero.position)), room.zone != lastZone {
+            if room.zone > lastZone { brain.handle(.zoneEntered(room.zone)) }
+            lastZone = room.zone
+        }
+
+        // Minimap pointer pings after `hints.pointerAfterSec` (recomputed twice a second).
+        pointerTimer -= dt
+        if pointerTimer <= 0, scene.session.elapsed >= data.rules.hints.pointerAfterSec {
+            pointerTimer = 0.5
+            let p = HintPlanner.pings(afterSec: scene.session.elapsed, rules: data.rules.hints, level: level,
+                                      puzzle: scene.puzzle, heroAt: hero.position)
+            pointerPings = p.elementIds
+            pointerExit = p.exitPad
+        }
+
+        sightTimer -= dt
+        if sightTimer <= 0 {
+            sightTimer = 1 / Self.sightHz
+            checkSights()
+        }
+    }
+
+    /// First sight of enemy types, element types and gates: on screen and in line of sight.
+    private func checkSights() {
+        let vis = scene.visibleSize
+        let cam = scene.cameraNode.position
+        let rect = CGRect(x: cam.x - vis.width / 2, y: cam.y - vis.height / 2, width: vis.width, height: vis.height)
+        let h = scene.hero.position
+        let grid = scene.solidGrid, brain = scene.pixelBrain
+        for e in scene.enemies where !e.isPoweredDown && !sightedEnemyTypes.contains(e.def.id) {
+            guard StoryDirector.isSighted(e.position, from: h, visibleRect: rect, grid: grid) else { continue }
+            sightedEnemyTypes.insert(e.def.id)
+            if brain.handle(.enemySeen(e.def.id)) != nil { scene.pixel.scan(toward: e.position) }
+        }
+        for el in scene.level.elements where !sightedElements.contains(el.type.rawValue) {
+            guard rect.contains(el.position), grid.hasLineOfSight(from: h, to: closestFloor(to: el)) else { continue }
+            sightedElements.insert(el.type.rawValue)
+            brain.handle(.elementSeen(el.type))
+        }
+        if !sightedGate {
+            for g in scene.level.gates where !scene.puzzle.isGateOpen(g.id) {
+                guard let d = scene.built.gates[g.id], rect.contains(d.position) else { continue }
+                sightedGate = true
+                brain.handle(.gateSeen)
+                break
+            }
+        }
+    }
+
+    /// A floor cell next to an element (elements block their own cells for line of sight).
+    private func closestFloor(to e: PlacedElement) -> CGPoint {
+        let level = scene.level, grid = scene.solidGrid
+        let h = level.grid.cell(at: scene.hero.position)
+        let cands = e.cells.flatMap { [$0] + $0.neighbors4 }.filter { grid.isWalkable($0) }
+        let best = cands.min { $0.distance(h) < $1.distance(h) }
+        return best.map { level.grid.world($0) } ?? e.position
+    }
+
+    private func floorId(_ p: PickupNode) -> String {
+        p.placementId ?? "drop_\(ObjectIdentifier(p).hashValue)"
+    }
+
+    /// Pickups on the floor for `HintPlanner`.
+    var floorItems: [FloorItem] {
+        scene.pickups.filter { !$0.isCollected }.map { FloorItem(id: floorId($0), itemId: $0.item.id, position: $0.groundPosition) }
+    }
+
+    /// Tap on Pixel (GDD §13): nothing while a hint runs, `hint_wait` during the cooldown.
+    func pixelTapped() {
+        guard scene.rescue == nil, !scene.interaction.isPanning else { return }
+        let brain = scene.pixelBrain
+        if brain.isHintRunning { return }
+        if !brain.canHint {
+            brain.say(StoryDirector.Key.hintWait, kind: .hint)
+            return
+        }
+        runHint(.tap)
+    }
+
+    /// Plans and shows a hint: fly + dotted arrow + minimap ping, or a line only.
+    func runHint(_ trigger: HintTrigger) {
+        let level = scene.level, brain = scene.pixelBrain, data = scene.data
+        let plan = HintPlanner.plan(level: level, puzzle: scene.puzzle, heroAt: scene.hero.position, carrier: scene.inventory,
+                                    floorItems: floorItems, trigger: trigger)
+        if let key = plan.lineKey { brain.say(key, kind: .hint) }
+        guard let target = plan.flyTo else {
+            if case .none = plan.target { brain.progress() } else { brain.beginLineOnlyHint() }
+            return
+        }
+        brain.beginHint()
+        scene.pixel.flyTo(target)
+        scene.pixel.scan(toward: target)
+        arrow?.removeFromParent()
+        let a = HintArrowNode(target: target, lifetime: data.rules.hints.arrowSec)
+        scene.worldNode.addChild(a)
+        arrow = a
+        var elementId: String?, floorId: String?
+        switch plan.target {
+        case .element(let id): elementId = id
+            if let item = level.element(id)?.requiresItem, scene.inventory.count(of: item) > 0 {
+                bagHintUntil = scene.clock + Self.bagHintSec
+            }
+        case .item(let f, _, _): floorId = f
+        default: break
+        }
+        hint = ActiveHint(target: target, elementId: elementId, floorId: floorId,
+                          remaining: data.rules.hints.flySec + data.rules.hints.arrowSec)
+        scene.hud.pushMinimap(force: true)
+    }
+
+    func endHint() {
+        guard hint != nil || arrow != nil else { return }
+        hint = nil
+        if let a = arrow {
+            arrow = nil
+            a.run(.sequence([.fadeOut(withDuration: 0.3), .removeFromParent()]))
+        }
+        scene.pixel.returnToHero()
+        scene.pixelBrain.endHint()
+        scene.hud.pushMinimap(force: true)
+    }
+}

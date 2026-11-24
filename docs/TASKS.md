@@ -608,13 +608,13 @@ Accessibility ids (new): `hud.swapButton`, `hud.weaponWheel`, `hud.weaponWheel.s
     - **Season complete card**.
   - Done when: every value is a concrete number or hex, all effects are kid-safe (no fire/explosion/red splats), and nothing contradicts §7/§13/§14
 
-- [ ] **M4-3 swift-coder (pass A) — GameScene split (refactor only)**
+- [x] **M4-3 swift-coder (pass A) — GameScene split (refactor only)** (2026-11-24)
   - Outputs: `CombatController`, `EnemyDirector`, `InteractionController`, `HUDBridge`; `GameScene` keeps the scene graph, update order and wiring only
   - Done when:
     - `GameScene.swift` is ≤ 500 lines and no other file is > 600
     - no behaviour change: all 243 unit + 16 UI tests green with the same results, including `ScenePlaythroughTests` and `M3ScenarioTests`
 
-- [ ] **M4-4 swift-coder (pass A) — Weapons, policies, boss brain (pure)**
+- [x] **M4-4 swift-coder (pass A) — Weapons, policies, boss brain (pure)** (2026-11-24)
   - Outputs: data extensions, `WeaponFire`, `Loadout`/`PickupResolver` extensions, `StatusEffects`, `DamageModel`, all `*Policy`, `BossBrain`, `BossAttacks`, `BossArenaLayout`. Tests in `WeaponFireTests`, `LoadoutSwapTests`, `StatusEffectsTests`, `KiterPolicyTests`, `SplitterPolicyTests`, `ShieldPolicyTests`, `TurretPolicyTests`, `BossBrainTests`, `BossAttacksTests`, `BossArenaLayoutTests`.
   - Done when (each is a test):
     - **Data:** all 7 enemies decode with every block; boss phases chain 1200 → 800 → 400 → 0

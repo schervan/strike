@@ -9,7 +9,8 @@ struct PickupResolverTests {
         var loadout = Loadout(start: PickupResolverTests.data.hero.startLoadout, weapons: PickupResolverTests.data.weapons)
 
         mutating func pick(_ id: String, count: Int = 1) -> PickupOutcome {
-            PickupResolver.resolve(PickupResolverTests.data.items[id]!, count: count, inventory: &inv, loadout: &loadout)
+            PickupResolver.resolve(PickupResolverTests.data.items[id]!, count: count, inventory: &inv, loadout: &loadout,
+                                   weapons: PickupResolverTests.data.weapons)
         }
     }
 
@@ -34,10 +35,15 @@ struct PickupResolverTests {
         #expect(r.inv.count(of: "keycard") == 1)
     }
 
-    @Test func blasterIsAPlaceholderUntilM4() {
+    /// M4-4 (GDD §5): the blaster pickup adds the blaster with one full magazine, not equipped.
+    @Test func blasterPickupAddsTheBlasterWithAFullMagazine() {
         var r = Rig()
-        do { let v = r.pick("blaster_spread"); #expect(v == .weaponPlaceholder) }
-        #expect(!r.loadout.owns("blaster_spread"))
+        let w = Self.data.weapons["blaster_spread"]!
+        do { let v = r.pick("blaster_spread"); #expect(v == .weapon(id: w.id, added: true, overflowPacks: 0)) }
+        #expect(r.loadout.owns(w.id))
+        #expect(r.loadout.magazine(w.id) == w.magazineSize)
+        #expect(r.loadout.equipped == Self.data.hero.startLoadout.weaponId)
+        #expect(r.inv.isEmpty)
     }
 
     @Test func ammoAboveReserveMaxBecomesPacksWhenASlotIsFree() {

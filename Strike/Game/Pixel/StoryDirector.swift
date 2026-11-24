@@ -27,6 +27,8 @@ nonisolated enum StoryEvent: Sendable, Hashable {
     case checkpoint
     /// After the rescue beam.
     case rescue
+    /// The SWAP button became visible (2 or more blasters owned; QA-012). The scene sends it in M4-5.
+    case swapVisible
     /// M4: ignored until the boss lands.
     case bossPhase(Int)
     case bossDefeated
@@ -72,6 +74,8 @@ nonisolated struct StoryDirector: Sendable, Equatable {
         static let doorOpen = "pixel.generic.door_open"
         static let checkpoint = "pixel.generic.checkpoint"
         static let rescue = "pixel.generic.rescue"
+        /// `firstSwapVisible` when the level has no beat for it (QA-012).
+        static let swap = "pixel.generic.swap"
         static let idle = "pixel.generic.idle"
         static let hintHere = "pixel.generic.hint_here"
         static let hintItem = "pixel.generic.hint_item"
@@ -100,6 +104,7 @@ nonisolated struct StoryDirector: Sendable, Equatable {
         case .zoneEntered(let n): "zone:\(n)"
         case .allElementsOn: "allElementsOn"
         case .doorOpen: "doorOpen"
+        case .swapVisible: "firstSwapVisible"
         case .elementOn, .gateOpen, .bagFull, .magazineEmpty, .checkpoint, .rescue, .bossPhase, .bossDefeated: nil
         }
     }
@@ -125,6 +130,8 @@ nonisolated struct StoryDirector: Sendable, Equatable {
             }
             return r
         }
+        // The swap line plays only the first time SWAP appears (beat or generic, never both).
+        if case .swapVisible = event, !isFirst { return r }
         guard r.cues.isEmpty, let g = generic(event) else { return r }
         r.cues.append(g)
         return r
@@ -146,6 +153,7 @@ nonisolated struct StoryDirector: Sendable, Equatable {
         case .magazineEmpty: return once("firstReload", Key.reload)
         case .checkpoint: return StoryCue(key: Key.checkpoint, kind: .chatter)
         case .rescue: return StoryCue(key: Key.rescue, kind: .story)
+        case .swapVisible: return StoryCue(key: Key.swap, kind: .chatter)
         case .enemySeen, .elementSeen, .gateSeen, .zoneEntered, .bossPhase, .bossDefeated: return nil
         }
     }

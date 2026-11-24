@@ -152,6 +152,15 @@ nonisolated struct LowHpRulesDef: Codable, Sendable, Equatable {
     let lineCooldownSec: Double
 }
 
+/// `rules.json → weapons` (GDD §5.1): swap time (no fire while swapping) and the weapon-wheel
+/// long press.
+nonisolated struct WeaponRulesDef: Codable, Sendable, Equatable {
+    let swapSec: Double
+    let wheelLongPressSec: Double
+    /// Game speed while the weapon wheel is open (M4-5).
+    let wheelTimeScale: Double?
+}
+
 nonisolated struct RulesFile: Codable, Sendable {
     let version: Int
     let puzzle: PuzzleRulesDef
@@ -164,6 +173,7 @@ nonisolated struct RulesFile: Codable, Sendable {
     let pixel: PixelRulesDef?
     let hints: HintRulesDef?
     let lowHp: LowHpRulesDef?
+    let weapons: WeaponRulesDef?
 }
 
 /// Global gameplay rules from `rules.json`. Optional blocks missing from the file use
@@ -179,26 +189,29 @@ nonisolated struct RulesDef: Sendable, Equatable {
     let pixel: PixelRulesDef
     let hints: HintRulesDef
     let lowHp: LowHpRulesDef
+    let weapons: WeaponRulesDef
 
     init(puzzle: PuzzleRulesDef, leash: LeashRulesDef, minimap: MinimapRulesDef, toast: ToastRulesDef? = nil,
          crate: CrateRulesDef? = nil, inventory: InventoryRulesDef? = nil, rescue: RescueRulesDef? = nil,
-         pixel: PixelRulesDef? = nil, hints: HintRulesDef? = nil, lowHp: LowHpRulesDef? = nil) {
+         pixel: PixelRulesDef? = nil, hints: HintRulesDef? = nil, lowHp: LowHpRulesDef? = nil,
+         weapons: WeaponRulesDef? = nil) {
         let f = Self.fallback
         self.init(fallbackPuzzle: puzzle.filling(from: f.puzzle), leash: leash,
                   minimap: minimap.filling(from: f.minimap),
                   toast: toast ?? f.toast, crate: crate ?? f.crate, inventory: inventory ?? f.inventory,
-                  rescue: rescue ?? f.rescue, pixel: pixel ?? f.pixel, hints: hints ?? f.hints, lowHp: lowHp ?? f.lowHp)
+                  rescue: rescue ?? f.rescue, pixel: pixel ?? f.pixel, hints: hints ?? f.hints, lowHp: lowHp ?? f.lowHp,
+                  weapons: weapons ?? f.weapons)
     }
 
     init(file: RulesFile) {
         self.init(puzzle: file.puzzle, leash: file.leash, minimap: file.minimap, toast: file.toast, crate: file.crate,
                   inventory: file.inventory, rescue: file.rescue, pixel: file.pixel, hints: file.hints,
-                  lowHp: file.lowHp)
+                  lowHp: file.lowHp, weapons: file.weapons)
     }
 
     private init(fallbackPuzzle: PuzzleRulesDef, leash: LeashRulesDef, minimap: MinimapRulesDef, toast: ToastRulesDef,
                  crate: CrateRulesDef, inventory: InventoryRulesDef, rescue: RescueRulesDef, pixel: PixelRulesDef,
-                 hints: HintRulesDef, lowHp: LowHpRulesDef) {
+                 hints: HintRulesDef, lowHp: LowHpRulesDef, weapons: WeaponRulesDef) {
         self.puzzle = fallbackPuzzle
         self.leash = leash
         self.minimap = minimap
@@ -209,9 +222,10 @@ nonisolated struct RulesDef: Sendable, Equatable {
         self.pixel = pixel
         self.hints = hints
         self.lowHp = lowHp
+        self.weapons = weapons
     }
 
-    /// GDD defaults (§4 low HP, §7 inventory, §8 leash, §11 puzzle timings, §12 rescue, §13 Pixel),
+    /// GDD defaults (§4 low HP, §5.1 swap, §7 inventory, §8 leash, §11 puzzle timings, §12 rescue, §13 Pixel),
     /// used only while `rules.json` (or one of its blocks) is missing. This is the single place
     /// these numbers exist in code.
     static let fallback = RulesDef(
@@ -229,5 +243,6 @@ nonisolated struct RulesDef: Sendable, Equatable {
                              tapRadius: 80, tapMaxSec: 0.25, tapMaxMovePt: 12, bubbleBaseSec: 3.0,
                              bubblePerCharSec: 0.04, maxChars: 60, queueMax: 2, repeatCooldownSec: 10),
         hints: HintRulesDef(flySec: 2, arrowSec: 6, cooldownSec: 10, pointerAfterSec: 60),
-        lowHp: LowHpRulesDef(threshold: 25, lineCooldownSec: 60))
+        lowHp: LowHpRulesDef(threshold: 25, lineCooldownSec: 60),
+        weapons: WeaponRulesDef(swapSec: 0.25, wheelLongPressSec: 0.4, wheelTimeScale: 0.3))
 }

@@ -76,10 +76,10 @@ final class AlertState: EnemyState, @unchecked Sendable {
 /// Chases the hero (straight when visible, else along the grid path); every `hopEverySec` it
 /// may pause for `hopPauseSec`. Leash: far away for `returnAfterSec` → `ReturnHomeState`.
 final class ChaseState: EnemyState, @unchecked Sendable {
-    private var hopTimer: Double = 0
+    private var hop = ChaserPolicy.Hop()
 
     @MainActor override func enter() {
-        hopTimer = enemy.def.hopEverySec ?? 0
+        hop.reset(every: enemy.def.hopEverySec)
     }
 
     @MainActor override func tick(dt: Double) {
@@ -89,14 +89,9 @@ final class ChaseState: EnemyState, @unchecked Sendable {
             return
         }
         enemy.moveToward(w.heroPosition, dt: dt)
-        guard let every = enemy.def.hopEverySec, every > 0,
-              let chance = enemy.def.hopChance, chance > 0 else { return }
-        hopTimer -= dt
-        if hopTimer <= 0 {
-            hopTimer += every
-            if Double(w.random.nextUniform()) < chance {
-                stateMachine?.enter(HopState.self)
-            }
+        if hop.tick(dt: dt, every: enemy.def.hopEverySec, chance: enemy.def.hopChance,
+                    roll: { Double(w.random.nextUniform()) }) {
+            stateMachine?.enter(HopState.self)
         }
     }
 }

@@ -80,6 +80,34 @@ nonisolated struct Loadout: Codable, Sendable, Equatable {
         return true
     }
 
+    /// Blaster order for SWAP and the wheel (GDD §5: starter → spread → rapid): by `unlockLevel`, then id.
+    static func order(_ weapons: [String: WeaponDef]) -> [String] {
+        weapons.values.sorted { ($0.unlockLevel, $0.id) < ($1.unlockLevel, $1.id) }.map(\.id)
+    }
+
+    /// The owned blaster after the equipped one in `order` (wrapping), nil when only one is owned.
+    func nextWeaponId(order: [String]) -> String? {
+        let owned = order.filter(owns)
+        guard owned.count > 1, let i = owned.firstIndex(of: equipped) else { return owned.first { $0 != equipped } }
+        return owned[(i + 1) % owned.count]
+    }
+
+    /// SWAP (GDD §5.1): equips the next owned blaster in `order`. Returns its id, nil when there is
+    /// nothing to swap to. The hero's `WeaponState.beginSwap` adds the swap time and cancels a reload.
+    @discardableResult
+    mutating func swapNext(order: [String]) -> String? {
+        guard let next = nextWeaponId(order: order) else { return nil }
+        equipped = next
+        return next
+    }
+
+    /// Weapon wheel pick: equips `weaponId` if owned and not already equipped.
+    @discardableResult
+    mutating func swap(to weaponId: String) -> Bool {
+        guard weaponId != equipped else { return false }
+        return equip(weaponId)
+    }
+
     /// Level start (GDD §5.1): magazine at least `magazine`, reserve at least `reserve` (both capped).
     mutating func topUp(_ weapon: WeaponDef, magazine minMag: Int, reserve minReserve: Int) {
         if magazine(weapon.id) < minMag { setMagazine(weapon, minMag) }
