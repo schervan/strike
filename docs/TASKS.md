@@ -570,7 +570,7 @@ Same conventions as before. New rule for AI: every behaviour is a **pure policy*
 Accessibility ids (new): `hud.swapButton`, `hud.weaponWheel`, `hud.weaponWheel.slot.0…2`, `hud.bossBar`, `seasonComplete.view`, `seasonComplete.toTitle`, `settings.pixelTalk`, `settings.aimAssist`, `debug.giveBlasters`, `debug.bossArena`, `debug.bossNextPhase`.
 
 ### Tasks
-- [ ] **M4-1 game-designer — Content and balance pass L1–L5, boss text, M4 strings**
+- [x] **M4-1 game-designer — Content and balance pass L1–L5, boss text, M4 strings**
   - Inputs: GDD §5, §8–§10, §15, §18; `docs/levels/L1–L5.md`; `enemies.json`, `weapons.json`, `levels.json`, `loot.json`, `rules.json`; M3 QA_REPORT (QA-011/012/014)
   - Outputs: data JSON, `Localizable.xcstrings`, `docs/GDD.md`, `docs/levels/L*.md`
   - Work:
@@ -588,7 +588,7 @@ Accessibility ids (new): `hud.swapButton`, `hud.weaponWheel`, `hud.weaponWheel.s
     - the time-to-power-down table and change log are in the GDD
     - no code touched
 
-- [ ] **M4-2 visual-artist — ART_BIBLE §15 "Enemies, blasters, boss"** (parallel)
+- [x] **M4-2 visual-artist — ART_BIBLE §15 "Enemies, blasters, boss"** (parallel)
   - Inputs: ART_BIBLE §1, §3, §7, §12–§14; `enemies`/`boss`/`items`/`ui` atlases; GDD §8–§9
   - Outputs: `docs/ART_BIBLE.md` §15; `ui_btn_settings` generated with `tools/gen_art.py` from prompt #36 and sliced into the `ui` atlas (leftover 10); optional face overlay sprites (`boss_megamech_face_<mood>`, ≤ 4 moods: smug, angry, panic, smiley) generated the same way, otherwise specified as code-drawn shapes. No Swift.
   - §15 covers:
@@ -684,17 +684,222 @@ Accessibility ids (new): `hud.swapButton`, `hud.weaponWheel`, `hud.weaponWheel.s
     - kid-safety pass on boss visuals and text (no explosion or scary wording; the boss is funny)
     - L5 + boss FPS / node counts logged; owner asked for the device number
 
-- [ ] **M4-8 game-manager — M4 review**: check deliverables against GDD/ART_BIBLE, update ROADMAP/TASKS/DECISIONS, plan M5
+- [x] **M4-8 game-manager — M4 review**: check deliverables against GDD/ART_BIBLE, update ROADMAP/TASKS/DECISIONS, plan M5 (2026-11-24, see below)
+
+### M4 review (2026-11-24, branch `m4-content` @ 9ccbacd)
+**Accepted.** 327 unit tests and 23 UI tests are green after the fix round.
+- **Boss fuzz:** 0 failures in 10,000 sequences against QA's own GDD §9 model, with no soft-lock.
+- **Balance:** the smoke test matches the GDD §8.3 table within tolerance.
+- **Generator re-fuzz:** clean with the M4-1 numbers.
+- **By hand:** every enemy type was fought with real touch input; the boss arena was played through all phases and ends on the Season complete card.
+- **Performance (simulator):** L5 with all 5 types plus the crowd runs at 349–367 nodes and 60 fps.
+- **Module map:** followed. `GameScene` is 459 lines (target ≤ 500); the policies are pure and tested.
+- **Data rules:** kept. QA-016 is `rescueResetsToPhaseTop: false` and QA-019 adds starter ammo at the pillars; both are in the GDD change log.
+- **Kid-safety:** the boss power-down is a sparkle burst with a smiley; QA-018 replaced the red glossy shots (ART_BIBLE §15.16).
+- Owner decisions QA-013, QA-016 and QA-018 are recorded (DECISIONS 2026-11-24). QA-009, QA-011, QA-017, QA-020 and QA-021 are closed.
+
+Leftovers (task id in brackets):
+1. **ART_BIBLE §15 extras not built**: bubble wobble and foam trail (§15.6), shield-android crouch squash (§15.1), core fly-in into the socket (§15.10), minimap core pips (§15.10), boss-bar lag band (§15.8). [M5-6]
+2. **Gear icon #36** (`ui_btn_settings`) is still not generated; SF Symbol `gearshape.fill` is used in 3 places. [M5-2, M5-6]
+3. **Debug overlay size** (QA-010): it covers the floor at the bottom centre. Make it a small collapsible toggle (DEBUG only). [M5-6]
+4. **First L2 shield android** is not guaranteed to be alone (GDD §19 q13). Accepted: add a generator option for a first encounter per zone. [M5-1, M5-4]
+5. **Boss fight may be short for skilled players**: the bot needs 65–98 s against the GDD's ~2 min. Don't tune before real kids play; this is an M6 balancing item with an owner playtest. [M6]
+6. **Real-iPad FPS** (crowd + boss) is still not measured. Owner question; part of M6 performance. [M6]
+7. QA-014 (German label) and QA-015 (camera nudge) were fixed in M4 but not re-checked by QA. [M5-7]
+8. **Settings live in two places**: audio in `SettingsStore` (UserDefaults), Pixel talk and aim assist in `RunState.settings` (save). "New game" must not reset settings, so all settings move to one device-level store. [M5-3, decision]
+
+### Carried to M6 (not M5)
+- Boss fight length and difficulty curve after an owner/kid playtest (leftover 5).
+- 60 fps check on iPad 9th/10th gen with the crowd and boss (leftover 6).
+- Final kid-safety review, TestFlight build, App Store Kids metadata (no business decisions by the team).
+
+## M5 Presentation
+
+Goal:
+- **Window handling:** the app runs in any iPad orientation and window size. Gameplay stays landscape; in portrait or a narrow window Pixel's "Turn me sideways!" card pauses the game, while all menus also work in portrait.
+- **Navigation:** a polished title screen leads to a level map with stars, best score/time and replay with a new seed, and to a datachip "Pixel facts" collection.
+- **Stars:** the Level complete card awards stars with a small celebration.
+- **Settings:** one Settings screen holds all settings (audio, Pixel talk, aim help, left-handed mirror, Easy mode if the owner accepts) and survives "New game".
+- **Save:** old saves migrate without losing progress.
+- **Text:** German and English are reviewed.
+- **Accessibility:** menus support Dynamic Type and VoiceOver, and Reduce Motion is respected.
+- **Audio:** jingle lengths are polished and a boss intro sting plays.
+- **Icon and launch:** the app icon and launch screen are final.
+
+Out of scope for M5:
+- new gameplay content
+- full frame animations (Later)
+- controller support (Later)
+- final balancing and performance (M6)
+- TestFlight (M6)
+- the final title text: it stays a single string key until the owner decides (owner question)
+
+Order:
+- **M5-1** (designer), **M5-2** (artist) and **M5-3a** (sound-designer) run in parallel.
+- **Coder pass A** = **M5-3 + M5-4**: pure logic, viewport, save migration, stars, settings and generator option, with tests. It starts now.
+- **Coder pass B** = **M5-5 + M5-6**: screens, accessibility, polish. It needs M5-1 strings and the M5-2 menu spec (placeholders marked `// TODO ART_BIBLE §16` otherwise).
+- Then **M5-7** (QA) and **M5-8** (review).
+
+### M5 module map (binding for M5-3 … M5-6)
+Same conventions as before: pure logic is `nonisolated`, `Sendable` and unit-tested; screens are SwiftUI and stay outside SpriteKit.
+
+| File | Type(s) | Role |
+|---|---|---|
+| `project.yml` | | iPad: all 4 orientations, `UIRequiresFullScreen` removed (QA-013 decision), `UILaunchScreen { UIColorName: LaunchBackground, UIImageName: LaunchLogo }` |
+| `Strike/App/ViewportPolicy.swift` | `enum ViewportPolicy`, `struct Viewport` | pure: window size + safe area → `isPlayable` (landscape-ish: aspect ≥ `rules.viewport.minAspect`, min height `rules.viewport.minHeightPt`), camera scale so the visible world height stays ≈ 834 pt, HUD safe rect. Covers 1024 × 768, 1194 × 834, 1366 × 1024, Stage Manager / windowed sizes, and portrait (→ not playable) |
+| `Strike/Game/Scenes/GameScene.swift` | (changed) | `scaleMode = .resizeFill` + `didChangeSize` → `ViewportPolicy`; camera clamp, HUD band and input zones are recomputed on resize |
+| `Strike/UI/TurnDeviceCard.swift` | `TurnDeviceCard` | Pixel avatar + `ui.turnDevice.*` text + rotate-iPad illustration (no text in art); auto-pause while shown, auto-dismiss on landscape (resume stays paused until the kid taps Resume, so nothing happens by surprise) |
+| `Strike/App/AppSettings.swift` (+ `SettingsStore` merged in) | `@Observable final class AppSettings` | single device-level store (UserDefaults): music/SFX volume, mute, Pixel talk, aim assist, left-handed, easy mode, reduce-motion override (follows the system by default). `RunState.settings` is removed via migration |
+| `Strike/Persistence/SaveMigrator.swift` | `enum SaveMigrator` | `migrate(data) -> SaveGame` for v1 → v2: moves settings into `AppSettings` once, adds `foundDatachips[levelId]: Set<String>` and the `facts` unlocks, keeps `bestResults`/`arena`. Writes `save.v1.bak.json` before the first v2 write; an unknown **future** version is left untouched (read-only fallback, never deleted) |
+| `Strike/Game/Systems/StarRules.swift` | `enum StarRules`, `enum ScoreRules` | GDD §15: ★1 finish, ★2 all 3 datachips, ★3 `rescues ≤ starRescueMax` and `time ≤ par × 1.5`; score = enemies + bolts + datachips + time bonus + no-rescue bonus; `LevelBest.merge(_:)` keeps each star and each best independently |
+| `Strike/Game/Level/SpawnPlacer.swift` | (extended) | `firstEncounterPerZone[{zone, enemyId}]` in `levels.json`: the first room of that zone gets that enemy alone (GDD §19 q13) |
+| `Strike/Data/FactsDef.swift` | `FactDef`, `FactsFile` | new `facts.json` (M5-1): 15 facts (3 per level), `id`, `levelId`, `datachipIndex`, `textKey` |
+| `Strike/Data/RulesDef.swift` | (extended) | `viewport { minAspect, minHeightPt }`, `easy { enemyDamageMultiplier 0.5, telegraphMultiplier 1.25 }` (only used if the owner accepts Easy mode), `stars { timeFactor 1.5 }` |
+| `Strike/Game/Input/TwinStickController.swift` + `HUDView` | (changed) | left-handed mirror: sticks and the right button column swap sides (GDD §3.2) |
+| `Strike/UI/Menus/MenuStyle.swift` | `MenuButtonStyle`, `MenuPanel`, `MenuBackground` | shared look from ART_BIBLE §16; all menu text uses Dynamic Type text styles (`.title`, `.headline`, `.body`) with SF Rounded, capped at `.accessibility2` where layout breaks |
+| `Strike/UI/Menus/TitleView.swift` | `TitleView` (moved out of `RootView`) | key art (hero + Pixel key poses, animated bob unless Reduce Motion), title from `title.gameName`, Continue / New game / Level map / Pixel facts / Settings |
+| `Strike/UI/Menus/LevelSelectView.swift`, `LevelNodeView.swift` | | 5 nodes on a path (theme colour + level name), locked/unlocked/finished, 3 stars each, best score and time, "Play" (always a new seed, GDD §19 q9 assumption), total stars "x / 15" |
+| `Strike/UI/Menus/FactsView.swift` | `FactsView` | 15 fact cards (locked = silhouette + "Find a datachip in Level N"); facts unlock when their datachip is found (best-of over all plays) |
+| `Strike/UI/LevelCompleteView.swift` | (extended) | stars awarded one by one (ART_BIBLE §16; instant under Reduce Motion) + `sfx_star_*`, "New best!" badges, unlocked fact teaser, buttons Next level / Level map / Title |
+| `Strike/UI/SettingsView.swift` | (extended) | sections Sound (existing sliders), Pixel (talk), Controls (aim help, left-handed), Difficulty (Easy, only if accepted), About (version, credits / licenses screen from `audio/LICENSES.md` + `art/LICENSES.md` contents as static localized text, no links out) |
+| `Strike/UI/Accessibility.swift` | helpers | VoiceOver labels/hints for HUD buttons, quick slots ("Heal pack, 2"), stars ("2 of 3 stars"), map nodes; Reduce Motion gate (`MotionPolicy.allowsShake`, `allowsCameraPan` → cut instead of pan, `allowsPulse`) used by HUD, Pixel, camera and particles (particle count × 0.5) |
+| `Strike/UI/DebugOverlay.swift` | (changed) | collapsed by default into a 32 pt "DBG" chip in the top-left safe corner (leftover 3) |
+
+Accessibility ids (new): `title.levelMap`, `title.facts`, `title.settings`, `levelSelect.view`, `levelSelect.node.l1…l5`, `levelSelect.play`, `levelSelect.stars`, `facts.view`, `facts.card.<id>`, `levelComplete.star.0…2`, `levelComplete.nextLevel`, `levelComplete.levelMap`, `turnDevice.card`, `settings.leftHanded`, `settings.easy`, `settings.about`, `debug.toggle`.
+
+### Tasks
+- [ ] **M5-1 game-designer — Facts, text review, star/score rules, Easy proposal**
+  - Inputs: GDD §15, §19; `Localizable.xcstrings` (243 keys); `levels.json`; QA_REPORT M4
+  - Outputs: `Strike/Resources/Data/facts.json`, `levels.json` (`firstEncounterPerZone` for L2 zone 1 shieldandroid, plus any other zone where it helps), `rules.json` (`viewport`, `stars`, `easy`), `Localizable.xcstrings`, GDD (§15 scoring confirmed, §16.11 `facts.json`, §19 updated, change log)
+  - **Facts**: 15 short, true, kid-level facts (≤ 120 chars) themed per level (robots, plants, computers, energy). Each fact names its source in the GDD table so QA can check it is true. No scary or violent topics.
+  - **Text review DE/EN**:
+    - keep a glossary (GDD §16.7: Blaster, Datenchip/datachip, Schnellplatz, Pixel, OVERMIND) and apply it consistently
+    - keep the tone at age 7–12
+    - make German gender-neutral where the hero is addressed
+    - shorten anything that clips at minimum window size (QA-014 style)
+    - fix every finding in a change-log row
+  - New strings:
+    - title menu
+    - level map (locked hint, best time/score, total stars)
+    - facts screen
+    - Level complete stars / "New best!"
+    - Turn-device card
+    - Settings sections + left-handed + Easy
+    - About / credits
+    - VoiceOver labels and hints for all HUD controls and menu items
+  - Easy mode: write the rule text for the owner question (enemy damage × 0.5, telegraphs × 1.25, no star penalty). The data goes in `rules.json`, but the feature stays off until the owner accepts.
+  - Done when:
+    - JSON valid, `LocalizationKeyTests` green
+    - facts have sources
+    - every review change is logged
+    - no code touched
+
+- [ ] **M5-2 visual-artist — ART_BIBLE §16 "Menus, map, icon, launch"** (parallel)
+  - Inputs: ART_BIBLE §1, §2, §7, §14, §15; app icon; atlases; current menu screenshots (`qa_m3r_*`, `qa_m4r_*`)
+  - Outputs: ART_BIBLE §16; assets via `tools/gen_art.py` + slicer: `ui_btn_settings` (prompt #36, leftover 2); `ui_map_node_<state>` or a code-drawn spec; `LaunchLogo` + `LaunchBackground` colour in `Assets.xcassets`; app icon **dark and tinted variants** (iOS 18 appearances). No Swift.
+  - §16 covers:
+    - **Menu style**: panels, buttons ≥ 64 pt, Dynamic Type layout rules (wrap, never truncate; scroll when needed), portrait and landscape layouts for title, map, facts and settings.
+    - **Title key art composition** (hero + Pixel key poses, OVERMIND silhouette, no baked text).
+    - **Level map**:
+      - path and node look per theme
+      - lock and star states
+      - star award animation (Reduce Motion variant)
+    - **Turn-device card illustration.**
+    - **App icon**:
+      - 1024 px check (opaque, no text, readable at 40 pt, no gun look)
+      - dark and tinted variants
+    - **Launch screen**: colour + centred logo mark, no text.
+    - **§15 extras spec check**: confirm the leftover-1 values are final.
+  - Done when: every value is a concrete number or hex, assets are sliced into the right atlas or asset catalog, `DataIntegrityTests` is green (QA confirms), and nothing contradicts §7/§14/§15
+
+- [ ] **M5-3a sound-designer — Audio polish** (parallel; owner of `docs/AUDIO_BIBLE.md`, `audio/`, `tools/*audio*`, `Strike/Resources/Audio/`, `audio.json`)
+  - Outputs:
+    - Jingles: check and fix the lengths and loudness of `music_level_complete` (target 4 s) and `music_season_complete` (target 8 s), with clean tails and no clipping.
+    - New SFX (synthesized): `sfx_boss_intro` (a 2–3 s goofy-evil sting on arena entry, before `music_boss`), `sfx_star_1/2/3` (rising chimes), `sfx_ui_tap`, `sfx_ui_back`, `sfx_fact_unlock`.
+    - `audio.json` entries for the above; AUDIO_BIBLE updated.
+  - Done when: `AudioTests` green, the new ids are listed in AUDIO_BIBLE with numbers, loudness is within the targets, and nothing is scary or explosion-like
+
+- [ ] **M5-3 swift-coder (pass A) — Viewport, settings store, save migration**
+  - Outputs: `ViewportPolicy`, `AppSettings` (merge of `SettingsStore` + `RunState.settings`), `SaveMigrator`, `project.yml` orientation/launch keys (launch assets may be placeholders until M5-2). Tests in `ViewportPolicyTests`, `AppSettingsTests`, `SaveMigratorTests` with **real v1 fixtures** (a fresh-game save, a mid-campaign save with arena progress, and a corrupt file, stored in `StrikeTests/Fixtures/`).
+  - Done when (each is a test):
+    - **Viewport:**
+      - 1024 × 768, 1194 × 834 and 1366 × 1024 landscape are playable with a visible world height of 834 ± 1 pt
+      - portrait and windows below `minAspect`/`minHeightPt` are not playable
+      - the HUD safe rect never overlaps the home-indicator inset
+    - **Settings:**
+      - survive `newGame()`
+      - v1 Pixel talk / aim values are taken over once
+    - **Migration:**
+      - v1 → v2 keeps loadout, inventory, quick slots, unlocked level, best results and arena progress byte-for-byte equal in meaning
+      - a backup is written
+      - a future version is left untouched, the app starts with a fresh in-memory run, and that run is not written over the future file
+      - corrupt → quarantine (existing rule)
+    - Build shows **no** `UIRequiresFullScreen` / orientation warning
+
+- [ ] **M5-4 swift-coder (pass A) — Stars, score, facts, first encounter per zone**
+  - Outputs: `StarRules`, `ScoreRules`, `LevelBest.merge`, `FactsDef` + `GameData` loading, `SpawnPlacer` first-encounter option, `MotionPolicy` (pure). Tests in `StarRulesTests`, `ScoreRulesTests`, `FactsTests`, `SpawnPlacerFirstEncounterTests`, `MotionPolicyTests`.
+  - Done when (each is a test):
+    - **Stars:**
+      - every star rule at its boundaries (time exactly par × 1.5, rescues exactly max)
+      - L5 uses `starRescueMax` 2
+    - **Best results:** merge keeps the best of each field independently
+    - **Score:** sum matches GDD §15, including the time bonus floor at 0 and the no-rescue bonus
+    - **Facts:** each fact maps to an existing level and datachip index; datachips unlock their facts, and replays only add
+    - **First encounter:** L2 seeds 0…399 always have the zone-1 first-encounter room with exactly one shield android and nothing else; solvability is still green
+    - **Motion:** with Reduce Motion, shake/pan/pulse are off and particle counts are halved
+
+- [ ] **M5-5 swift-coder (pass B) — Screens: title, level map, facts, Level complete, Settings, turn card**
+  - Outputs: `Menus/*`, `LevelCompleteView`, `SettingsView`, `TurnDeviceCard`, `GameScene` resize, left-handed mirror, `RootView` routing, the Easy toggle behind a feature flag. UI tests `StrikeMenusUITests`, `StrikeOrientationUITests`.
+  - Done when:
+    - **Navigation:**
+      - title → map → play L1 → finish (debug) → stars shown → map shows the stars and best time → replay uses a new seed
+      - facts unlock from the datachips found in that run
+    - **Orientation:**
+      - rotating to portrait in game shows `turnDevice.card` and pauses
+      - rotating back keeps it paused until Resume
+      - menus lay out in portrait without clipping
+    - **Settings:**
+      - left-handed swaps the sticks and button column live
+      - all settings persist across relaunch and New game
+    - **Window sizes:** Stage Manager / windowed size changes keep the HUD inside the safe area (UI test with 2 sizes if the simulator allows, otherwise unit coverage via `ViewportPolicy`)
+    - full test run green
+
+- [ ] **M5-6 swift-coder (pass B) — Accessibility, polish, leftovers**
+  - Outputs:
+    - VoiceOver labels/hints on every interactive element
+    - Dynamic Type on all menus and cards (the in-game HUD keeps its fixed size)
+    - `MotionPolicy` wired into camera pan, shake, Pixel bob, star animation and particles
+    - the §15 extras (leftover 1)
+    - `ui_btn_settings` swapped in (leftover 2)
+    - the collapsible debug overlay (leftover 3)
+    - `sfx_boss_intro` before `music_boss`; star / UI / fact SFX hooks
+    - launch screen and icon variants wired
+  - Done when:
+    - `XCUIApplication().performAccessibilityAudit()` passes on title, map, facts, settings, pause, inventory and Level complete (documented exclusions only for the game canvas)
+    - menus readable at the `accessibility2` text size (UI test sets the content size category)
+    - Reduce Motion launch arg disables pan, shake and pulses (scenario test)
+    - every §15 extra is visible in a render test like `VisualCheckTests`
+    - no SF Symbol gear remains
+    - full test run green with no warnings
+
+- [ ] **M5-7 qa-tester — M5 verification**
+  - Outputs: `docs/QA_REPORT.md` M5 section; `SaveMigrationFuzzTests.swift` (random v1 run states → migrate → identical meaning); a German and English screenshot set of every screen in landscape and portrait (portrait menus only) and at accessibility text size
+  - Done when:
+    - suite green with no warnings, no orientation build warning
+    - **Re-checks:** QA-014 and QA-015 (leftover 7); the facts are checked against their sources
+    - **By hand:** a full campaign from New game to Season complete with stars, best times and facts unlocking, then an app kill and Continue
+    - **Accessibility:** a VoiceOver walk-through of the menus (simulator Accessibility Inspector) logged
+    - **Kid-safety:** a pass on all new text and art
+    - **Device:** the owner device FPS question repeated for the M5 build
+
+- [ ] **M5-8 game-manager — M5 review**: check deliverables against GDD/ART_BIBLE/AUDIO_BIBLE, update ROADMAP/TASKS/DECISIONS, plan M6
 
 ## Questions for the owner
-- **QA-013: iPad orientations.** Xcode warns that `UIRequiresFullScreen` will soon be ignored and that iPad apps will need to support all orientations and resizable windows. Today Strike is landscape-only and full screen. This needs a decision before the App Store submission (M6). Options:
-  1. **Keep landscape-only for now.** Ship with the current settings while iOS still honours them, and revisit when Apple enforces the change. No work now, but a risk of a forced late change or a rejection.
-  2. **Support every orientation and window size with a "Turn me sideways" card.** Declare all orientations and drop `UIRequiresFullScreen`. In landscape and wide windows the game plays as now (the scene adapts to the window size, HUD stays on the safe area). In portrait or narrow windows the game pauses and shows a friendly Pixel card asking to turn the iPad. Small and contained (scene resize handling + one SwiftUI card + UI tests).
-  3. **Full portrait layout.** Re-flow the HUD and sticks for portrait and show a taller view. The most work; the twin-stick layout is clearly weaker in portrait for kids' hands.
-
-  **Recommendation: option 2, scheduled in M5** (presentation/menus), so the M6 TestFlight build is already compliant. Please confirm, or choose 1 or 3.
-- Performance check on your iPad 10th gen: in a DEBUG device build of M3, open L4 (`-StrikeLevel l4`), tap `spawnCrowd` once, fight for 30 s, and tell us the FPS shown in the corner (needed for the 60 fps goal on iPad 9th gen+)
-- Final title and character names (designer proposed options in GDD §19)
-- Gemini commercial-use terms for generated images, and the Lyria terms for the generated music (owner to confirm; we do not decide licensing)
-- Minimum iPad model (default iPadOS 18, iPad 9th gen+)
-- GDD §19 items 6–9 (Easy setting, hero looks, left-handed prompt, replay with new seed) are still open
+- **Easy mode** (GDD §19 q6/q14): add a "Relaxed" toggle in Settings, off by default: enemy damage × 0.5 and telegraphs × 1.25, no star penalty? Recommendation: **yes**. It is cheap (data is in `rules.json`), and 7-year-olds who struggle with shooting enemies get a gentler game without us changing the default. It is built behind a flag in M5 and switched on only with your OK.
+- **Final title and names** (GDD §19 q1–q4: game title, hero, Pixel, OVERMIND). Needed before the M5 title key art is final; until then the title screen shows the working title from one string key.
+- **Hero looks** (q7): one fixed hero, or a choice of 2–3 looks? Recommendation: **one fixed hero for Season 1** (no new art, keeps scope).
+- **Left-handed mirror** (q8): Settings only, or also asked on first launch? Recommendation: **Settings only** (one less screen before playing).
+- **Replays with a new seed** (q9): the M5 level map assumes **yes**. Please confirm.
+- **Performance on your iPad 10th gen** (M6 input): in a DEBUG device build of M4 or later, (1) open L5 (`-StrikeLevel l5`), tap the crowd debug button once and fight for 30 s; (2) start the boss (`-StrikeBossArena`) and play phase 2. Tell us the FPS shown in the corner for both.
+- **Licensing**: the commercial-use terms for the Gemini-generated images and the Lyria-generated music. We do not decide licensing; this is needed before the App Store submission (M6).
+- **Minimum iPad model** (default iPadOS 18, iPad 9th gen+).
