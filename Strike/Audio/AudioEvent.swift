@@ -66,4 +66,10 @@ nonisolated enum MusicID {
 protocol AudioSink: AnyObject {
     func play(_ event: AudioEvent)
     func playJingle(_ id: String)
+    /// Pixel's speech beep (a random one of three when `index` is nil).
+    func playPixelBeep(index: Int?)
+}
+
+extension AudioSink {
+    func playPixelBeep(index: Int?) { play(AudioEvent.pixelBeeps[min(max(0, index ?? 0), AudioEvent.pixelBeeps.count - 1)]) }
 }

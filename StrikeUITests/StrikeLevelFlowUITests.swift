@@ -8,12 +8,15 @@ final class StrikeLevelFlowUITests: XCTestCase {
     func testLevelFlowL1ToL2() {
         XCUIDevice.shared.orientation = .landscapeLeft
         let app = XCUIApplication()
+        app.launchArguments += ["-StrikeFreshSave"]
         app.launchArguments += ["-StrikeLevel", "l1", "-StrikeSeed", "42"]
         app.launch()
 
-        let start = app.buttons["startButton"]
+        let start = app.buttons["title.newGame"]
         XCTAssertTrue(start.waitForExistence(timeout: 10))
         start.tap()
+        let intro = app.descendants(matching: .any)["levelIntro.view"]
+        if intro.waitForExistence(timeout: 5) { intro.tap() }
 
         XCTAssertTrue(app.descendants(matching: .any)["gameView"].waitForExistence(timeout: 10))
         XCTAssertTrue(app.descendants(matching: .any)["hud.minimap"].waitForExistence(timeout: 5))

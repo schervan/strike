@@ -31,6 +31,8 @@ nonisolated struct MinimapSnapshot: Equatable, Sendable {
     /// Hero centre in cell units.
     var heroX = 0.0
     var heroY = 0.0
+    /// Pixel's pings (hint target, pointer pings after `hints.pointerAfterSec`), ART_BIBLE §14.6.
+    var pings: [MinimapMark] = []
 }
 
 /// SwiftUI `Canvas` minimap, top-right below the pause button (ART_BIBLE §13.1). Display only.
@@ -71,6 +73,7 @@ struct MinimapView: View {
             TimelineView(.periodic(from: .now, by: Layout.pulseStep)) { timeline in
                 Canvas { ctx, size in
                     draw(snap, in: &ctx, size: size)
+                    drawPings(snap, in: &ctx, size: size, time: timeline.date.timeIntervalSinceReferenceDate)
                     drawHero(snap, in: &ctx, size: size, time: timeline.date.timeIntervalSinceReferenceDate)
                 }
             }
@@ -163,6 +166,25 @@ struct MinimapView: View {
             star.closeSubpath()
             ctx.fill(star, with: .color(Self.color(0xFFD93D, e.on ? 1 : 0.7)))
             ctx.stroke(star, with: .color(outline), lineWidth: 1)
+        }
+    }
+
+    /// Ring 4 → 14 pt over 0.9 s, alpha 1 → 0, a new ring every 0.5 s (2 Hz), #FFD93D.
+    private func drawPings(_ s: MinimapSnapshot, in ctx: inout GraphicsContext, size: CGSize, time: Double) {
+        guard !s.pings.isEmpty else { return }
+        let g = geometry(s, size)
+        for m in s.pings {
+            var c = point(m.x, m.y, s, g)
+            c.x = min(max(c.x, 4), size.width - 4)
+            c.y = min(max(c.y, 4), size.height - 4)
+            for k in 0..<2 {
+                let age = (time - Double(k) * 0.5).truncatingRemainder(dividingBy: 1.0)
+                guard age >= 0, age <= 0.9 else { continue }
+                let f = age / 0.9
+                let d = CGFloat(4 + 10 * f)
+                let r = CGRect(x: c.x - d / 2, y: c.y - d / 2, width: d, height: d)
+                ctx.stroke(Path(ellipseIn: r), with: .color(Self.color(0xFFD93D, 1 - f)), lineWidth: 2)
+            }
         }
     }
 

@@ -7,7 +7,7 @@ struct StrikeApp: App {
     @State private var model: GameModel = {
         let launch = LaunchOptions.current
         if launch.resetSettings { SettingsStore.shared.reset() }
-        let model = GameModel(screen: launch.autoStart ? .game : .title, launch: launch)
+        let model = GameModel(screen: launch.autoStart ? .game : .title, launch: launch, saveStore: .makeDefault())
         AudioManager.shared.start(audio: model.data.audio, settings: .shared)
         return model
     }()

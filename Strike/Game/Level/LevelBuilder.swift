@@ -68,16 +68,8 @@ enum LevelBuilder {
                      checkpoints: checkpoints, exitPad: exitPad, crates: crates)
     }
 
-    /// Centre of the niche's far row (the pad sits centred in a 2- or 3-wide niche).
-    static func exitPadCenter(_ level: GeneratedLevel) -> CGPoint {
-        let grid = level.grid
-        let door = level.exitDoor.cells
-        guard !door.isEmpty, !level.exitDoor.niche.isEmpty else { return grid.world(level.exitPad) }
-        func dist(_ c: GridPoint) -> Int { door.map { $0.chebyshev(c) }.min() ?? 0 }
-        let far = level.exitDoor.niche.map(dist).max() ?? 0
-        let row = level.exitDoor.niche.filter { dist($0) == far }.map { grid.world($0) }
-        return CGPoint(x: row.map(\.x).reduce(0, +) / CGFloat(row.count), y: row.map(\.y).reduce(0, +) / CGFloat(row.count))
-    }
+    /// Centre of the niche's far row; same point as `GeneratedLevel.exitPadPosition` (QA-008).
+    static func exitPadCenter(_ level: GeneratedLevel) -> CGPoint { level.exitPadPosition }
 
     // MARK: Tiles
 

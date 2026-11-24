@@ -96,6 +96,46 @@ enum Textures {
         return SKTexture(image: image)
     }()
 
+    /// Five-point star with a 1.5 pt plum rim (poof v2 stars, ART_BIBLE §14.9): reads on light floors.
+    static let outlinedStar: SKTexture = {
+        let size = CGSize(width: 28, height: 28)
+        let image = UIGraphicsImageRenderer(size: size).image { _ in
+            let path = UIBezierPath()
+            let c = CGPoint(x: 14, y: 14)
+            for i in 0..<10 {
+                let r: CGFloat = i.isMultiple(of: 2) ? 12 : 5
+                let a = CGFloat(i) * .pi / 5 - .pi / 2
+                let p = CGPoint(x: c.x + cos(a) * r, y: c.y + sin(a) * r)
+                i == 0 ? path.move(to: p) : path.addLine(to: p)
+            }
+            path.close()
+            path.lineJoinStyle = .round
+            path.lineWidth = 3
+            UIColor(red: 0x2B / 255, green: 0x21 / 255, blue: 0x40 / 255, alpha: 1).setStroke()
+            path.stroke()
+            UIColor.white.setFill()
+            path.fill()
+        }
+        return SKTexture(image: image)
+    }()
+
+    /// Small rounded chip / nut with a plum rim (poof v2 bolts and blobs).
+    static let outlinedChip: SKTexture = {
+        let size = CGSize(width: 18, height: 18)
+        let image = UIGraphicsImageRenderer(size: size).image { _ in
+            let outer = UIBezierPath(roundedRect: CGRect(x: 2, y: 2, width: 14, height: 14), cornerRadius: 4)
+            outer.lineWidth = 3
+            UIColor(red: 0x2B / 255, green: 0x21 / 255, blue: 0x40 / 255, alpha: 1).setStroke()
+            outer.stroke()
+            UIColor.white.setFill()
+            outer.fill()
+            let hole = UIBezierPath(ovalIn: CGRect(x: 7, y: 7, width: 4, height: 4))
+            UIColor(red: 0x2B / 255, green: 0x21 / 255, blue: 0x40 / 255, alpha: 0.6).setFill()
+            hole.fill()
+        }
+        return SKTexture(image: image)
+    }()
+
     /// ART_BIBLE §13.9: shared radial glow (128 px, white centre to transparent, `pow(1 - r, 2)`).
     static let radialGlow: SKTexture = {
         let px = 128

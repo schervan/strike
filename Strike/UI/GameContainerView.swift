@@ -14,7 +14,9 @@ struct GameContainerView: View {
             if let scene {
                 SpriteView(
                     scene: scene,
-                    isPaused: model.isPaused,
+                    // The scene freezes itself while `model.isGameFrozen` (SpriteView's `isPaused`
+                    // does not reliably resume a scene that started paused behind the intro card).
+                    isPaused: false,
                     preferredFramesPerSecond: 60,
                     options: [.ignoresSiblingOrder],
                     debugOptions: debugOptions
@@ -28,6 +30,8 @@ struct GameContainerView: View {
             }
 
             HUDView()
+
+            PixelBubbleView()
 
             MinimapView()
                 .padding(.trailing, MinimapView.Layout.right)
@@ -47,18 +51,34 @@ struct GameContainerView: View {
 
             #if DEBUG
             DebugOverlay()
-                .padding(.bottom, 16)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+                .padding(.leading, 16)
+                .padding(.bottom, 104)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
             #endif
+
+            if model.isIntroShowing, let level = model.data.levels[run.levelId] {
+                LevelIntroView(level: level)
+                    .transition(.opacity)
+                    .zIndex(5)
+            }
+
+            if model.isInventoryOpen {
+                InventoryView()
+                    .transition(.opacity.combined(with: .scale(scale: 0.92)))
+                    .zIndex(6)
+            }
 
             if model.isPaused {
                 PauseMenuView()
                     .transition(.opacity)
+                    .zIndex(7)
             }
         }
+        .animation(.easeOut(duration: 0.18), value: model.isInventoryOpen)
+        .animation(.easeOut(duration: 0.2), value: model.isIntroShowing)
         .onAppear {
             guard scene == nil else { return }
-            let s = GameScene(data: model.data, levelId: run.levelId, seed: run.seed)
+            let s = GameScene(data: model.data, levelId: run.levelId, seed: run.seed, run: model.progress)
             s.model = model
             scene = s
         }

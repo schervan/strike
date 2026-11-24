@@ -446,7 +446,7 @@ Accessibility ids (new): `hud.quickSlot.0…3`, `hud.inventoryButton`, `hud.paus
       - it points at the exit pad once all elements are on
       - pings start only after `pointerAfterSec`
 
-- [ ] **M3-5 swift-coder (pass B) — Scene: pickups, Pixel, rescue, leftovers**
+- [x] **M3-5 swift-coder (pass B) — Scene: pickups, Pixel, rescue, leftovers**
   - Outputs: `PixelNode`, `PixelController`, `GameScene` changes, `Particles` poof v2, `PickupNode` halo/shadow/bob (§13.8), enemy-shot under-glow on L4/L5, QA-008 fix (`LevelGenerator`/`LevelBuilder` agree on the exit pad; test), QA comment fix (leftover 8), debug `spawnCrowd` (12 boltbots + 2 crates in the current room) and `damageHero`
   - Done when:
     - all pickups route through `PickupResolver`, and the bag-full "!" stays on the floor
@@ -458,7 +458,7 @@ Accessibility ids (new): `hud.quickSlot.0…3`, `hud.inventoryButton`, `hud.paus
     - poof v2 visible on all 5 floors (render test like `VisualCheckTests`)
     - still under 1500 nodes and ~60 fps on the simulator with `spawnCrowd` on L4; result logged
 
-- [ ] **M3-6 swift-coder (pass B) — HUD, inventory, pause, intro, save flow, UI tests**
+- [x] **M3-6 swift-coder (pass B) — HUD, inventory, pause, intro, save flow, UI tests**
   - Outputs: `QuickSlotBar`, `InventoryView`, `ItemInfoPanel`, `PauseMenuView`, `PixelBubbleView`, `LevelIntroView`, `RootView`/`GameModel` changes; `StrikeUITests/StrikeInventoryUITests.swift`
   - Done when:
     - quick slots show icon and total, tap = use, greyed at 0, shake + toast at full HP

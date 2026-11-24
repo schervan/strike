@@ -600,8 +600,17 @@ nonisolated struct GeneratedLevel: Sendable, Equatable {
     /// Grid with every door closed (level start).
     var gridAllDoorsClosed: TileGrid { grid(closedGates: Set(gates.map(\.id)), exitClosed: true) }
 
-    /// Exit pad centre in world points (the middle of the niche's far row).
-    var exitPadPosition: CGPoint { grid.world(exitPad) }
+    /// Exit pad centre in world points: the middle of the niche's far row (a 2-wide niche puts it
+    /// between two cells). The drawn pad, Pixel's hints and tests all use this (QA-008); `exitPad`
+    /// is the far-row cell nearest to it.
+    var exitPadPosition: CGPoint {
+        let door = exitDoor.cells
+        guard !door.isEmpty, !exitDoor.niche.isEmpty else { return grid.world(exitPad) }
+        func dist(_ c: GridPoint) -> Int { door.map { $0.chebyshev(c) }.min() ?? 0 }
+        let far = exitDoor.niche.map(dist).max() ?? 0
+        let row = exitDoor.niche.filter { dist($0) == far }.map { grid.world($0) }
+        return CGPoint(x: row.map(\.x).reduce(0, +) / CGFloat(row.count), y: row.map(\.y).reduce(0, +) / CGFloat(row.count))
+    }
 
     /// FNV-1a over the grid and every placement, stable across runs of the same build.
     var stableHash: UInt64 {
