@@ -137,3 +137,47 @@ Green: fuzz 10,000/10,000 seeds clean, 15/15 scripted playthroughs complete, ful
 - QA-009 (subtle power-down) stays open for M3 (QA-009 in this report is the power-down effect; the machine-focus item was filed as QA-007 and is the one coder-m2 called QA-009).
 - Fuzz default: `GeneratorFuzzTests` is `.serialized`, 400 seeds per level (about 36 s); full 2,000 per level with `TEST_RUNNER_FUZZ_SEEDS=2000` (203 s on the dedicated setup).
 
+
+## M3 - Systems (2026-11-24, branch m3-systems, pass B committed; QA tests uncommitted)
+
+### Commands
+Dedicated simulator "QA iPad" (iPad Pro 11-inch M5, iOS 26.5) and `-derivedDataPath build/DerivedDataQA`, as CLAUDE.md now requires for parallel agents:
+```
+xcodebuild -project Strike.xcodeproj -scheme Strike -destination 'platform=iOS Simulator,id=<QA iPad>' -derivedDataPath build/DerivedDataQA test
+```
+
+### Results: TEST SUCCEEDED
+- Unit suite (StrikeTests): 235 Swift Testing tests passed at the start of M3-7; after QA additions 243 tests in 43 suites passed, 0 failed, no warnings in the test targets.
+- Full suite including UI: 16 XCTest cases (UI tests), 0 failures (about 7 minutes; the old play pass alone is 146 s). One run was red for a moment: my `withKnownIssue` for QA-010 failed with "Known issue was not recorded" because coder-m3 fixed QA-010 in the meantime; I turned it into a normal assertion and re-ran green.
+- New or changed tests:
+  - `InventoryFuzzTests.swift`: 10,000 seeded random sequences x 60 actions (600,000 actions) + 200 long sequences x 400 actions against `Inventory` + `ItemUse`. Actions: add (incl. 130-item overflow, bolts/blasters/unknown ids), addAll, remove, drop (bad slots), assignQuick (bad index, nil), tidy, use via quick slot and slot (cooldown, full HP, ammo packs), hurt, and JSON round trip + `bind`. Invariants after every action: 25 slots, never more than 25 used, every stack within 1...stackSize, only bag-storable known ids, quick links valid and unique, item totals equal a ledger (added - used - dropped, so nothing duplicated or lost), HP and ammo reserve inside bounds, tidy conserves totals and leaves no gaps and at most one partial stack per id, round trip keeps the exact layout. Result: 0 violations.
+  - `LocalizationKeyTests.swift` extended (7 tests now): every key in `levels.json -> story` (intro, outro, beats), generic Pixel lines (derived from items and enemies), boss keys exist in de and en; all pixel/story/boss lines fit `rules.pixel.maxChars` (60) in both languages (longest: 53 en, 52 de); every key-looking string literal in the Swift sources exists in the catalog (scans the source tree; ignores UserDefaults keys, SF Symbols and `id:` identifiers); banned-word list stays split per language.
+  - `M3ScenarioTests.swift`: leash and rescue on a real `GameScene` (details below).
+  - `StrikeUITests/StrikeM3PassUITests.swift`: save/relaunch/Continue with quick slots and Pixel hint, German screens, L4 crowd.
+  - Main-actor warnings: fixed in `StrikePlayPassUITests` and `StrikeM2PassUITests` (helpers are `@MainActor`, the second-thread screenshot is gone), and in `StrikeInventoryUITests`, `StrikeSettingsUITests`, `StrikeLevelScreenshotUITests`. A full test-target build shows no warnings. The remaining build notice is a project-level warning about `UIRequiresFullScreen` and orientations ("will soon be ignored / all orientations required"), see QA-013.
+
+### Manual checks (real output)
+- Leash (leftover 5): L1 seed 11 and L3 seed 222; a boltbot is lured with the hero 200 pt away, hurt to half HP, then the hero is placed 45+ path steps away (outside the 2 x detectRange leash). It walks home after the 4 s out-of-range timer (6.8 s and 6.3 s total including the walk), arrives 27 pt from its spawn, HP back to 30/30 (was 15), state Idle. Enemy movement was integrated by hand, because SpriteKit physics only runs in a live render loop; no finger run was done.
+- Rescue: L1, L2 and L4 (L2 and L4 touched the gate checkpoint first, the bag was filled from floor pickups). `damageHero(1000)` starts the sequence, the beam node appears, it takes 1.40 s, the hero lands on `checkpoint_start`, `checkpoint_gate_2` or `checkpoint_gate_3` (192 to 1950 pt away), HP 100/100, rescues + 1, last checkpoint unchanged, bag identical (stacks and quick links), blasters and other ammo kept, hero alpha and scale back to 1, every living enemy back at full HP and either walking home or idle. In the simulator the DMG button path (4 x DMG to 0 HP) was already covered by coder's `StrikeInventoryUITests` (passes).
+- Save (simulator, real app kill): L1 seed 5, New game; Q1 heal pack 1, Q2 apples 2; DMG, apple heals (70 to 80 HP), Q2 shows 1, heal pack used (Q1 0); Level complete via ALL ON and EXIT; app terminated on the card; relaunch (no `-StrikeFreshSave`): Continue exists, resumes at "l2 · seed ..." with Q1 0 and Q2 1 (items kept). Screens: `qa_m3_en_complete.png`, `qa_m3_en_title_continue.png`, `qa_m3_en_l2_resumed.png`.
+- Quick slots: all four slots are at least 60 pt wide; empty slots show a dashed "+" frame, the used heal pack is greyed (`qa_m3r_en_quick_used.png`).
+- Pixel tap hint: tapping Pixel shows "This way! Follow my arrow." in the top bubble, draws the dotted arrow toward the target and pings the minimap (`qa_m3r_en_pixel_tap_hint.png`). Pixel idles up-left of the hero as designed; the low-HP line "Ouch! Eat something!" appears in the crowd fight.
+- German screens (`qa_m3r_de_intro.png`, `de_hud_pixel`, `de_inventory`, `de_pause`, `de_complete`): intro card text, "Tasche", "Heilpaket / Du hast 1 / Gibt dir 50 Leben.", "Benutzen / In Schnellplatz / Ablegen" and the pause menu fit without clipping. The "In Schnellplatz" label is set smaller than its neighbours (see QA-014).
+- Crowd (L4 seed 7, 12 boltbots + crates via CROWD, 8 s of fire; simulator): 271 nodes, 60 fps in the fight, 139 nodes at 60 fps in the idle hint shot, 88 nodes at start. Real device number is still an owner question.
+
+### Kid-safety pass (all new text)
+- No violent or scary wording in 214+ strings (per-language banned lists, test green). I read all 48 story/boss/Pixel lines in English: tone is playful ("Eww, it is so sticky", "OVERMIND is very angry now", "Slimes split in two", "The monsters are just sleepy now"), the outro ends on a gentle cliffhanger beep. No network, analytics, ads or web code in the new files (the sources scan and the earlier greps stay clean).
+- Touch targets: quick slots 60 pt or more, inventory Drop 64 pt or more (coder's UI test), inventory/Pause/Continue buttons large.
+
+### Open bugs / findings (IDs continue from QA-009)
+- QA-010 FIXED (low): `Inventory.bind` re-packed the bag after save/load, closing gaps and merging partial stacks. Found by the first fuzz run (6,472 of 10,000 sequences changed layout); coder-m3 fixed it (each stack keeps its slot); the fuzz now checks the exact layout and passes 10,000/10,000.
+- QA-011 (low, latent for M4): `StoryDirector` asks for `pixel.tip.<enemyId>` on the first sight of any enemy, but there is no `pixel.tip.megamech`. When the boss is seen, the raw key could appear in Pixel's bubble. Suspected: `Strike/Game/Pixel/StoryDirector.swift:124`; add the string or skip the tip for the boss. The new test excludes megamech on purpose.
+- QA-012 (info, M4 content): L2 beats `pixel.l2.spread` / `pixel.l2.swap` ("Tap SWAP to change blasters") and `pixel.l3.rapid` fire on `firstPickup:blaster_*`. The SWAP button does not exist before M4; if a blaster pickup appears earlier the line points at a missing button. Suspected: `levels.json` beats.
+- QA-013 (low, project): the UI test runs print "Update the Info.plist: UIRequiresFullScreen will soon be ignored; support for all orientations will soon be required" (`project.yml` landscape-only with `UIRequiresFullScreen`). Needs an owner decision before submission to the App Store.
+- QA-014 (low, polish): in German, the inventory button "In Schnellplatz" is set noticeably smaller than "Benutzen" and "Ablegen" to fit one line. Suggest a shorter label ("Schnellplatz") or two lines. Suspected: `Strike/UI/ItemInfoPanel.swift`.
+- QA-015 (info, visual): on L4 the world-space arcade machine can sit under the reload and interact buttons (`qa_m3r_crowd_fight.png`), which is just map position under a HUD button, no function lost.
+- Ignored as instructed: duplicate bag count badge on the quick slot (visible at the bottom of the intro screens), rescue beam look, one Pixel line.
+- QA-004 (ammo starvation) not re-tested in M3. QA-009 (power-down effect subtle) and QA-003 (real-iPad touch check) remain open.
+
+### M3-7 verdict
+Green: 243/243 unit tests, 16/16 UI cases, inventory fuzz 10,000/10,000 clean, leash, rescue, save/Continue, quick slots and Pixel hint verified, de and en lines fit. No blockers; QA-011 and QA-012 should be handled before M4 content lands.

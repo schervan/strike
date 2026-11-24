@@ -1390,11 +1390,11 @@
       }
     },
     "pixel.l1.button": {
-      "comment": "L1 beat: firstSeen:button. 'The hand' = the HUD interact button icon. Max 60 chars",
+      "comment": "L1 beat: firstSeen:button. 'The glow on the right' = the HUD interact button with its yellow pulse ring (ART_BIBLE §13.3), right column. Max 60 chars",
       "extractionState": "manual",
       "localizations": {
-        "de": { "stringUnit": { "state": "translated", "value": "Ein Knopf! Geh hin und tipp die Hand." } },
-        "en": { "stringUnit": { "state": "translated", "value": "A button! Go close and tap the hand." } }
+        "de": { "stringUnit": { "state": "translated", "value": "Ein Knopf! Geh hin und tipp rechts aufs Leuchten." } },
+        "en": { "stringUnit": { "state": "translated", "value": "A button! Walk to it, then tap the glow on the right." } }
       }
     },
     "pixel.l1.lever": {
@@ -1406,11 +1406,11 @@
       }
     },
     "pixel.l1.heal": {
-      "comment": "L1 beat: firstLowHp. The heart = heal pack in quick slot 1. Max 60 chars",
+      "comment": "L1 beat: firstLowHp. Points at the quick slots at the bottom (L1 start gift: heal pack in Q1, apples in Q2). The HUD heart cannot be tapped. Max 60 chars",
       "extractionState": "manual",
       "localizations": {
-        "de": { "stringUnit": { "state": "translated", "value": "Tipp auf das Herz zum Heilen." } },
-        "en": { "stringUnit": { "state": "translated", "value": "Tap the heart to heal." } }
+        "de": { "stringUnit": { "state": "translated", "value": "Tipp unten auf Heilpaket oder Apfel zum Heilen!" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Tap the heal pack or apple below to heal!" } }
       }
     },
     "pixel.l1.door": {

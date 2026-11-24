@@ -1132,28 +1132,57 @@ final class GameScene: SKScene, @preconcurrency SKPhysicsContactDelegate, EnemyW
         let n = SKNode()
         n.name = "rescue_beam"
         n.zPosition = 45
-        let layers: [(CGFloat, SKColor, CGFloat)] = [(96, Palette.pixelCyan, 0.4), (50, Palette.pixelLight, 0.7), (24, .white, 0.9)]
-        for (w, c, a) in layers {
-            let col = SKSpriteNode(color: c, size: CGSize(width: w, height: 240))
+        // ART_BIBLE §14.7: from 20 pt below the feet to 220 pt above; outer cyan 96, inner 50, core 24.
+        let footY: CGFloat = -40, height: CGFloat = 240 + 20
+        let layers: [(CGFloat, SKColor, CGFloat)] = [(96, Palette.pixelCyan, 0.55), (50, Palette.pixelLight, 0.8), (24, .white, 0.95)]
+        for (i, (w, c, a)) in layers.enumerated() {
+            let col = SKSpriteNode(texture: Textures.beamGradient, size: CGSize(width: w, height: height))
             col.anchorPoint = CGPoint(x: 0.5, y: 0)
-            col.position = CGPoint(x: 0, y: -40)
+            col.position = CGPoint(x: 0, y: footY - 20)
+            col.color = c
+            col.colorBlendFactor = 1
             col.alpha = a
             col.blendMode = .add
             col.xScale = 0.05
-            col.run(.scaleX(to: 1, duration: 0.2))
+            // Width 0 → full in 0.2 s, then a slight pulse (±8 %, layers out of phase).
+            let pulse = SKAction.sequence([.scaleX(to: 1.08, duration: 0.18 + 0.03 * Double(i)),
+                                           .scaleX(to: 0.94, duration: 0.18 + 0.03 * Double(i))])
+            col.run(.sequence([.scaleX(to: 1, duration: 0.2), .repeatForever(pulse)]))
             n.addChild(col)
         }
-        let ring = SKShapeNode(ellipseOf: CGSize(width: 88, height: 32))
-        ring.position = CGPoint(x: 0, y: -40)
-        ring.fillColor = Palette.pixelCyan.withAlphaComponent(0.6)
-        ring.strokeColor = .clear
+        let ring = SKSpriteNode(texture: Textures.radialGlow, size: CGSize(width: 88, height: 32))
+        ring.position = CGPoint(x: 0, y: footY)
+        ring.color = Palette.pixelCyan
+        ring.colorBlendFactor = 1
+        ring.alpha = 0.8
         ring.blendMode = .add
         ring.setScale(0.6)
         ring.run(.scale(to: 1, duration: 0.2))
         n.addChild(ring)
-        n.addChild(Particles.group(at: .zero, [
-            Particles.Burst(color: Palette.pixelLight, count: 8, lifetime: 0.5, speed: 120...220, size: 8, angle: .pi / 2, angleRange: 0.4),
-            Particles.Burst(color: .white, count: 6, lifetime: 0.5, speed: 120...220, size: 6, angle: .pi / 2, angleRange: 0.4),
+        // Rising sparkles along the column for as long as the beam lives.
+        let rise = SKEmitterNode()
+        rise.particleTexture = Textures.particleDot
+        rise.particleBirthRate = 36
+        rise.particleLifetime = 0.5
+        rise.particlePositionRange = CGVector(dx: 50, dy: 30)
+        rise.position = CGPoint(x: 0, y: footY + 10)
+        rise.emissionAngle = .pi / 2
+        rise.emissionAngleRange = 0.2
+        rise.particleSpeed = 170
+        rise.particleSpeedRange = 100
+        rise.particleScale = 0.6
+        rise.particleScaleSpeed = -1.1
+        rise.particleAlphaSpeed = -1.6
+        rise.particleColor = Palette.pixelLight
+        rise.particleColorBlendFactor = 1
+        rise.particleColorSequence = SKKeyframeSequence(keyframeValues: [Palette.pixelLight, SKColor.white, Palette.pixelCyan],
+                                                        times: [0, 0.5, 1])
+        rise.particleBlendMode = .add
+        rise.zPosition = 1
+        n.addChild(rise)
+        n.addChild(Particles.group(at: CGPoint(x: 0, y: footY + 40), [
+            Particles.Burst(texture: Textures.particleStar, color: Palette.star, count: 4, lifetime: 0.5, speed: 80...160,
+                            size: 9, angle: .pi / 2, angleRange: 0.6),
         ]))
         return n
     }

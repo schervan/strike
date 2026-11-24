@@ -144,13 +144,15 @@ struct InventoryView: View {
                             .offset(x: Layout.slot / 2 - 12, y: Layout.slot / 2 - 12)
                     }
                     if let q = quickIndex {
-                        Text(verbatim: "\(q + 1)")
-                            .font(.system(size: 11, weight: .bold, design: .rounded))
-                            .foregroundStyle(.white)
-                            .frame(width: 18, height: 18)
-                            .background(Circle().fill(HUDColors.cyan))
-                            .overlay(Circle().stroke(HUDColors.outline, lineWidth: 2))
-                            .offset(x: -Layout.slot / 2 + 11, y: -Layout.slot / 2 + 11)
+                        // Quick-link marker (ART_BIBLE §14.2), "Q2" so it never reads as a second count.
+                        Text(verbatim: "Q\(q + 1)")
+                            .font(.system(size: 10, weight: .heavy, design: .rounded))
+                            .foregroundStyle(HUDColors.outline)
+                            .padding(.horizontal, 4)
+                            .frame(height: 16)
+                            .background(RoundedRectangle(cornerRadius: 5).fill(HUDColors.cyan))
+                            .overlay(RoundedRectangle(cornerRadius: 5).stroke(HUDColors.outline, lineWidth: 1.5))
+                            .offset(x: -Layout.slot / 2 + 15, y: -Layout.slot / 2 + 10)
                     }
                 }
             }

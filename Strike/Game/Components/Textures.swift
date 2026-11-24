@@ -136,6 +136,33 @@ enum Textures {
         return SKTexture(image: image)
     }()
 
+    /// Rescue beam column (ART_BIBLE §14.7), made once: white, alpha `(1 − |x|)²` across the width,
+    /// fading out over the top 45 % and the bottom 8 %. Tinted and stacked per layer.
+    static let beamGradient: SKTexture = {
+        let w = 64, h = 256
+        var px = [UInt8](repeating: 0, count: w * h * 4)
+        for y in 0..<h {
+            let v = Double(y) / Double(h - 1)            // 0 = top row of the image
+            let top = min(1, v / 0.45)
+            let bottom = min(1, (1 - v) / 0.08)
+            let vertical = pow(top, 1.5) * bottom
+            for x in 0..<w {
+                let u = abs(Double(x) / Double(w - 1) * 2 - 1)
+                let a = pow(1 - u, 2) * vertical
+                let i = (y * w + x) * 4
+                let b = UInt8(max(0, min(255, a * 255)))
+                px[i] = b; px[i + 1] = b; px[i + 2] = b; px[i + 3] = b   // premultiplied white
+            }
+        }
+        let data = Data(px)
+        let cg = CGImage(width: w, height: h, bitsPerComponent: 8, bitsPerPixel: 32, bytesPerRow: w * 4,
+                         space: CGColorSpaceCreateDeviceRGB(),
+                         bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue),
+                         provider: CGDataProvider(data: data as CFData)!, decode: nil, shouldInterpolate: true,
+                         intent: .defaultIntent)!
+        return SKTexture(cgImage: cg)
+    }()
+
     /// ART_BIBLE §13.9: shared radial glow (128 px, white centre to transparent, `pow(1 - r, 2)`).
     static let radialGlow: SKTexture = {
         let px = 128

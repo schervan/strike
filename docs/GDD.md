@@ -1061,8 +1061,8 @@ Details: `docs/levels/L1.md` … `L5.md`.
    assumed)?
 10. (M3-1) Hero gender: German lines are now written gender-neutral ("du Winzling", "Wir zwei
     sind das beste Team"). Once the hero name/look is decided, lines may use it.
-11. (M3-1) `pixel.l1.button` says "tap the hand": this assumes the `ui_btn_interact` icon shows a
-    hand. If it does not, the line becomes "tap the glowing button" (artist to confirm).
+11. ~~(M3-1) `pixel.l1.button` "tap the hand"~~ resolved: the line now names the yellow glow on
+    the right (ART_BIBLE §13.3), which is true whatever the icon shows.
 12. (M3-1) Datachips "unlock a Pixel fact" (§6): the fact texts are not written yet; they need a
     screen to show them (M5 stars/map screen). OK to postpone to M5?
 
@@ -1111,3 +1111,5 @@ Details: `docs/levels/L1.md` … `L5.md`.
 | 2026-11-24 | §12 rescue | – → numbers from `rules.json → rescue`, top-up formula, input lock, enemy shots removed at the beam | M3-1 |
 | 2026-11-24 | new §16.10 save game | – → `save.json` v1 schema; audio volumes stay in `SettingsStore`; start gift = top up to `count` | DECISIONS 2026-11-22 save basics |
 | 2026-11-24 | §16.7 keys, xcstrings | 90 keys → 214 (+56 story/level-beat/boss keys from `levels.json`, +21 `pixel.generic.*`, +6 `pixel.tip.*`, +41 UI: 16 inventory, 5 hud, 5 pause, 6 title, 2 levelIntro, 2 ui.toast, 5 settings) | M3-1; M2 leftover 9 |
+| 2026-11-24 | `pixel.l1.heal` | "Tap the heart to heal." / „Tipp auf das Herz zum Heilen." → "Tap the heal pack or apple below to heal!" / „Tipp unten auf Heilpaket oder Apfel zum Heilen!" | The HUD heart can't be tapped; healing is a quick slot (ART_BIBLE §14.1). L1 start gift puts a heal pack in Q1 and apples in Q2, so both words match what the kid sees |
+| 2026-11-24 | `pixel.l1.button` | "A button! Go close and tap the hand." / „… tipp die Hand." → "A button! Walk to it, then tap the glow on the right." / „Ein Knopf! Geh hin und tipp rechts aufs Leuchten." | Same mistake class: the interact icon is not specified as a hand; the yellow pulse ring on the right is (ART_BIBLE §13.3) |

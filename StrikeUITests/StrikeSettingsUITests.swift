@@ -4,7 +4,7 @@ import XCTest
 final class StrikeSettingsUITests: XCTestCase {
     override func setUp() { continueAfterFailure = false }
 
-    private func percent(_ e: XCUIElement) -> Int {
+    @MainActor private func percent(_ e: XCUIElement) -> Int {
         Int((e.value as? String ?? "").filter(\.isNumber)) ?? -1
     }
 

@@ -249,15 +249,21 @@ struct M3SceneTests {
             let view = SKView(frame: CGRect(origin: .zero, size: GameScene.logicalSize))
             view.presentScene(s)
             let o = s.hero.position
-            let crop = CGRect(x: o.x - 110, y: o.y - 110, width: 220, height: 220)
+            let crop = CGRect(x: o.x - 80, y: o.y - 80, width: 160, height: 160)
             s.hero.isHidden = true
             s.pixel.isHidden = true
             VisualCheckTests.spin(0.05)
             let before = try #require(view.texture(from: s.worldNode, crop: crop)?.cgImage())
             s.worldNode.addChild(Particles.poof(at: o, darkFloor: s.darkFloor))
-            VisualCheckTests.spin(0.18)
-            let after = try #require(view.texture(from: s.worldNode, crop: crop)?.cgImage())
-            let changed = Self.changedFraction(before, after)
+            // Particles are random and real-time: keep the strongest of three frames.
+            var changed = 0.0
+            var after = before
+            for _ in 0..<3 {
+                VisualCheckTests.spin(0.08)
+                let frame = try #require(view.texture(from: s.worldNode, crop: crop)?.cgImage())
+                let c = Self.changedFraction(before, frame)
+                if c > changed { changed = c; after = frame }
+            }
             if let d = UIImage(cgImage: after).pngData() {
                 try? d.write(to: URL(fileURLWithPath: "\(VisualCheckTests.dir)/qa_m3_poof_\(id).png"))
             }

@@ -470,7 +470,7 @@ Accessibility ids (new): `hud.quickSlot.0…3`, `hud.inventoryButton`, `hud.paus
     - UI test (landscape): `-StrikeLevel l1 -StrikeSeed 42 -StrikeFreshSave`, tap through the intro, Q1 shows the healpack count 1, `debug.damageHero` then Q1 → count 0 and HP up, open the inventory, `inventory.tidy`, close, relaunch without `-StrikeFreshSave` → `title.continue` exists
     - full `xcodegen generate` + `xcodebuild … test` green (own derivedDataPath + simulator per CLAUDE.md)
 
-- [ ] **M3-7 qa-tester — M3 verification**
+- [x] **M3-7 qa-tester — M3 verification**
   - Outputs: `docs/QA_REPORT.md` M3 section; `StrikeTests/InventoryFuzzTests.swift`; `LocalizationKeyTests` extended to every string-array key in `levels.json → story` (leftover 9); main-actor warnings fixed in `StrikePlayPassUITests` (leftover 7)
   - Inventory fuzz: 10,000 random add / remove / use / drop / tidy / assign sequences. Invariants: ≤ 25 slots used, every stack ≤ `stackSize`, item totals conserved (picked − used − dropped), quick links only to inventory item ids.
   - Done when:

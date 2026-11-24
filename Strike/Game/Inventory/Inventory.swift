@@ -223,9 +223,23 @@ nonisolated struct Inventory: ItemCarrier, Codable, Sendable, Equatable {
     /// longer store in the bag are removed, quick links to such items are cleared.
     mutating func bind(items: [String: ItemDef], rules: InventoryRulesDef) {
         catalog = items
-        let old = slots.compactMap { $0 }
-        slots = Array(repeating: nil, count: max(0, rules.slots))
-        for s in old where s.count > 0 { _ = addPreservingQuick(s.itemId, count: s.count) }
+        let n = max(0, rules.slots)
+        let old = slots
+        // Each stack stays in its own slot (gaps included, QA-010); unknown items are dropped and a
+        // stack above a lowered `stackSize` is clamped, its overflow spilling into free slots.
+        var overflow: [ItemStack] = []
+        slots = Array(repeating: nil, count: n)
+        for (i, s) in old.enumerated() {
+            guard let s, s.count > 0, canStore(s.itemId) else { continue }
+            let keep = min(s.count, stackSize(of: s.itemId))
+            if i < n {
+                slots[i] = ItemStack(itemId: s.itemId, count: keep)
+                if s.count > keep { overflow.append(ItemStack(itemId: s.itemId, count: s.count - keep)) }
+            } else {
+                overflow.append(s)                       // the bag got smaller
+            }
+        }
+        for s in overflow { _ = addPreservingQuick(s.itemId, count: s.count) }
         var q = Array(quick.prefix(max(0, rules.quickSlots)))
         q += Array(repeating: nil, count: max(0, rules.quickSlots - q.count))
         quick = q.map { id in id.flatMap { canStore($0) ? $0 : nil } }

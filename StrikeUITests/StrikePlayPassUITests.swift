@@ -6,7 +6,7 @@ final class StrikePlayPassUITests: XCTestCase {
 
     override func setUp() { continueAfterFailure = true }
 
-    private func shot(_ name: String) {
+    @MainActor private func shot(_ name: String) {
         let s = XCUIScreen.main.screenshot()
         let a = XCTAttachment(screenshot: s)
         a.name = name; a.lifetime = .keepAlways
@@ -14,7 +14,7 @@ final class StrikePlayPassUITests: XCTestCase {
         try? s.pngRepresentation.write(to: URL(fileURLWithPath: "\(Self.shotDir)/qa_\(name).png"))
     }
 
-    private func value(_ app: XCUIApplication, _ id: String) -> String {
+    @MainActor private func value(_ app: XCUIApplication, _ id: String) -> String {
         (app.descendants(matching: .any)[id].value as? String) ?? "?"
     }
 

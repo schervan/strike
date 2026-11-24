@@ -7,7 +7,7 @@ final class StrikeInventoryUITests: XCTestCase {
 
     override func setUp() { continueAfterFailure = false }
 
-    private func shot(_ name: String) {
+    @MainActor private func shot(_ name: String) {
         let s = XCUIScreen.main.screenshot()
         let a = XCTAttachment(screenshot: s)
         a.name = name
@@ -16,7 +16,7 @@ final class StrikeInventoryUITests: XCTestCase {
         try? s.pngRepresentation.write(to: URL(fileURLWithPath: "\(Self.shotDir)/\(name).png"))
     }
 
-    private func hp(_ app: XCUIApplication) -> Int {
+    @MainActor private func hp(_ app: XCUIApplication) -> Int {
         let v = app.descendants(matching: .any)["hud.hpBar"].value as? String ?? ""
         return Int(v.split(separator: " ").first ?? "") ?? -1
     }
