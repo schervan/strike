@@ -151,7 +151,7 @@ check(ic.size == (1024, 1024) and ic.mode == "RGB", "AppIcon.png is 1024x1024 op
 check(cj["images"][0].get("filename") == "AppIcon.png", "Contents.json filename set")
 
 # 8. manifest sanity
-check(len(M.SHEETS) == 35, "35 sheets in manifest (got %d)" % len(M.SHEETS))
+check(len(M.SHEETS) == 36, "36 sheets in manifest (got %d)" % len(M.SHEETS))
 allk = {g.key for g in M.GROUPS}
 check(all(k in allk for k in M.LITE), "every SHEETS item is a manifest group")
 

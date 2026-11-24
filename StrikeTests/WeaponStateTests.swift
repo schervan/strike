@@ -1,6 +1,33 @@
 import Testing
 @testable import Strike
 
+/// M3: `WeaponState` keeps only timers; magazine and reserve live in `Loadout`. This rig pairs
+/// the two with the pre-M3 API so the M1/QA-004 test bodies below are unchanged.
+private struct Rig {
+    var w: WeaponState
+    var l: Loadout
+
+    init(def: WeaponDef, magazine: Int, reserve: Int, safetyNet: SafetyNetDef? = nil) {
+        w = WeaponState(def: def, safetyNet: safetyNet)
+        l = Loadout(start: StartLoadoutDef(weaponId: def.id, magazine: magazine, reserve: reserve),
+                    weapons: [def.id: def])
+    }
+
+    var def: WeaponDef { w.def }
+    var magazine: Int { w.magazine(in: l) }
+    var reserve: Int { w.reserve(in: l) }
+    var totalAmmo: Int { w.totalAmmo(in: l) }
+    var isReloading: Bool { w.isReloading }
+    var reloadProgress: Double { w.reloadProgress }
+    var safetyNetActive: Bool { w.safetyNetActive }
+
+    mutating func tick(dt: Double) { w.tick(dt: dt, loadout: &l) }
+    mutating func tryFire(triggerHeld: Bool) -> Bool { w.tryFire(triggerHeld: triggerHeld, loadout: &l) }
+    @discardableResult mutating func startReload() -> Bool { w.startReload(loadout: l) }
+    mutating func cancelReload() { w.cancelReload() }
+    @discardableResult mutating func addReserve(_ n: Int) -> Int { l.ammo.add(def.ammoId, amount: n) }
+}
+
 struct WeaponStateTests {
     let def: WeaponDef
     let net = SafetyNetDef(rechargeEverySec: 1.5, rechargeTo: 12)
@@ -8,7 +35,7 @@ struct WeaponStateTests {
     init() throws { def = try TestData.starter() }
 
     @Test func fireUsesMagazineOnly() {
-        var w = WeaponState(def: def, magazine: 12, reserve: 48)
+        var w = Rig(def: def, magazine: 12, reserve: 48)
         let r11 = w.tryFire(triggerHeld: true)
         #expect(r11)
         #expect(w.magazine == 11)
@@ -16,14 +43,14 @@ struct WeaponStateTests {
     }
 
     @Test func noFireWithoutTrigger() {
-        var w = WeaponState(def: def, magazine: 12, reserve: 48)
+        var w = Rig(def: def, magazine: 12, reserve: 48)
         let r19 = w.tryFire(triggerHeld: false)
         #expect(!r19)
         #expect(w.magazine == 12)
     }
 
     @Test func fireRateIsRespected() {
-        var w = WeaponState(def: def, magazine: 12, reserve: 0)
+        var w = Rig(def: def, magazine: 12, reserve: 0)
         let dt = 1.0 / 60
         var shots = 0
         var lastShot = -1.0
@@ -42,14 +69,14 @@ struct WeaponStateTests {
     }
 
     @Test func emptyMagazineCannotFire() {
-        var w = WeaponState(def: def, magazine: 0, reserve: 0)
+        var w = Rig(def: def, magazine: 0, reserve: 0)
         let r45 = w.tryFire(triggerHeld: true)
         #expect(!r45)
         #expect(!w.isReloading)
     }
 
     @Test func reloadMovesMinOfMissingAndReserve() {
-        var w = WeaponState(def: def, magazine: 4, reserve: 48)
+        var w = Rig(def: def, magazine: 4, reserve: 48)
         let r52 = w.startReload()
         #expect(r52)
         w.tick(dt: def.reloadSec * 0.5)
@@ -61,7 +88,7 @@ struct WeaponStateTests {
         #expect(w.magazine == 12)
         #expect(w.reserve == 40)
 
-        var low = WeaponState(def: def, magazine: 2, reserve: 3)
+        var low = Rig(def: def, magazine: 2, reserve: 3)
         low.startReload()
         low.tick(dt: def.reloadSec + 0.01)
         #expect(low.magazine == 5)
@@ -69,16 +96,16 @@ struct WeaponStateTests {
     }
 
     @Test func reloadRefusedWhenFullOrNoReserve() {
-        var full = WeaponState(def: def, magazine: 12, reserve: 48)
+        var full = Rig(def: def, magazine: 12, reserve: 48)
         let r72 = full.startReload()
         #expect(!r72)
-        var empty = WeaponState(def: def, magazine: 5, reserve: 0)
+        var empty = Rig(def: def, magazine: 5, reserve: 0)
         let r75 = empty.startReload()
         #expect(!r75)
     }
 
     @Test func cancelLosesNoAmmo() {
-        var w = WeaponState(def: def, magazine: 3, reserve: 20)
+        var w = Rig(def: def, magazine: 3, reserve: 20)
         w.startReload()
         w.tick(dt: def.reloadSec * 0.9)
         w.cancelReload()
@@ -90,7 +117,7 @@ struct WeaponStateTests {
     }
 
     @Test func autoReloadAtEmptyMagWithTriggerHeld() {
-        var w = WeaponState(def: def, magazine: 1, reserve: 10)
+        var w = Rig(def: def, magazine: 1, reserve: 10)
         let r93 = w.tryFire(triggerHeld: true)
         #expect(r93)
         w.tick(dt: 1)
@@ -106,7 +133,7 @@ struct WeaponStateTests {
     }
 
     @Test func safetyNetRechargesOnlyWhenEmpty() {
-        var w = WeaponState(def: def, magazine: 0, reserve: 0, safetyNet: net)
+        var w = Rig(def: def, magazine: 0, reserve: 0, safetyNet: net)
         w.tick(dt: 1.4)
         #expect(w.reserve == 0)
         w.tick(dt: 0.2)
@@ -114,23 +141,23 @@ struct WeaponStateTests {
         for _ in 0..<100 { w.tick(dt: 0.5) } // 50 s
         #expect(w.reserve == 12)
 
-        var notEmpty = WeaponState(def: def, magazine: 1, reserve: 0, safetyNet: net)
+        var notEmpty = Rig(def: def, magazine: 1, reserve: 0, safetyNet: net)
         notEmpty.tick(dt: 10)
         #expect(notEmpty.reserve == 0)
 
-        var noNet = WeaponState(def: def, magazine: 0, reserve: 0)
+        var noNet = Rig(def: def, magazine: 0, reserve: 0)
         noNet.tick(dt: 10)
         #expect(noNet.reserve == 0)
     }
 
     @Test func addReserveReturnsOverflow() {
-        var w = WeaponState(def: def, magazine: 12, reserve: 90)
+        var w = Rig(def: def, magazine: 12, reserve: 90)
         let r127 = w.addReserve(24)
         #expect(r127 == 18)
         #expect(w.reserve == def.reserveMax)
         let r130 = w.addReserve(5)
         #expect(r130 == 5)
-        var e = WeaponState(def: def, magazine: 0, reserve: 0)
+        var e = Rig(def: def, magazine: 0, reserve: 0)
         let r133 = e.addReserve(24)
         #expect(r133 == 0)
         #expect(e.reserve == 24)
@@ -140,7 +167,7 @@ struct WeaponStateTests {
     @Test func safetyNetFromHeroJSONRefillsToCapAndNeverAbove() throws {
         let hero = try TestData.load().hero
         let net = hero.starterSafetyNet
-        var w = WeaponState(def: def, magazine: 0, reserve: 0, safetyNet: net)
+        var w = Rig(def: def, magazine: 0, reserve: 0, safetyNet: net)
         w.tick(dt: net.rechargeEverySec * 0.9)
         #expect(w.reserve == 0)
         w.tick(dt: net.rechargeEverySec * 0.2)
@@ -165,7 +192,7 @@ struct WeaponStateTests {
     /// `rechargeEverySec` and never exceeds `rechargeTo`.
     @Test func safetyNetUnderSustainedFireTrickles() throws {
         let net = try TestData.load().hero.starterSafetyNet
-        var w = WeaponState(def: def, magazine: 0, reserve: 0, safetyNet: net)
+        var w = Rig(def: def, magazine: 0, reserve: 0, safetyNet: net)
         var shots = 0
         let dt = 1.0 / 60
         for _ in 0..<(30 * 60) { // 30 s holding fire
@@ -175,5 +202,38 @@ struct WeaponStateTests {
         let expected = 30 / net.rechargeEverySec
         #expect(Double(shots) >= expected * 0.8 && Double(shots) <= expected)
         #expect(w.totalAmmo <= net.rechargeTo)
+    }
+
+    // MARK: M3 refactor
+
+    /// The net refills the starter even while another blaster is equipped, and a pickup during
+    /// the net ends it (as `addReserve` did before M3).
+    @Test func safetyNetWorksThroughTheLoadout() throws {
+        let data = try TestData.load()
+        let spread = try #require(data.weapons["blaster_spread"])
+        var l = Loadout(start: StartLoadoutDef(weaponId: def.id, magazine: 0, reserve: 0), weapons: data.weapons)
+        l.addWeapon(spread)
+        l.equip(spread.id)
+        var w = WeaponState(def: spread, safetyNet: net, safetyNetWeapon: def)
+        w.tick(dt: 1.6, loadout: &l)
+        #expect(l.reserve(for: def) == 1)
+        #expect(w.safetyNetActive)
+        l.ammo.add(def.ammoId, amount: 2)               // picked up a little ammo
+        w.tick(dt: 0.1, loadout: &l)
+        #expect(!w.safetyNetActive)
+        w.tick(dt: 10, loadout: &l)
+        #expect(l.reserve(for: def) == 3)
+    }
+
+    @Test func reloadAndFireGoThroughTheLoadout() {
+        var w = WeaponState(def: def)
+        var l = Loadout(start: StartLoadoutDef(weaponId: def.id, magazine: 1, reserve: 30), weapons: [def.id: def])
+        do { let ok = w.tryFire(triggerHeld: true, loadout: &l); #expect(ok) }
+        #expect(l.magazine(def.id) == 0)
+        w.tick(dt: 1, loadout: &l)
+        do { let ok = !w.tryFire(triggerHeld: true, loadout: &l); #expect(ok) }   // empty → auto-reload
+        w.tick(dt: def.reloadSec + 0.01, loadout: &l)
+        #expect(l.magazine(def.id) == def.magazineSize)
+        #expect(l.ammo.reserve(def.ammoId) == 30 - def.magazineSize)
     }
 }

@@ -139,7 +139,22 @@ nonisolated struct PickupsDef: Codable, Sendable, Equatable {
     let startGift: [ItemCountDef]?
 }
 
-/// One level from `levels.json` (GDD §16.5). `story` and `bossArena` are M3/M4 and not decoded.
+/// One `story.beats` entry: Pixel says `key` the first time `trigger` happens in the level.
+nonisolated struct StoryBeatDef: Codable, Sendable, Equatable {
+    let trigger: String
+    let key: String
+}
+
+/// `story` block (GDD §16.5): `intro`/`outro` lines for the level cards, `beats` during play.
+nonisolated struct StoryDef: Codable, Sendable, Equatable {
+    let intro: [String]
+    let outro: [String]
+    let beats: [StoryBeatDef]
+
+    static let empty = StoryDef(intro: [], outro: [], beats: [])
+}
+
+/// One level from `levels.json` (GDD §16.5). `bossArena` is M4 and not decoded.
 nonisolated struct LevelDef: Codable, Sendable, Equatable, Identifiable {
     let id: String
     let index: Int
@@ -158,10 +173,12 @@ nonisolated struct LevelDef: Codable, Sendable, Equatable, Identifiable {
     let puzzle: PuzzleDef
     let pickups: PickupsDef
     let bossId: String?
+    let story: StoryDef?
 
     /// GDD §16.5 default for `hintIdleSec`.
     static let defaultHintIdleSec = 30
     var effectiveHintIdleSec: Int { hintIdleSec ?? Self.defaultHintIdleSec }
+    var effectiveStory: StoryDef { story ?? .empty }
 
     /// Tile-texture prefix of this level's theme (`tile_l3_floor_01`, ART_BIBLE §4).
     var tilePrefix: String { "l\(index)" }

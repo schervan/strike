@@ -2,6 +2,7 @@ import SwiftUI
 
 struct RootView: View {
     @Environment(GameModel.self) private var model
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         ZStack {
@@ -30,6 +31,10 @@ struct RootView: View {
         .ignoresSafeArea()
         .onChange(of: model.screen, initial: true) { _, screen in updateMusic(screen) }
         .onChange(of: model.isPaused) { _, paused in AudioManager.shared.setGamePaused(paused) }
+        .onChange(of: scenePhase) { _, phase in
+            // Save on app background (GDD §16.10).
+            if phase == .background || phase == .inactive { model.saveNow() }
+        }
     }
 
     /// Title loop on the title screen, `levels.json` music in a level; the Level complete card
@@ -50,6 +55,7 @@ struct RootView: View {
 
 struct TitleView: View {
     @Environment(GameModel.self) private var model
+    @State private var confirmNewGame = false
 
     var body: some View {
         ZStack(alignment: .topTrailing) {
@@ -63,18 +69,34 @@ struct TitleView: View {
                 Text("title.tagline")
                     .font(.title2)
                     .foregroundStyle(.white.opacity(0.7))
+                if model.hasSave {
+                    Button {
+                        AudioManager.shared.play(.uiTap)
+                        model.continueGame()
+                    } label: {
+                        Text("title.continue")
+                            .font(.system(size: 40, weight: .bold, design: .rounded))
+                            .padding(.horizontal, 64)
+                            .padding(.vertical, 20)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .buttonBorderShape(.capsule)
+                    .accessibilityIdentifier("title.continue")
+                }
                 Button {
                     AudioManager.shared.play(.uiTap)
-                    model.startGame()
+                    if model.hasSave { confirmNewGame = true } else { model.newGame() }
                 } label: {
-                    Text("title.start")
-                        .font(.system(size: 40, weight: .bold, design: .rounded))
-                        .padding(.horizontal, 64)
-                        .padding(.vertical, 20)
+                    Text("title.newGame")
+                        .font(.system(size: model.hasSave ? 30 : 40, weight: .bold, design: .rounded))
+                        .padding(.horizontal, model.hasSave ? 48 : 64)
+                        .padding(.vertical, model.hasSave ? 14 : 20)
+                        .frame(minHeight: 64)
                 }
                 .buttonStyle(.borderedProminent)
                 .buttonBorderShape(.capsule)
-                .accessibilityIdentifier("startButton")
+                .tint(model.hasSave ? HUDColors.panel : .accentColor)
+                .accessibilityIdentifier("title.newGame")
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
@@ -93,6 +115,14 @@ struct TitleView: View {
             .padding(24)
             .accessibilityIdentifier("title.settingsButton")
             .accessibilityLabel(Text("settings.open"))
+        }
+        .alert(Text("title.newGameConfirm.title"), isPresented: $confirmNewGame) {
+            Button(role: .cancel) { } label: { Text("title.newGameConfirm.no") }
+            Button(role: .destructive) {
+                model.newGame()
+            } label: { Text("title.newGameConfirm.yes") }
+        } message: {
+            Text("title.newGameConfirm.message")
         }
     }
 }

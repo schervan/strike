@@ -48,8 +48,8 @@ struct StrikeSmokeTests {
         #expect(scene.enemies.count == scene.level.enemySpawns.count)
         #expect(scene.built.interactables.count == scene.level.elements.count)
         #expect(scene.camera === scene.cameraNode)
-        #expect(scene.hero.weapon.magazine == 12)
-        #expect(scene.hero.weapon.reserve == 48)
+        #expect(scene.hero.magazine == 12)
+        #expect(scene.hero.reserve == 48)
         #expect(scene.level.grid.cell(at: scene.hero.position) == scene.level.heroStart)
     }
 
@@ -184,20 +184,22 @@ struct StrikeSmokeTests {
         #expect(scene.focusedId == machine.id)
         scene.handle(.interact)
         #expect(!scene.puzzle.isOn(machine.id))
-        #expect(model.toast != nil)
+        // GDD §13 (M3): Pixel's `need_fuse` line replaces the M2 toast when the talk level allows it.
+        let said = [scene.pixelBrain.speech.current?.key].compactMap { $0 } + scene.pixelBrain.speech.pending.map(\.key)
+        #expect(said.contains("pixel.generic.need_fuse") || model.toast != nil)
         // Pick up the fuse, come back.
         let fuse = try #require(scene.level.itemPlacements.first { $0.elementId == machine.id })
         for _ in 0..<30 {
             scene.hero.position = scene.level.grid.world(fuse.cell)
             scene.step(dt: 1.0 / 60)
         }
-        #expect(scene.bag.count(of: "fuse") == 1)
+        #expect(scene.inventory.count(of: "fuse") == 1)
         #expect(model.hud.carried["fuse"] == 1)
         scene.hero.position = CGPoint(x: machine.position.x - 90, y: machine.position.y)
         scene.step(dt: 1.0 / 60)
         scene.handle(.interact)
         #expect(scene.puzzle.isOn(machine.id))
-        #expect(scene.bag.count(of: "fuse") == 0)
+        #expect(scene.inventory.count(of: "fuse") == 0)
     }
 
     @Test func solveAllOpensDoorsAndTheExitPadEndsTheLevel() throws {

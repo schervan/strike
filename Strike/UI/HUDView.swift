@@ -21,6 +21,49 @@ struct HUDView: View {
         static let chipGap: CGFloat = 8
         static let chipsTop: CGFloat = 92
         static let toastTop: CGFloat = 124
+        static let inventoryRight: CGFloat = 96
+        static let badge: CGFloat = 24
+    }
+
+    // MARK: Inventory button (ART_BIBLE §7, §14.3 "!" badge, §14.6 hint glow)
+
+    @State private var badgeBounce = false
+    @State private var hintGlow = false
+
+    private func inventoryButton(_ hud: HUDState) -> some View {
+        Button {
+            AudioManager.shared.play(.uiTap)
+            model.openInventory()
+        } label: {
+            ZStack(alignment: .topTrailing) {
+                AtlasImage("ui_btn_inventory")
+                    .frame(width: Layout.button, height: Layout.button)
+                if hud.bagHint {
+                    Circle()
+                        .stroke(Self.star, lineWidth: 2)
+                        .frame(width: Layout.button + 6, height: Layout.button + 6)
+                        .opacity(hintGlow ? 1 : 0.4)
+                        .offset(x: 3, y: -3)
+                        .animation(.easeInOut(duration: 0.7).repeatForever(autoreverses: true), value: hintGlow)
+                        .onAppear { hintGlow = true }
+                        .onDisappear { hintGlow = false }
+                }
+                if hud.bagFull {
+                    BangBadge(size: Layout.badge)
+                        .scaleEffect(badgeBounce ? 1.2 : 1)
+                        .animation(.easeInOut(duration: 0.7).repeatForever(autoreverses: true), value: badgeBounce)
+                        .onAppear { badgeBounce = true }
+                        .onDisappear { badgeBounce = false }
+                        .offset(x: 4, y: -4)
+                }
+            }
+            .frame(width: Layout.button, height: Layout.button)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(HUDButtonStyle())
+        .accessibilityIdentifier("hud.inventoryButton")
+        .accessibilityLabel(Text("hud.inventory.accessibility"))
+        .accessibilityValue(Text(verbatim: hud.bagFull ? "full" : ""))
     }
 
     private static let panel = Color(red: 0x2E / 255, green: 0x2A / 255, blue: 0x55 / 255)
@@ -54,6 +97,15 @@ struct HUDView: View {
                 .padding(.trailing, Layout.reloadRight - (Layout.interactGlow - Layout.button) / 2)
                 .padding(.bottom, Layout.interactBottom - (Layout.interactGlow - Layout.button) / 2)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+
+            inventoryButton(hud)
+                .padding(.trailing, Layout.inventoryRight)
+                .padding(.top, Layout.margin)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+
+            QuickSlotBar()
+                .padding(.bottom, QuickSlotBar.Layout.bottom)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
 
             toastLine
                 .padding(.top, Layout.toastTop)
@@ -148,7 +200,7 @@ struct HUDView: View {
         let ratio = hud.maxHp > 0 ? CGFloat(hud.hp) / CGFloat(hud.maxHp) : 0
         let fillWidth = (Layout.hpBar.width - 2 * Layout.hpInset) * max(0, min(1, ratio))
         return HStack(spacing: 6) {
-            AtlasImage("ui_icon_heart")
+            LowHpHeart(active: hud.lowHp, fast: hud.maxHp > 0 && Double(hud.hp) / Double(hud.maxHp) < 0.15)
                 .frame(width: Layout.icon, height: Layout.icon)
             ZStack(alignment: .leading) {
                 RoundedRectangle(cornerRadius: Layout.hpBar.height / 2)
@@ -161,6 +213,13 @@ struct HUDView: View {
                     .animation(.easeOut(duration: 0.2), value: hud.hp)
             }
             .frame(width: Layout.hpBar.width, height: Layout.hpBar.height)
+            .overlay {
+                if hud.lowHp {
+                    RoundedRectangle(cornerRadius: Layout.hpBar.height / 2)
+                        .stroke(Self.star, lineWidth: 3)
+                        .phaseAnimator([0.0, 0.8]) { v, a in v.opacity(a) } animation: { _ in .easeInOut(duration: 0.45) }
+                }
+            }
         }
         .accessibilityElement(children: .ignore)
         .accessibilityIdentifier("hud.hpBar")
@@ -233,5 +292,55 @@ struct HUDButtonStyle: ButtonStyle {
         configuration.label
             .opacity(configuration.isPressed ? 1 : 0.7)
             .scaleEffect(configuration.isPressed ? 0.92 : 1)
+    }
+}
+
+/// Heart icon with the low-HP "lub-dub" (ART_BIBLE §14.8): 1.0 → 1.25 → 1.0 → 1.15 → 1.0, about
+/// 1.1 Hz (0.7 s period below 15 %), white glow behind it. Holds at 1.1 with Reduce Motion.
+struct LowHpHeart: View {
+    let active: Bool
+    let fast: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        ZStack {
+            if active {
+                if reduceMotion {
+                    glow(0.3)
+                    heart.scaleEffect(1.1)
+                } else {
+                    TimelineView(.animation) { t in
+                        let s = scale(at: t.date.timeIntervalSinceReferenceDate)
+                        ZStack {
+                            glow((s - 1) / 0.25 * 0.4)
+                            heart.scaleEffect(s)
+                        }
+                    }
+                }
+            } else {
+                heart
+            }
+        }
+        .accessibilityIdentifier("hud.heart")
+        .accessibilityValue(Text(verbatim: active ? "low" : ""))
+    }
+
+    private var heart: some View { AtlasImage("ui_icon_heart") }
+
+    private func glow(_ alpha: Double) -> some View {
+        Circle().fill(.white.opacity(max(0, alpha))).frame(width: 44, height: 44).blur(radius: 6)
+    }
+
+    private func scale(at time: Double) -> CGFloat {
+        let period = fast ? 0.7 : 0.9
+        let k = 0.9 / period
+        let t = time.truncatingRemainder(dividingBy: period) * k
+        switch t {
+        case ..<0.12: return 1 + 0.25 * t / 0.12
+        case ..<0.22: return 1.25 - 0.25 * (t - 0.12) / 0.10
+        case ..<0.32: return 1 + 0.15 * (t - 0.22) / 0.10
+        case ..<0.50: return 1.15 - 0.15 * (t - 0.32) / 0.18
+        default: return 1
+        }
     }
 }

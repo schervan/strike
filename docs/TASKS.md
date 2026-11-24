@@ -357,7 +357,7 @@ Same conventions as M1/M2: pure logic is `nonisolated struct/enum`, `Sendable`, 
 Accessibility ids (new): `hud.quickSlot.0…3`, `hud.inventoryButton`, `hud.pauseButton`, `pixel.bubble`, `inventory.view`, `inventory.slot.0…24`, `inventory.use`, `inventory.drop`, `inventory.assign`, `inventory.tidy`, `inventory.close`, `pause.view`, `pause.resume`, `levelIntro.view`, `title.continue`, `title.newGame`, `debug.spawnCrowd`, `debug.damageHero`.
 
 ### Tasks
-- [ ] **M3-1 game-designer — M3 rules, Pixel and story text, save schema**
+- [x] **M3-1 game-designer — M3 rules, Pixel and story text, save schema**
   - Inputs: GDD §4, §6, §7, §10, §12, §13, §15; `docs/levels/L1–L5.md`; `levels.json`; `rules.json`; ART_BIBLE §7 / §13.9
   - Outputs: `rules.json`, `hero.json`, `Localizable.xcstrings`, `docs/GDD.md`, `docs/levels/L*.md` if lines change
   - `rules.json` additions:
@@ -382,7 +382,7 @@ Accessibility ids (new): `hud.quickSlot.0…3`, `hud.inventoryButton`, `hud.paus
     - change log
   - Done when: JSON valid; every key in `levels.json → story` exists in de + en; Pixel lines ≤ 60 chars in both languages; no violent wording; no code touched
 
-- [ ] **M3-2 visual-artist — ART_BIBLE §14 "Systems UI and Pixel"** (parallel)
+- [x] **M3-2 visual-artist — ART_BIBLE §14 "Systems UI and Pixel"** (parallel)
   - Inputs: ART_BIBLE §7, §12, §13; `ui`/`pixel`/`fx` atlases; QA-009 screenshots `qa_m2_powerdown_a.png` / `_b.png` in the scratchpad
   - Outputs: `docs/ART_BIBLE.md` §14. Optional atlas/slicer tweaks (no Swift).
   - §14 covers:
@@ -398,7 +398,7 @@ Accessibility ids (new): `hud.quickSlot.0…3`, `hud.inventoryButton`, `hud.paus
     - **poof v2 (QA-009)**: bigger, colourful, ≥ 0.6 s, a burst of stars + bolts, readable on all 5 floors and still kid-safe (no red splats)
   - Done when: every value is a concrete number or hex; nothing contradicts §7 / §13 or the GDD
 
-- [ ] **M3-3 swift-coder (pass A) — Inventory, ammo, pickups, run state, save**
+- [x] **M3-3 swift-coder (pass A) — Inventory, ammo, pickups, run state, save**
   - Outputs: `ItemStack`, `Inventory` (`PuzzleBag` removed, its callers moved over), `ItemUse`, `AmmoBank`, `Loadout`, `WeaponState` refactor, `PickupResolver`, `RunState`, `SaveGame`, `SaveStore`. Tests in `InventoryTests.swift`, `ItemUseTests.swift`, `AmmoBankTests.swift`, `PickupResolverTests.swift`, `SaveStoreTests.swift`; existing `WeaponStateTests` and `LootRollerTests` stay green.
   - Done when (each is a test):
     - **Inventory storage:**
@@ -423,7 +423,7 @@ Accessibility ids (new): `hud.quickSlot.0…3`, `hud.inventoryButton`, `hud.paus
       - a corrupt file or a version mismatch gives `nil` plus a `.bak` file and does not crash
     - **Start gift:** the L1 `startGift` is applied once on a new game (not again on replay if already owned)
 
-- [ ] **M3-4 swift-coder (pass A) — Rescue rules, Pixel brain, hints, story**
+- [x] **M3-4 swift-coder (pass A) — Rescue rules, Pixel brain, hints, story**
   - Outputs: `RescueRules`, `SpeechQueue`, `StoryDirector`, `HintPlanner`. Tests in `RescueRulesTests.swift`, `SpeechQueueTests.swift`, `StoryDirectorTests.swift`, `HintPlannerTests.swift`.
   - Done when (each is a test):
     - **Rescue:**
@@ -446,7 +446,7 @@ Accessibility ids (new): `hud.quickSlot.0…3`, `hud.inventoryButton`, `hud.paus
       - it points at the exit pad once all elements are on
       - pings start only after `pointerAfterSec`
 
-- [ ] **M3-5 swift-coder (pass B) — Scene: pickups, Pixel, rescue, leftovers**
+- [x] **M3-5 swift-coder (pass B) — Scene: pickups, Pixel, rescue, leftovers**
   - Outputs: `PixelNode`, `PixelController`, `GameScene` changes, `Particles` poof v2, `PickupNode` halo/shadow/bob (§13.8), enemy-shot under-glow on L4/L5, QA-008 fix (`LevelGenerator`/`LevelBuilder` agree on the exit pad; test), QA comment fix (leftover 8), debug `spawnCrowd` (12 boltbots + 2 crates in the current room) and `damageHero`
   - Done when:
     - all pickups route through `PickupResolver`, and the bag-full "!" stays on the floor
@@ -458,7 +458,7 @@ Accessibility ids (new): `hud.quickSlot.0…3`, `hud.inventoryButton`, `hud.paus
     - poof v2 visible on all 5 floors (render test like `VisualCheckTests`)
     - still under 1500 nodes and ~60 fps on the simulator with `spawnCrowd` on L4; result logged
 
-- [ ] **M3-6 swift-coder (pass B) — HUD, inventory, pause, intro, save flow, UI tests**
+- [x] **M3-6 swift-coder (pass B) — HUD, inventory, pause, intro, save flow, UI tests**
   - Outputs: `QuickSlotBar`, `InventoryView`, `ItemInfoPanel`, `PauseMenuView`, `PixelBubbleView`, `LevelIntroView`, `RootView`/`GameModel` changes; `StrikeUITests/StrikeInventoryUITests.swift`
   - Done when:
     - quick slots show icon and total, tap = use, greyed at 0, shake + toast at full HP
@@ -470,7 +470,7 @@ Accessibility ids (new): `hud.quickSlot.0…3`, `hud.inventoryButton`, `hud.paus
     - UI test (landscape): `-StrikeLevel l1 -StrikeSeed 42 -StrikeFreshSave`, tap through the intro, Q1 shows the healpack count 1, `debug.damageHero` then Q1 → count 0 and HP up, open the inventory, `inventory.tidy`, close, relaunch without `-StrikeFreshSave` → `title.continue` exists
     - full `xcodegen generate` + `xcodebuild … test` green (own derivedDataPath + simulator per CLAUDE.md)
 
-- [ ] **M3-7 qa-tester — M3 verification**
+- [x] **M3-7 qa-tester — M3 verification**
   - Outputs: `docs/QA_REPORT.md` M3 section; `StrikeTests/InventoryFuzzTests.swift`; `LocalizationKeyTests` extended to every string-array key in `levels.json → story` (leftover 9); main-actor warnings fixed in `StrikePlayPassUITests` (leftover 7)
   - Inventory fuzz: 10,000 random add / remove / use / drop / tidy / assign sequences. Invariants: ≤ 25 slots used, every stack ≤ `stackSize`, item totals conserved (picked − used − dropped), quick links only to inventory item ids.
   - Done when:
@@ -482,12 +482,219 @@ Accessibility ids (new): `hud.quickSlot.0…3`, `hud.inventoryButton`, `hud.paus
     - kid-safety pass on all new text
     - `spawnCrowd` on L4: FPS / node count logged on the simulator; ask the owner for the device number (owner question)
 
-- [ ] **M3-8 game-manager — M3 review**: check deliverables against GDD/ART_BIBLE, update ROADMAP/TASKS/DECISIONS, plan M4
+- [x] **M3-8 game-manager — M3 review**: check deliverables against GDD/ART_BIBLE, update ROADMAP/TASKS/DECISIONS, plan M4 (2026-11-24, see below)
+
+### M3 review (2026-11-24, branch `m3-systems` @ 25a1ab2)
+**Accepted.** 243 unit tests and 16 UI tests are green.
+- **Fuzz:** inventory fuzz is clean on 10,000 sequences × 60 actions plus 200 × 400; it found and closed QA-010, the re-pack on load.
+- **By hand:** leash, rescue (L1/L2/L4, with gate checkpoints), save → kill → Continue, quick slots, the Pixel tap hint, and German screens were all checked by hand with real output.
+- **Text:** story keys are now covered by `LocalizationKeyTests` (M2 leftover 9 closed), and every Pixel line is ≤ 60 chars in both languages.
+- **Crowd:** L4 with 12 boltbots runs at 271 nodes and 60 fps on the simulator.
+- **Module map:** followed. `PuzzleBag` is gone; `Inventory` is the `ItemCarrier`.
+- **Data rules:** kept. The M3 blocks are in `rules.json` and every change is in the GDD change log (§12, §13, §16.9).
+- **Art:** ART_BIBLE §14 is implemented except the items listed below.
+- **Audio run (merged on main, 2026-11-23):** brought the Settings screen (music/SFX volume) and the pause gear earlier than the M5 plan said. This is accepted as owner requests.
+
+**Note on TASKS wording.** TASKS lines are the plan at the time they were written. Where the GDD later wrote a sharper rule, the GDD wins and the older TASKS line is outdated. Examples:
+- M3-4 says "item in the bag → `need_*` line", but GDD §13 now says `pixel.generic.hint_machine` ("You have it! Bring it to the machine."), and `need_*` is only used at the machine.
+- M3-1 lists `pixel { … }` fields that the GDD refined (`tapMaxSec`, `tapMaxMovePt`, `repeatCooldownSec`).
+
+Done tasks are not rewritten (DECISIONS 2026-11-24).
+
+Leftovers carried into M4 (task id in brackets):
+1. **QA-011**: there is no `pixel.tip.megamech`, so the boss's first sighting would show the raw key. Add the line and make `StoryDirector` skip any missing tip key. [M4-1, M4-4]
+2. **QA-012**: the L2 line "Tap SWAP to change blasters." points at a button that does not exist yet. M4 adds SWAP. The line must only play once SWAP is visible (2 or more blasters owned), and its wording must match the icon-only button. [M4-1, M4-5]
+3. **QA-014**: the German "In Schnellplatz" label is set smaller than its neighbours; shorten it ("Schnellplatz") or allow 2 lines. [M4-1]
+4. **QA-015**: an L4 machine can sit under the right-column HUD buttons. When the focused interactable's screen rect overlaps a HUD button rect, the camera shifts it into view (max 120 pt, eased). [M4-6]
+5. **Enemy-shot under-glow** on L4/L5 (§13.8) lands with the first real enemy projectiles. [M4-5]
+6. **Enemy shot SFX hook**: `sfx_shot_enemy` is in `audio.json` but never played. [M4-5]
+7. **Boss music trigger**: `music_boss` on arena entry (crossfade), `music_season_complete` after the boss. [M4-6]
+8. **Off-screen hint chevron and target ring** (ART_BIBLE §14.6) are not implemented. [M4-6]
+9. **Settings controls for Pixel talk (lots/some/quiet) and aim-assist**: the values are already in the save, but the screen only has volume. Add them to `SettingsView`. [M4-1 strings, M4-6]
+10. **Game-style gear icon (#36)**: not generated, the SF Symbol is still used. Generate `ui_btn_settings` via `tools/gen_art.py` and swap it in. [M4-2, M4-6]
+11. Still open from before: QA-009 poof v2 was built in M3, and QA re-checks it on all floors in M4-7. Real-iPad crowd FPS is still an owner question.
+
+## M4 Content
+
+Goal:
+- **Enemies:** all 5 enemy types fight with their own behaviours (chaser, kiter, splitter, shielded, turret), with telegraphs ≥ 0.4 s, colourful slow enemy shots and the spore slow effect.
+- **Blasters:** the hero finds the Bubble Blaster in L2 and the Foam Blaster in L3, swaps with SWAP (long-press = weapon wheel), and each blaster fires its own pattern with its own ammo.
+- **Levels:** L1–L5 get a content and balance pass for the real enemies.
+- **Boss:** L5 ends in the fixed boss arena. MEGA-MECH Unit Zero has 3 phases, with the phase 2 energy-core shield puzzle, boltbot core carriers and kid-safe retries. Boss music plays.
+- **Finish:** a "Season complete" card closes the season.
+
+Out of scope for M4:
+- new enemy types, blasters or levels beyond Season 1
+- boss frame animations: the lite key pose is animated by `PoseAnimator` and the face is a code overlay (see M4-2)
+- stars screen and level map (M5)
+- controller support (Later)
+
+Order:
+- **M4-1** (designer) and **M4-2** (artist) run in parallel.
+- **Coder pass A** = **M4-3 + M4-4**. M4-3 is a refactor with no behaviour change; M4-4 is pure logic and tests. It starts now; every number already exists in `enemies.json`, `weapons.json` and `levels.json`.
+- **Coder pass B** = **M4-5 + M4-6**, scene, HUD and boss. It needs M4-1 and uses M4-2 visuals (placeholders marked `// TODO ART_BIBLE §15` otherwise).
+- Then **M4-7** (QA) and **M4-8** (review).
+
+### M4 module map (binding for M4-3 … M4-6)
+Same conventions as before. New rule for AI: every behaviour is a **pure policy** (`nonisolated struct`, unit-tested without SpriteKit) driven by thin `GKState` classes, so behaviour is testable without a render loop (lesson from the M3 leash check).
+
+| File | Type(s) | Role |
+|---|---|---|
+| `Strike/Data/EnemyDef.swift` | (extended) `KeepDistanceDef`, `SplitDef`, `ShieldDef`, `BossPhaseDef`, `BossAttackDef`, `BossSpawnDef`, `BossUnlockDef` | every §16.2 block incl. `phases`, `shy*`, `retreatRange`, `strafeSec`, `attack.slow*`. `validate()`: boss phases form one chain `hp → 0` with no gaps |
+| `Strike/Data/LevelDef.swift` | (extended) | `bossId`, `bossMusic`, `bossArena { width, height, coreMachines, pillars }`, `pickups.fixed[{itemId, count, respawnOnBossPhase}]` |
+| `Strike/Game/Scenes/GameScene.swift` → split (M4-3) | `CombatController`, `EnemyDirector`, `InteractionController`, `HUDBridge` in `Strike/Game/Systems/` | GameScene is 1,524 lines. Move projectile/contact/damage handling, enemy spawn/tick/leash, interactable focus/INTERACT/doors, and HUD/model pushes out of it. Behaviour unchanged, all 243 + 16 tests green |
+| `Strike/Game/Systems/WeaponFire.swift` | `enum WeaponFire` | `pellets(def:aimAngle:rng:) -> [CGFloat]`: `pellets` spread evenly across `spreadDeg` + `±jitterDeg` |
+| `Strike/Game/Systems/Loadout.swift` | (extended) | `addWeapon(_:)` (adds + one full magazine, GDD §6), `swapNext()` (starter → spread → rapid, skipping unowned), `swap(to:)`; swap takes `rules.weapons.swapSec` 0.25 (no fire while swapping), cancels reload with no ammo lost |
+| `Strike/Game/Systems/PickupResolver.swift` | (extended) | `weaponPlaceholder` → `.weapon(id)` |
+| `Strike/Game/Systems/StatusEffects.swift` | `struct StatusEffects` | slow ×`slowMultiplier` for `slowSec`, no stacking, refresh on re-hit (GDD §4); cleared on rescue |
+| `Strike/Game/Systems/DamageModel.swift` | `enum DamageModel` | final damage = base × dizzy multiplier × shy multiplier; `immune` → 0; shield block test (below) |
+| `Strike/Game/AI/ChaserPolicy.swift` | `struct ChaserPolicy` | M2 steering + pathfinding + hop (from `BoltbotStates`); used by boltbot and slimemutant_small |
+| `Strike/Game/AI/KiterPolicy.swift` | `struct KiterPolicy` | laserdrone: stay in `keepDistance` 220–320, strafe `strafeSec`, then stop + glow `telegraphSec` 0.5 + one laser ball; retreat below `retreatRange` 160; `flying` (ignores plates) |
+| `Strike/Game/AI/SplitterPolicy.swift` | `struct SplitterPolicy` | slimemutant: slow chase, squash-on-hit hook; on power-down returns `splitInto` spawns (count 2, ±40 pt, `spawnDelaySec` 0.3, harmless and not damageable during pop-out; smalls never split; positions never inside walls) |
+| `Strike/Game/AI/ShieldPolicy.swift` | `struct ShieldPolicy` | shieldandroid: turn toward the hero at `turnRateDeg`; `blocks(hitDirection:)` within `arcDeg`/2 of facing; crouch + glow 0.7 s → dash 260 pt at 420 pt/s; dizzy `dizzySec` 1.5 (shield down, ×1.5 damage). Blocked shots bounce off as sparkles |
+| `Strike/Game/AI/TurretPolicy.swift` | `struct TurretPolicy` | sporeplant: static; petals telegraph 0.6 s → 3 spores in a 30° fan (4 dmg + slow, pop on walls); hero closer than `shyRange` 80 → closed, ×0.5 damage for `shySec` 1 |
+| `Strike/Game/AI/BossBrain.swift` | `struct BossBrain` | MEGA-MECH, pure:<br>• phase from HP (`stomp` → `shield` → `overload`); attack scheduler with per-attack cooldowns × `cooldownMultiplier`<br>• phase 2: `immune` until `unlockBy.count` core machines are on → dizzy 4 s with ×2 damage, then phase 2 continues vulnerable until 400<br>• spawns: boltbot every 8 s, max 4 alive; the first `carryCount` carry an `energycore`, and if cores ever become unreachable (not in the bag, not on the floor, fewer machines on than needed) the next spawn carries one again (GDD §9 "always ≥ 1 core reachable")<br>• phase 3 dash: pillar hit → dizzy 2.5 s<br>• `rescueReset()`: HP back to the current phase's `hpFrom`, inserted cores stay |
+| `Strike/Game/AI/BossAttacks.swift` | `enum StompWave`, `enum StarVolley`, `enum LaserSweep`, `enum BossDash` | pure geometry and hit tests: expanding ring 140 → 220 pt; 6 star rockets across 70°; rotating beam with `gaps` safe gaps at `sweepDegPerSec`; dash line with pillar intersection |
+| `Strike/Game/Entities/AI/*States.swift` | `ChaserStates`, `KiterStates`, `SplitterStates`, `ShieldedStates`, `TurretStates`, `BossStates` | thin `GKState`s calling the policies; `BoltbotStates.swift` becomes `ChaserStates.swift` |
+| `Strike/Game/Entities/EnemyBehaviorFactory.swift` | `enum EnemyBehaviorFactory` | `behavior` → state machine; **removes the M2 "everything is a chaser" fallback** (DECISIONS 2026-11-22) |
+| `Strike/Game/Entities/EnemyProjectileNode.swift` + `ProjectilePool` (generic owner `.hero` / `.enemy`) | | `proj_enemy` (min radius 8, max 300 pt/s, GDD §8), under-glow on L4/L5 (§13.8), `sfx_shot_enemy`; spores apply `StatusEffects`; all enemy shots are removed when the rescue beam starts |
+| `Strike/Game/Entities/MegaMechNode.swift` | `@MainActor final class MegaMechNode: EnemyNode` | 192 pt key pose, radius 72, face-screen overlay (expressions from M4-2), telegraph nodes (red ring, warning line, dash arrow), bubble shield, dizzy stars, phase-change flash |
+| `Strike/Game/Level/BossArenaLayout.swift` | `enum BossArenaLayout` | pure: fixed 22 × 16 tile grid, 4 pillars, 2 core machines on the left and right walls, entrance checkpoint, `pickups.fixed` at the pillars. Output is a `GeneratedLevel` so `LevelBuilder`, minimap and Pathfinder reuse everything |
+| `Strike/Game/Systems/LevelSession.swift` / `RunState.swift` | (extended) | `stage: .level / .bossArena`; `RunState.l5ArenaReached` so Continue resumes at the arena checkpoint (exception to "no mid-level state", see DECISIONS) |
+| `Strike/UI/HUDView.swift` | (extended) | SWAP button (`ui_btn_swap`, right column per ART_BIBLE §7; visible once 2 or more blasters are owned), long-press 0.4 s → `WeaponWheelView`, ammo readout follows the equipped blaster icon/ammo; boss bar (no numbers, phase notches) |
+| `Strike/UI/WeaponWheelView.swift` | `WeaponWheelView` | 3 slots (owned / locked silhouette), ammo per slot, tap or release to pick |
+| `Strike/UI/SeasonCompleteView.swift` | `SeasonCompleteView` | after the boss: L5 outro lines, total score, datachips, `music_season_complete`, Title button |
+| `Strike/UI/SettingsView.swift` | (extended) | Pixel talk (lots / some / quiet) and Aim assist (on / off) controls bound to the saved settings |
+| `Strike/UI/DebugOverlay.swift` | (extended) | `debug.giveBlasters`, `debug.bossArena`, `debug.bossNextPhase`, `debug.spawn.<enemyId>`; launch arg `-StrikeBossArena` |
+
+Accessibility ids (new): `hud.swapButton`, `hud.weaponWheel`, `hud.weaponWheel.slot.0…2`, `hud.bossBar`, `seasonComplete.view`, `seasonComplete.toTitle`, `settings.pixelTalk`, `settings.aimAssist`, `debug.giveBlasters`, `debug.bossArena`, `debug.bossNextPhase`.
+
+### Tasks
+- [ ] **M4-1 game-designer — Content and balance pass L1–L5, boss text, M4 strings**
+  - Inputs: GDD §5, §8–§10, §15, §18; `docs/levels/L1–L5.md`; `enemies.json`, `weapons.json`, `levels.json`, `loot.json`, `rules.json`; M3 QA_REPORT (QA-011/012/014)
+  - Outputs: data JSON, `Localizable.xcstrings`, `docs/GDD.md`, `docs/levels/L*.md`
+  - Work:
+    - Re-tune per level now that enemies really kite/shield/split/shoot: `enemyMix` weights, `zoneMin`, `minPathFraction`, `maxPerRoom`, `enemyDensity`, `maxThreatPerRoom`, `firstEncounterRoom`, `parTimeSec`, loot tables and pickups.
+    - Add a short **time-to-power-down table** (each enemy × each blaster, incl. misses at 60 % accuracy) to the GDD so the balance is traceable.
+    - New `rules.json → weapons { swapSec 0.25, wheelLongPressSec 0.4 }`.
+    - Boss: confirm the arena numbers and `pickups.fixed`; L5 story beats for `bossPhase:1…3` / `bossDefeated` use the existing `boss.megamech.*` keys.
+    - **QA-011**: add `pixel.tip.megamech`.
+    - **QA-012**: rewrite `pixel.l2.swap` for the icon-only button (e.g. "Tap the two arrows to swap blasters!") and document that it plays only once SWAP is visible.
+    - **QA-014**: shorter German quick-slot label.
+    - New strings: Settings Pixel talk + aim assist (labels and the 3 talk levels), weapon wheel, boss bar accessibility, Season complete card, `pixel.generic.swap_hint` if needed.
+  - Done when:
+    - JSON is valid and `validate()` passes
+    - `LocalizationKeyTests` is green (incl. the boss tip), Pixel lines ≤ 60 chars in de and en, no violent wording
+    - the time-to-power-down table and change log are in the GDD
+    - no code touched
+
+- [ ] **M4-2 visual-artist — ART_BIBLE §15 "Enemies, blasters, boss"** (parallel)
+  - Inputs: ART_BIBLE §1, §3, §7, §12–§14; `enemies`/`boss`/`items`/`ui` atlases; GDD §8–§9
+  - Outputs: `docs/ART_BIBLE.md` §15; `ui_btn_settings` generated with `tools/gen_art.py` from prompt #36 and sliced into the `ui` atlas (leftover 10); optional face overlay sprites (`boss_megamech_face_<mood>`, ≤ 4 moods: smug, angry, panic, smiley) generated the same way, otherwise specified as code-drawn shapes. No Swift.
+  - §15 covers:
+    - **Telegraphs** (all ≥ the JSON `telegraphSec`, readable on all 5 floors): drone red glow, android crouch + shield glow, sporeplant petal open, boss red stomp ring, laser warning line, dash arrow.
+    - **Shield**: arc visual and the bounce-off sparkle.
+    - **Dizzy stars**.
+    - **Spore slow** tint/particles on the hero.
+    - **Slime split** pop-out.
+    - **Blasters**: muzzle and projectile feel per blaster (bubble wobble, foam trail), the SWAP button states and the weapon wheel layout (≥ 64 pt slots).
+    - **Boss**:
+      - bar (no numbers, phase notches)
+      - bubble shield
+      - core machine sockets (empty/filled)
+      - phase-change flash
+      - power-down "sparkle burst", explicitly no explosion look
+      - the face overlay
+    - **Season complete card**.
+  - Done when: every value is a concrete number or hex, all effects are kid-safe (no fire/explosion/red splats), and nothing contradicts §7/§13/§14
+
+- [ ] **M4-3 swift-coder (pass A) — GameScene split (refactor only)**
+  - Outputs: `CombatController`, `EnemyDirector`, `InteractionController`, `HUDBridge`; `GameScene` keeps the scene graph, update order and wiring only
+  - Done when:
+    - `GameScene.swift` is ≤ 500 lines and no other file is > 600
+    - no behaviour change: all 243 unit + 16 UI tests green with the same results, including `ScenePlaythroughTests` and `M3ScenarioTests`
+
+- [ ] **M4-4 swift-coder (pass A) — Weapons, policies, boss brain (pure)**
+  - Outputs: data extensions, `WeaponFire`, `Loadout`/`PickupResolver` extensions, `StatusEffects`, `DamageModel`, all `*Policy`, `BossBrain`, `BossAttacks`, `BossArenaLayout`. Tests in `WeaponFireTests`, `LoadoutSwapTests`, `StatusEffectsTests`, `KiterPolicyTests`, `SplitterPolicyTests`, `ShieldPolicyTests`, `TurretPolicyTests`, `BossBrainTests`, `BossAttacksTests`, `BossArenaLayoutTests`.
+  - Done when (each is a test):
+    - **Data:** all 7 enemies decode with every block; boss phases chain 1200 → 800 → 400 → 0
+    - **Weapon fire:**
+      - spread fires 5 pellets symmetric across 40°
+      - starter jitter stays within ±2°, rapid within ±7°
+      - fire rate respected per blaster
+    - **Loadout:**
+      - picking up a blaster adds it + one full magazine
+      - `swapNext` cycles only owned blasters in GDD order
+      - swap cancels reload with no ammo lost and blocks firing for 0.25 s
+      - ammo for an unowned blaster fills its reserve
+    - **Slow:** ×0.7 for 2 s, a second hit refreshes and does not stack
+    - **Kiter:** stays inside 220–320 pt in a sim, retreats below 160 pt, telegraphs 0.5 s before each shot
+    - **Splitter:** 2 smalls at ±40 pt, never in a wall, harmless and not damageable for 0.3 s, smalls do not split
+    - **Shield:**
+      - a front hit inside ±60° is blocked, a back hit passes
+      - turning is capped at 120°/s, so circling works in a sim
+      - after the dash: dizzy 1.5 s, shield down, ×1.5 damage
+    - **Turret:** never moves; shy below 80 pt gives ×0.5 damage for 1 s; spores fan 30°
+    - **Boss phases and shield:**
+      - transitions at 800 and 400
+      - phase 2 immune until both cores are inserted, then dizzy 4 s ×2
+      - phase 3 cooldowns ×0.75
+      - a dash into a pillar gives dizzy 2.5 s
+    - **Boss spawns:**
+      - every 8 s, max 4 alive
+      - the first 2 carry cores
+      - after a "lost core" event the next spawn carries one
+      - in 1,000 random event sequences, a core is always obtainable until both are inserted
+    - **Boss retries:** `rescueReset` restores the phase top and keeps the inserted cores
+    - **Laser sweep:** a hero inside a gap is never hit
+    - **Arena:** layout is valid for `SolvabilityChecker` and the fixed pickups sit next to pillars
+
+- [ ] **M4-5 swift-coder (pass B) — Real enemies, blasters, SWAP in the scene**
+  - Outputs: `EnemyBehaviorFactory`, `*States`, `EnemyProjectileNode` + generic pool, enemy shot under-glow + `sfx_shot_enemy` (leftovers 5, 6), spread/rapid firing + SFX, weapon pickups live, SWAP button + `WeaponWheelView`, QA-012 gating, `StoryDirector` skips missing tip keys (QA-011)
+  - Done when:
+    - each enemy type behaves per GDD §8.1 in a debug spawn room (`debug.spawn.<id>`)
+    - telegraphs are visible before every damaging attack
+    - shots stop at walls and pass through powered-down enemies
+    - the L2 Bubble Blaster and L3 Foam Blaster pickups work and Pixel's lines play
+    - SWAP appears with the 2nd blaster; long-press opens the wheel
+    - `ScenePlaythroughTests` still finishes L1–L5 on 3 seeds with real behaviours (adjust the script, not the game)
+    - < 1,500 nodes and ~60 fps on the simulator in an L5 room with all 5 types + `spawnCrowd`; result logged
+
+- [ ] **M4-6 swift-coder (pass B) — Boss arena, boss fight, season end, leftovers**
+  - Outputs: `MegaMechNode`, `BossStates`, arena stage flow (L5 exit pad → fade → arena with Pixel line → entrance checkpoint), boss bar, `music_boss` crossfade on arena entry and `music_season_complete` (leftover 7), `SeasonCompleteView`, `l5ArenaReached` Continue, QA-015 camera nudge (leftover 4), off-screen hint chevron + target ring (leftover 8), Settings Pixel talk + aim assist (leftover 9), `ui_btn_settings` swap-in (leftover 10)
+  - Done when:
+    - the boss plays all 3 phases with telegraphs; the phase 2 core puzzle works (cores from carriers → both machines → shield pops → dizzy)
+    - a rescue in the arena returns the hero to the arena checkpoint, the boss to its phase top, and keeps the inserted cores
+    - the boss power-down shows the sparkle burst + smiley face, then the Season complete card leads back to the title
+    - relaunch after reaching the arena → Continue starts at the arena checkpoint
+    - the focused machine under the HUD column is nudged into view (camera test)
+    - the hint chevron shows for off-screen targets
+    - the Settings controls change Pixel talk and aim assist live and persist
+    - UI test: `-StrikeLevel l5 -StrikeBossArena -StrikeSeed 1` → `hud.bossBar` exists, `debug.bossNextPhase` ×3 → `seasonComplete.view`
+    - full `xcodegen generate` + test run green (own derivedDataPath + simulator)
+
+- [ ] **M4-7 qa-tester — M4 verification**
+  - Outputs: `docs/QA_REPORT.md` M4 section; `StrikeTests/BossFuzzTests.swift` (QA's own boss-state model: random hero damage, rescues, core losses, phase skips, always winnable); `StrikeTests/BalanceSmokeTests.swift` (time-to-power-down per enemy × blaster from JSON matches the designer's GDD table ±10 %)
+  - Done when:
+    - suite green with no new warnings
+    - fuzz for 10,000 boss sequences with no unwinnable state
+    - generator fuzz re-run on L1–L5 with the M4-1 numbers (2,000 seeds each)
+    - manual sim pass of one room per enemy type, and the full boss fight without debug buttons (timings and rescues logged)
+    - poof v2 checked by eye on all 5 floors (QA-009 close-out)
+    - kid-safety pass on boss visuals and text (no explosion or scary wording; the boss is funny)
+    - L5 + boss FPS / node counts logged; owner asked for the device number
+
+- [ ] **M4-8 game-manager — M4 review**: check deliverables against GDD/ART_BIBLE, update ROADMAP/TASKS/DECISIONS, plan M5
 
 ## Questions for the owner
+- **QA-013: iPad orientations.** Xcode warns that `UIRequiresFullScreen` will soon be ignored and that iPad apps will need to support all orientations and resizable windows. Today Strike is landscape-only and full screen. This needs a decision before the App Store submission (M6). Options:
+  1. **Keep landscape-only for now.** Ship with the current settings while iOS still honours them, and revisit when Apple enforces the change. No work now, but a risk of a forced late change or a rejection.
+  2. **Support every orientation and window size with a "Turn me sideways" card.** Declare all orientations and drop `UIRequiresFullScreen`. In landscape and wide windows the game plays as now (the scene adapts to the window size, HUD stays on the safe area). In portrait or narrow windows the game pauses and shows a friendly Pixel card asking to turn the iPad. Small and contained (scene resize handling + one SwiftUI card + UI tests).
+  3. **Full portrait layout.** Re-flow the HUD and sticks for portrait and show a taller view. The most work; the twin-stick layout is clearly weaker in portrait for kids' hands.
+
+  **Recommendation: option 2, scheduled in M5** (presentation/menus), so the M6 TestFlight build is already compliant. Please confirm, or choose 1 or 3.
 - Performance check on your iPad 10th gen: in a DEBUG device build of M3, open L4 (`-StrikeLevel l4`), tap `spawnCrowd` once, fight for 30 s, and tell us the FPS shown in the corner (needed for the 60 fps goal on iPad 9th gen+)
 - Final title and character names (designer proposed options in GDD §19)
-- Gemini commercial-use terms for generated images (owner to confirm)
-- Music/SFX source (default: CC0 packs)
+- Gemini commercial-use terms for generated images, and the Lyria terms for the generated music (owner to confirm; we do not decide licensing)
 - Minimum iPad model (default iPadOS 18, iPad 9th gen+)
 - GDD §19 items 6–9 (Easy setting, hero looks, left-handed prompt, replay with new seed) are still open

@@ -129,7 +129,7 @@ Numbers live in `Strike/Resources/Data/hero.json` (§16.6).
 | Pickup radius | 40 pt (bolt magnet 96 pt) |
 | Interact radius | 64 pt |
 | Start loadout L1 | `blaster_starter`, 12 in mag, 48 reserve, 1 × `healpack`, 2 × `food_apple` |
-| Low-HP warning | ≤ 25 HP: heart pulses, Pixel line (max once per 60 s) |
+| Low-HP warning | ≤ 25 HP (`rules.json → lowHp.threshold`): heart pulses, Pixel line (max once per `lowHp.lineCooldownSec` 60 s) |
 
 Slow effects (spores): move speed × 0.7 for 2 s, do not stack, refresh duration.
 
@@ -213,10 +213,10 @@ Use rules:
 | Auto-assign | first heal item picked up goes to Q1 if Q1 is empty, first food to Q2 |
 | Assign | inventory: tap item → "Put in quick slot" → tap Q1–Q4. Or drag item onto a quick slot |
 | Use | tap item → "Use" (heal/food/ammo pack). Quick slot tap = use |
-| Drop | tap item → "Drop" → choose amount (1 / all). Drops at hero's feet, never despawns. Puzzle items can be dropped too (they stay until picked up again) |
+| Drop | tap item → "Drop" → choose amount (1 / all). Drops at hero's feet (random offset up to `rules.json → inventory.dropScatter` 24 pt, never inside a wall), never despawns. A dropped item is not picked up again until the hero has left its pickup radius once (no instant re-pickup). Puzzle items can be dropped too (they stay until picked up again) |
 | Sort | "Tidy up" button: puzzle → heal → food → ammo, then by id |
 | Full | pickup stays on the floor with a bobbing "!" ; toast "Bag full!" (`ui.toast.bag_full`) |
-| Persistence | inventory, quick slots and blasters carry over between levels and are saved |
+| Persistence | inventory, quick slots and blasters carry over between levels and are saved (§16.10). Puzzle items (fuse, battery, keycard, energy core) are cleared at level start and level end: they belong to one layout |
 | Rescue | inventory is kept 100 % at a checkpoint rescue |
 
 ---
@@ -392,44 +392,103 @@ zone or an earlier zone and never behind the gate it opens. Verified by simulati
      their home rooms.
   7. `rescues` counter + 1 (affects 3rd star, §15).
 - No lives, no restart penalty besides the star.
+- M3 numbers: `rules.json → rescue` (§16.9): slow-mo `slowMoScale` 0.3 for `slowMoSec` 0.6
+  (real time), beam `beamSec` 0.8, starter top-up: if starter mag + reserve < `starterMinMagazine`
+  (12), the reserve gets the gap, then the magazine fills from the reserve at once (no reload
+  animation). Invulnerability = `hero.json → respawnInvulnerableSec` (2.0 s). Input is locked from
+  0 HP until the hero appears at the checkpoint. Enemy shots in flight are removed at the beam.
+  Then Pixel says `pixel.generic.rescue`. The words "game over" never appear.
 
 ---
 
 ## 13. Pixel – the drone buddy (`pixel`)
 
+All numbers in this section live in `rules.json → pixel / hints / lowHp` (§16.9) and
+`levels.json → hintIdleSec`.
+
 | Behaviour | Rule |
 |---|---|
-| Follow | floats 56 pt behind-left of the hero, bobbing 4 pt at 1.5 Hz; lerp 0.15 s; passes through walls (it's a hologram drone); never blocks shots or touch |
-| Speak | speech bubble above Pixel, 1 line, max 60 chars, 3.0 s (+0.04 s/char). One line at a time, queue max 2, older dropped. Lines come from `pixel.*` keys |
-| Hint (tap Pixel or 30 s no progress) | Pixel flies 2 s toward the nearest reachable unactivated required element (or the needed item if a machine is blocked), shows a dotted arrow for 6 s, then returns. Cooldown 10 s |
-| Pointer | minimap pings unactivated reachable required elements as blinking dots after 60 s in the level |
-| Scan | first time an enemy type is seen: short "scan" beam + tip line (`pixel.tip.<enemyId>`) |
-| Rescue | at 0 HP performs the rescue (§12) |
+| Follow | floats at `followOffset` (−40, +40) pt = about 56 pt up-left of the hero, in **world** axes (does not turn with the aim: twin-stick aim changes all the time and Pixel would swing around). Bobbing 4 pt at 1.5 Hz; lerp 0.15 s; passes through walls (it's a hologram drone); never blocks shots or physics |
+| Speak | lines show in the **HUD bubble at the top centre** (ART_BIBLE §7: max 420 × 90, `ui_icon_pixel` avatar, tap to dismiss), **not** above Pixel in the world (always readable, never off-screen or under walls). Max 60 chars, 2 lines max in the bubble. Shown for `bubbleBaseSec + bubblePerCharSec × chars` (3.0 + 0.04/char → 3.4–5.4 s). One line at a time, queue max 2, older dropped. While a line shows, Pixel does a small talk wiggle |
+| Repeat guard | the same `pixel.*` key is not queued again within `pixel.repeatCooldownSec` (10 s). Low HP: `lowHp.lineCooldownSec` (60 s). Story beats, intro and outro are exempt (each beat fires once per level anyway) |
+| Hint (tap Pixel or idle) | see "Hints" below. Fly 2 s, dotted arrow 6 s, then return. Cooldown 10 s |
+| Pointer | minimap pings unactivated reachable required elements (and the exit pad once the door is open) as blinking dots after `hints.pointerAfterSec` (60 s) in the level. Ping style: ART_BIBLE §14 |
+| Scan | first time an enemy type is **seen** (on screen and in line of sight, not first contact): short scan beam + tip line (`pixel.tip.<enemyId>`). The boss has no tip; its lines are the `boss.*` beats |
+| Rescue | at 0 HP performs the rescue (§12), then says `pixel.generic.rescue` |
 | Combat | Pixel never attacks and can't be hurt |
-| Silence | Settings → "Pixel talk: lots / some / quiet". "some" = story + hints only, "quiet" = story only |
+| Silence | Settings → "Pixel talk: lots / some / quiet" (default lots). **lots** = everything. **some** = story beats + hint lines (`hint_*`, `need_*`, `idle`, `rescue`). **quiet** = story beats, intro/outro and `rescue` only. Hints still fly and point in every mode |
 
-Generic triggers (keys in `pixel.generic.*`): level start, first item, bag full, low HP,
-first reload, element on, all elements on, door open, checkpoint, rescue, idle 30 s.
+**Tap on Pixel vs. stick touch.** Pixel floats inside the stick zones. A touch is a **Pixel tap**
+when it starts within `pixel.tapRadius` (80 pt) of Pixel's on-screen centre, ends within
+`pixel.tapMaxSec` (0.25 s) and moves less than `pixel.tapMaxMovePt` (12 pt). Such a touch starts no
+stick. Implementation: a touch that starts inside the radius is held back for up to 0.25 s; if it
+moves ≥ 12 pt or lasts longer, it becomes a normal stick touch from its **start** point (so a kid
+who meant to move loses at most 0.25 s). Touches outside the radius start sticks at once.
+While a hint is running (fly + arrow), taps on Pixel do nothing; during the cooldown a tap says
+`pixel.generic.hint_wait`.
 
-| Key | EN | DE |
-|---|---|---|
-| `pixel.generic.bag_full` | Your bag is full! | Deine Tasche ist voll! |
-| `pixel.generic.low_hp` | Ouch! Eat something! | Autsch! Iss etwas! |
-| `pixel.generic.reload` | Tap RELOAD for new shots! | Tipp auf NACHLADEN! |
-| `pixel.generic.element_on` | Yes! One more done! | Ja! Wieder eins geschafft! |
-| `pixel.generic.all_on` | All done! The door is open! | Alles geschafft! Die Tür ist offen! |
-| `pixel.generic.checkpoint` | Checkpoint saved! | Checkpoint gespeichert! |
-| `pixel.generic.rescue` | Gotcha! I beamed you back. | Hab dich! Ich habe dich zurückgebeamt. |
-| `pixel.generic.idle` | Need help? Tap me! | Brauchst du Hilfe? Tipp mich an! |
-| `pixel.generic.need_fuse` | We need a fuse! | Wir brauchen eine Sicherung! |
-| `pixel.generic.need_battery` | We need a battery! | Wir brauchen eine Batterie! |
-| `pixel.generic.need_keycard` | We need a keycard! | Wir brauchen eine Schlüsselkarte! |
-| `pixel.generic.need_energycore` | We need an energy core! | Wir brauchen einen Energiekern! |
-| `pixel.tip.boltbot` | Boltbots run at you. Zap them! | Boltbots rennen auf dich zu. Zapp sie! |
-| `pixel.tip.laserdrone` | Drones glow red, then shoot. Dodge! | Drohnen leuchten rot, dann schießen sie. Ausweichen! |
-| `pixel.tip.slimemutant` | Slimes split in two! | Schleime teilen sich in zwei! |
-| `pixel.tip.shieldandroid` | Hit it from behind! | Triff ihn von hinten! |
-| `pixel.tip.sporeplant` | Don't get too close. It sneezes! | Nicht zu nah. Sie niest! |
+**Hints.**
+1. Target = the nearest **reachable** (only through doors that are open now) required element that
+   is off, by path distance. Gate elements count as required for this.
+2. If that element is a machine and its item is **not** in the bag: target the nearest reachable
+   floor item of that id (line `hint_item`). If no such floor item exists (should not happen,
+   the generator guarantees it): no fly, line `pixel.generic.need_<item>`.
+3. If that element is a machine and its item **is** in the bag: fly to the machine as normal, line
+   `pixel.generic.hint_machine` ("You have it! Bring it to the machine."). Saying "We need a
+   fuse!" while the kid carries one would confuse them.
+4. Else, if all required elements are on and the exit door is open: target `level.exitPad`
+   (line `hint_exit`).
+5. Line while flying to an element: `hint_here` (tap) or `idle` (idle trigger).
+
+**Idle hint and "progress".** The idle timer counts game time (not while paused, in the
+inventory, during the door pan or the rescue sequence). It fires the hint after `hintIdleSec`
+(L1 20 s, L2–L5 30 s) without progress. **Progress** = any of:
+- a required element or a gate element turns on (lever pull counts when it ends on),
+- an item is **stored** in the bag (PickupResolver `stored`; bolts, datachips and ammo that goes
+  straight to the reserve do not count),
+- a gate or the exit door opens,
+- a room is revealed for the first time,
+- a checkpoint is touched.
+Any shown hint (tap or idle) also resets the timer. The tap hint cooldown (10 s) and the idle
+timer are separate; an idle hint during the tap cooldown waits until the cooldown ends.
+
+**Generic triggers** (keys `pixel.generic.*`). If the level has a beat for the same trigger
+(`start`, `doorOpen`, `firstLowHp`), the level beat plays **instead of** the generic line.
+
+| Key | Trigger | Filter | EN | DE |
+|---|---|---|---|---|
+| `pixel.generic.start` | level start, no `start` beat | lots | Let's go! Find all the switches. | Los geht's! Finde alle Schalter. |
+| `pixel.generic.first_item` | first item stored in the bag this level | lots | Into the bag it goes! | Ab in die Tasche damit! |
+| `pixel.generic.bag_full` | pickup `staysBagFull` | lots | Your bag is full! | Deine Tasche ist voll! |
+| `pixel.generic.low_hp` | HP ≤ `lowHp.threshold`, no `firstLowHp` beat or later times | lots | Ouch! Eat something! | Autsch! Iss etwas! |
+| `pixel.generic.reload` | first empty magazine | lots | Tap RELOAD for new shots! | Tipp auf NACHLADEN! |
+| `pixel.generic.element_on` | a required element on (not the last) | lots | Yes! One more done! | Ja! Wieder eins geschafft! |
+| `pixel.generic.all_on` | last required element on | lots | All done! The door opens! | Alles geschafft! Die Tür geht auf! |
+| `pixel.generic.gate_open` | a gate opens (replaces `ui.toast.gate_open`) | lots | The gate is open. Let's go on! | Das Tor ist offen. Weiter geht's! |
+| `pixel.generic.door_open` | exit door open, no `doorOpen` beat | lots | The door is open! Step on the glowing pad! | Die Tür ist offen! Lauf auf das Leuchtfeld! |
+| `pixel.generic.checkpoint` | checkpoint touched (replaces `ui.toast.checkpoint`) | lots | Checkpoint saved! | Checkpoint gespeichert! |
+| `pixel.generic.rescue` | after the rescue beam | all | Gotcha! I beamed you back. | Hab dich! Ich habe dich zurückgebeamt. |
+| `pixel.generic.idle` | idle hint starts | some | Need help? Tap me! | Brauchst du Hilfe? Tipp mich an! |
+| `pixel.generic.hint_here` | tap hint to an element | some | This way! Follow my arrow. | Hier lang! Folge meinem Pfeil. |
+| `pixel.generic.hint_item` | hint to a floor puzzle item | some | Look! We need that thing over there! | Da liegt was, das wir brauchen! |
+| `pixel.generic.hint_machine` | hint to a machine whose item is in the bag | some | You have it! Bring it to the machine. | Du hast es! Bring es zur Maschine. |
+| `pixel.generic.hint_exit` | hint to the exit pad | some | The exit is over there! | Der Ausgang ist da drüben! |
+| `pixel.generic.hint_wait` | Pixel tapped during the cooldown | some | One sec! My antenna is cooling down. | Moment! Meine Antenne kühlt ab. |
+| `pixel.generic.need_fuse` | machine without item / hint with item in bag | some | We need a fuse! | Wir brauchen eine Sicherung! |
+| `pixel.generic.need_battery` | same | some | We need a battery! | Wir brauchen eine Batterie! |
+| `pixel.generic.need_keycard` | same | some | We need a keycard! | Wir brauchen eine Schlüsselkarte! |
+| `pixel.generic.need_energycore` | same | some | We need an energy core! | Wir brauchen einen Energiekern! |
+| `pixel.tip.boltbot` | first sight | lots | Boltbots run at you. Zap them! | Boltbots rennen auf dich zu. Zapp sie! |
+| `pixel.tip.laserdrone` | first sight | lots | Drones glow red, then shoot. Dodge! | Drohnen leuchten rot, dann schießen sie. Ausweichen! |
+| `pixel.tip.slimemutant` | first sight | lots | Slimes split in two! | Schleime teilen sich in zwei! |
+| `pixel.tip.slimemutant_small` | first sight | lots | Mini slimes! They are quick. | Mini-Schleime! Die sind flott. |
+| `pixel.tip.shieldandroid` | first sight | lots | Big shield! Hit it from behind! | Großer Schild! Triff ihn von hinten! |
+| `pixel.tip.sporeplant` | first sight | lots | Don't get too close. It sneezes! | Nicht zu nah. Sie niest! |
+
+Level beats (`pixel.l<n>.*`, `boss.*`) and intro/outro (`story.*`) are "story" in the filter.
+"First" triggers (first item, first reload, tips) are once per **level**, so a replay teaches again.
+The `need_*` line from tapping a machine replaces the M2 toast `ui.toast.need_item` only when the
+talk level lets it through; otherwise the toast still shows.
 
 ---
 
@@ -745,7 +804,8 @@ Aim-assist cone per blaster stays in `weapons.json → aimAssistConeDeg`.
 | `hud.*` | HUD labels; format args are positional (`%1$lld`, `%2$lld`) so DE/EN can reorder |
 | `ui.toast.*` | one-line HUD toasts (M2) |
 | `levelComplete.*` | M2 "Level complete" card |
-| `pixel.*`, `story.*` | added when their milestone needs them (M3) |
+| `pixel.*`, `story.*`, `boss.*` | Pixel/OVERMIND lines (§13, `levels.json → story`, `docs/levels/L*.md`); max 60 chars in de + en; `pixel.*` holds **only** spoken lines |
+| `inventory.*`, `pause.*`, `title.*`, `levelIntro.*`, `settings.*` | screens (M3; `settings.*` from the audio run) |
 
 **M2 keys** (added in M2-1):
 
@@ -769,6 +829,50 @@ Aim-assist cone per blaster stays in `weapons.json → aimAssistConeDeg`.
 | `levelComplete.continue` | – | Continue | Weiter |
 | `levelComplete.toTitle` | – | Main menu | Hauptmenü |
 
+**M3 keys** (added in M3-1; Pixel lines are in §13 and `docs/levels/L*.md`):
+
+| Key | Args | EN | DE |
+|---|---|---|---|
+| `pause.inventory` | – | Bag | Tasche |
+| `pause.quitConfirm.title` | – | Leave the level? | Level verlassen? |
+| `pause.quitConfirm.message` | – | Your things stay. The level starts again next time. | Deine Sachen bleiben. Das Level startet dann neu. |
+| `pause.quitConfirm.yes` / `.no` | – | Leave / Stay | Verlassen / Bleiben |
+| `title.continue` | – | Continue | Weiterspielen |
+| `title.newGame` | – | New game | Neues Spiel |
+| `title.newGameConfirm.title` | – | Start a new game? | Neues Spiel starten? |
+| `title.newGameConfirm.message` | – | Your old game will be gone. | Dein altes Spiel ist dann weg. |
+| `title.newGameConfirm.yes` / `.no` | – | Start new / Keep my game | Neu starten / Mein Spiel behalten |
+| `levelIntro.level` | level number | Level %lld | Level %lld |
+| `levelIntro.tapToStart` | – | Tap to start | Tippen zum Starten |
+| `inventory.title` | – | Bag | Tasche |
+| `inventory.use` | – | Use | Benutzen |
+| `inventory.drop` | – | Drop | Ablegen |
+| `inventory.dropOne` / `.dropAll` | – | Drop 1 / Drop all | 1 ablegen / Alle ablegen |
+| `inventory.assign` | – | Put in quick slot | In Schnellplatz |
+| `inventory.assignPrompt` | – | Tap a quick slot. | Tipp auf einen Schnellplatz. |
+| `inventory.cancel` | – | Cancel | Abbrechen |
+| `inventory.tidy` | – | Tidy up | Aufräumen |
+| `inventory.close` | – | Close | Schließen |
+| `inventory.empty` | – | Your bag is empty. | Deine Tasche ist leer. |
+| `inventory.pickHint` | – | Tap a thing. | Tipp auf ein Ding. |
+| `inventory.count` | count | You have %lld | Du hast %lld |
+| `inventory.puzzleHint` | – | Bring it to a machine. | Bring es zu einer Maschine. |
+| `inventory.slot.accessibility` | name, count | %1$@, %2$lld | %1$@, %2$lld Stück |
+| `inventory.emptySlot.accessibility` | – | Empty slot | Leerer Platz |
+| `hud.inventory.accessibility` | – | Open your bag | Tasche öffnen |
+| `hud.quickSlot.accessibility` | slot, name, count | Quick slot %1$lld: %2$@, %3$lld left | Schnellplatz %1$lld: %2$@, noch %3$lld |
+| `hud.quickSlot.empty.accessibility` | slot | Quick slot %lld: empty | Schnellplatz %lld: leer |
+| `hud.pixel.accessibility` | – | Pixel. Tap for help. | Pixel. Tipp für Hilfe. |
+| `hud.pixelBubble.accessibility` | line | Pixel says: %@ | Pixel sagt: %@ |
+| `ui.toast.already_full` | – | Already full! | Schon voll! |
+| `ui.toast.dropped` | item name | Dropped: %@ | Abgelegt: %@ |
+| `settings.pixelTalk` | – | Pixel talk | Pixel redet |
+| `settings.pixelTalk.lots` / `.some` / `.quiet` | – | Lots / Some / Quiet | Viel / Etwas / Leise |
+| `settings.aimAssist` | – | Aim help | Zielhilfe |
+
+The pause button keeps `game.menu`; the pause menu's settings entry uses `settings.title`.
+"Put in quick slot" is "In Schnellplatz" in German so it fits a 64 pt high button in one line.
+
 `need_item` / `got_item` use "label: name" so German needs no article (eine Sicherung / einen
 Energiekern). The item name comes from `item.<id>.name`. The door counter itself shows only digits
 ("3 / 5"). The debug overlay (`#if DEBUG`) is not localized.
@@ -779,8 +883,12 @@ Exception to the "one array" rule: global rule numbers, grouped by system. Every
 is required in the file; the decoder keeps `RulesDef.fallback` (same values) if the file is missing.
 
 ```json
-{ "version": 1, "puzzle": Puzzle, "leash": Leash, "minimap": Minimap, "crate": Crate, "toast": Toast }
+{ "version": 1, "puzzle": Puzzle, "leash": Leash, "minimap": Minimap, "crate": Crate, "toast": Toast,
+  "inventory": Inventory, "rescue": Rescue, "pixel": Pixel, "hints": Hints, "lowHp": LowHp }
 ```
+
+M2 blocks below; the M3 blocks (`inventory`, `rescue`, `pixel`, `hints`, `lowHp`) and the M3
+fields of `puzzle` and `minimap` are in §16.9.
 
 | Field | Type | Value | Meaning |
 |---|---|---|---|
@@ -797,6 +905,107 @@ is required in the file; the decoder keeps `RulesDef.fallback` (same values) if 
 | `toast.repeatCooldownSec` | float | 3.0 | the same toast key is not shown again inside this time |
 
 INTERACT range is not here: it is `hero.json → hero.interactRadius` (64 pt).
+
+### 16.9 `rules.json` M3 blocks
+
+| Field | Type | Value | Meaning |
+|---|---|---|---|
+| `puzzle.plateRingFadeSec` | float | 0.1 | plate hold ring fade-in (ART_BIBLE §13.4) |
+| `puzzle.doorStaggerSec` | float | 0.04 | door frame start offset per cell, outer cell first (ART_BIBLE §13.2) |
+| `puzzle.doorFrameSec` | float | 0.07 | time per door opening frame (4 frames) |
+| `minimap.corridorRevealRadius` | int | 3 | corridor cells within this Chebyshev distance of the hero's cell are revealed and stay revealed (ART_BIBLE §13.1) |
+| `minimap.heroPulseSec` | float | 1.0 | hero dot pulse period |
+| `minimap.exitPulseSec` | float | 1.2 | exit star alpha pulse period |
+| `inventory.slots` | int | 25 | bag slots (5 × 5) |
+| `inventory.quickSlots` | int | 4 | quick links Q1–Q4 |
+| `inventory.useCooldownSec` | float | 0.5 | per item **id**: a second use inside this time is `coolingDown` (§6) |
+| `inventory.dropScatter` | float | 24 | pt, max random offset from the hero centre for a dropped stack; a spot inside a wall is moved to the hero centre |
+| `rescue.slowMoScale` | float | 0.3 | game speed during step 1 of §12 |
+| `rescue.slowMoSec` | float | 0.6 | step 1 length in **real** seconds |
+| `rescue.beamSec` | float | 0.8 | teleport beam length (step 2) |
+| `rescue.starterMinMagazine` | int | 12 | starter mag + reserve is topped up to at least this (step 5; = one magazine) |
+| `pixel.followOffset` | {x, y} | −40, 40 | pt from the hero centre, world axes (up-left, ≈ 56 pt) |
+| `pixel.bobAmplitude` | float | 4 | pt |
+| `pixel.bobHz` | float | 1.5 | bobs per second |
+| `pixel.followLerpSec` | float | 0.15 | follow smoothing time constant |
+| `pixel.tapRadius` | float | 80 | pt on screen around Pixel's centre that counts as a tap on Pixel (§13) |
+| `pixel.tapMaxSec` | float | 0.25 | a Pixel tap must end within this time |
+| `pixel.tapMaxMovePt` | float | 12 | a Pixel tap must move less than this |
+| `pixel.bubbleBaseSec` | float | 3.0 | bubble time base |
+| `pixel.bubblePerCharSec` | float | 0.04 | + per character of the shown line |
+| `pixel.maxChars` | int | 60 | longest allowed line (debug assert, `LocalizationKeyTests`) |
+| `pixel.queueMax` | int | 2 | lines waiting; a new line drops the oldest waiting one |
+| `pixel.repeatCooldownSec` | float | 10 | the same `pixel.*` key is not queued again inside this time (story exempt) |
+| `hints.flySec` | float | 2 | Pixel flies to the target (or until it is 64 pt from it) |
+| `hints.arrowSec` | float | 6 | dotted arrow from the hero to the target, then Pixel flies back |
+| `hints.cooldownSec` | float | 10 | after a hint ends (arrow gone) before the next tap hint |
+| `hints.pointerAfterSec` | float | 60 | level time before minimap pings start |
+| `lowHp.threshold` | int | 25 | HP (absolute, max 100): at or below = low HP (heart pulse, line, loot modifier is separate) |
+| `lowHp.lineCooldownSec` | float | 60 | low-HP line at most once per this time |
+
+The idle hint time is per level: `levels.json → hintIdleSec` (§16.5). The rescue invulnerability
+is `hero.json → respawnInvulnerableSec`.
+
+### 16.10 Save game (`save.json`)
+
+One file in Application Support, written atomically. Saved on level complete, checkpoint touch and
+app background. **No mid-level state**: Continue restarts the current level (new layout, same
+seed rules) with the saved loadout and bag. Decoder rules: unknown fields are ignored; a missing
+optional field takes its default; `version` ≠ 1 or a corrupt file → moved to `save.bak.json`, fresh
+start, never a crash.
+
+```json
+{
+  "version": 1,
+  "savedAt": "2026-11-24T10:00:00Z",
+  "run": {
+    "currentLevelId": "l2",
+    "unlockedLevelIndex": 2,
+    "loadout": {
+      "owned": ["blaster_starter"],
+      "equipped": "blaster_starter",
+      "magazines": { "blaster_starter": 12 },
+      "ammo": { "reserves": { "ammo_starter": 48, "ammo_spread": 12 } }
+    },
+    "inventory": {
+      "slots": [ { "itemId": "healpack", "count": 1 }, { "itemId": "food_apple", "count": 2 }, null ],
+      "quick": [ "healpack", "food_apple", null, null ]
+    },
+    "bestResults": {
+      "l1": { "stars": [true, false, true], "bestScore": 2350, "bestTimeSec": 301, "datachips": 2, "fewestRescues": 0 }
+    },
+    "settings": { "pixelTalk": "lots", "aimAssist": true }
+  }
+}
+```
+
+| Field | Type | Meaning |
+|---|---|---|
+| `version` | int | 1 |
+| `savedAt` | ISO-8601 string | for debug and "last played" |
+| `run.currentLevelId` | string | level that Continue starts: the level in progress, or the next one after a level complete. After L5 complete: `l5` (replay) |
+| `run.unlockedLevelIndex` | int 1–5 | highest level that can be started (finish N → N + 1) |
+| `run.loadout.owned` | [weaponId] | always contains `blaster_starter` |
+| `run.loadout.equipped` | weaponId | must be in `owned`, else `blaster_starter` |
+| `run.loadout.magazines` | {weaponId: int} | ≤ `magazineSize` |
+| `run.loadout.ammo.reserves` | {ammoId: int} | ≤ `reserveMax`; also for blasters not owned yet (§5.1) |
+| `run.inventory.slots` | [ItemStack or null] × 25 | `{itemId, count}`, count 1…`stackSize`; unknown item ids are dropped on load; fewer than 25 entries are padded with null (the example is shortened) |
+| `run.inventory.quick` | [itemId or null] × 4 | links, not storage; a link to an id with 0 left stays |
+| `run.bestResults` | {levelId: Result} | best of each field independently; `stars` = the 3 stars of §15 (OR-merged) |
+| `run.settings.pixelTalk` | `lots` / `some` / `quiet` | default `lots` |
+| `run.settings.aimAssist` | bool | default `hero.json → controls.aimAssistDefaultOn` (true) |
+
+A mid-level save (checkpoint touch, app background) writes the **current** loadout and bag. A kid
+who quits keeps what they found; the level itself restarts. Datachips, score, time and rescues of
+an unfinished level are **not** saved. Puzzle items in the bag are removed when a level starts
+or ends (they belong to one layout; a kept fuse would skip a puzzle on replay).
+
+Start gift (`pickups.startGift`): on level start, each gift item is topped up to its `count`
+(bag count below `count` → add the difference; never more). On replay of L1 with 1 healpack in
+the bag, nothing is added.
+
+Music/SFX volume and "mute all" stay in `SettingsStore` (`UserDefaults`, audio run): they are
+device preferences and survive "New game". "New game" also keeps `run.settings`.
 
 Every key referenced by a JSON file must exist in `Localizable.xcstrings` with `de` + `en`
 (guarded by `LocalizationKeyTests`, M1-11). Item `desc` texts repeat JSON numbers (heal,
@@ -850,6 +1059,12 @@ Details: `docs/levels/L1.md` … `L5.md`.
 8. Left-handed mirrored layout: in Settings only, or asked on first launch?
 9. Levels unlock linearly; should replays of finished levels be allowed with a new seed (yes
    assumed)?
+10. (M3-1) Hero gender: German lines are now written gender-neutral ("du Winzling", "Wir zwei
+    sind das beste Team"). Once the hero name/look is decided, lines may use it.
+11. ~~(M3-1) `pixel.l1.button` "tap the hand"~~ resolved: the line now names the yellow glow on
+    the right (ART_BIBLE §13.3), which is true whatever the icon shows.
+12. (M3-1) Datachips "unlock a Pixel fact" (§6): the fact texts are not written yet; they need a
+    screen to show them (M5 stars/map screen). OK to postpone to M5?
 
 ---
 
@@ -884,3 +1099,17 @@ Details: `docs/levels/L1.md` … `L5.md`.
 | 2026-11-22 | new `rules.json → crate.hp` | – (code fallback 20) → 20 | Coder request (pass B). Breaks fast (2 starter shots) so crates feel like a treat, not a chore |
 | 2026-11-22 | new `enemies[].knockbackSec?` | `EnemyNode` code constant 0.1 → JSON 0.1 on all 7 enemies | M1 review leftover 1 (balance in code) |
 | 2026-11-22 | §11 M2 notes, §16.7 M2 keys | 62 keys → 79 (+5 hud incl. `hud.minimap.accessibility` on coder request, +6 ui.toast, +6 levelComplete) | M2-1; level name/subtitle keys already existed |
+| 2026-11-24 | M3-1 new `rules.json` blocks (§16.9) | constants / GDD text → JSON: `inventory` (25, 4, 0.5 s, scatter 24 pt), `rescue` (0.3 × 0.6 s, beam 0.8 s, starter ≥ 12), `pixel` (offset −40/40, bob 4 pt 1.5 Hz, lerp 0.15 s, tap 80 pt / 0.25 s / 12 pt, bubble 3.0 + 0.04/char, 60 chars, queue 2, repeat 10 s), `hints` (2 / 6 / 10 / 60 s), `lowHp` (25 HP, 60 s) | CLAUDE.md: balance in JSON. Values unchanged from §4/§7/§12/§13; new: `dropScatter` 24 pt (several dropped stacks spread out and stay visible instead of piling on one point), `tapMaxSec`/`tapMaxMovePt` (DECISIONS tap rule), `repeatCooldownSec` 10 s (stops "Yes! One more done!" spam on L4 with 7+ elements) |
+| 2026-11-24 | M3-1 `rules.json → minimap.corridorRevealRadius` 3, `heroPulseSec` 1.0, `exitPulseSec` 1.2; `puzzle.plateRingFadeSec` 0.1, `doorStaggerSec` 0.04, `doorFrameSec` 0.07 | code constants → JSON (same values) | M2 leftover 4, ART_BIBLE §13.9 |
+| 2026-11-24 | §13 Pixel bubble | above Pixel in the world → HUD top-centre bubble (ART_BIBLE §7) | DECISIONS 2026-11-22: always readable |
+| 2026-11-24 | §13 Pixel follow offset | "56 pt behind-left" (relative to facing) → (−40, +40) pt in world axes (≈ 56 pt up-left) | Twin-stick aim turns constantly; a facing-relative buddy would swing around the hero |
+| 2026-11-24 | §13 hint with the machine's item already in the bag | no fly + `need_*` (TASKS draft) → fly to the machine + `hint_machine` | "We need a fuse!" while carrying one confuses 7-year-olds |
+| 2026-11-24 | §13 new: tap-vs-stick rule, "progress" definition for the idle timer, talk-level filter per key, level beats replace generic lines, repeat guard | – | M3-1 |
+| 2026-11-24 | §13 lines | `all_on` "The door is open!" → "The door opens!" (DE "Die Tür geht auf!"); `pixel.tip.shieldandroid` "Hit it from behind!" → "Big shield! Hit it from behind!" | the door opens after the 1 s pan; the tip now says what to look for |
+| 2026-11-24 | L4/L5 DE lines | „Geh nach Hause, kleiner Held!" → „…, du Winzling!"; L5 outro 3 "Thank you, hero. You are my best friend!" / „Danke, Held. Du bist mein bester Freund!" → "Thank you! We are the best team ever!" / „Danke! Wir zwei sind das beste Team!" | Hero gender is still open (§19); German "Held/Freund" is male |
+| 2026-11-24 | §7 drop + persistence | – → drop scatter 24 pt, no instant re-pickup, puzzle items cleared at level start/end | A kept fuse would skip a puzzle on replay |
+| 2026-11-24 | §12 rescue | – → numbers from `rules.json → rescue`, top-up formula, input lock, enemy shots removed at the beam | M3-1 |
+| 2026-11-24 | new §16.10 save game | – → `save.json` v1 schema; audio volumes stay in `SettingsStore`; start gift = top up to `count` | DECISIONS 2026-11-22 save basics |
+| 2026-11-24 | §16.7 keys, xcstrings | 90 keys → 214 (+56 story/level-beat/boss keys from `levels.json`, +21 `pixel.generic.*`, +6 `pixel.tip.*`, +41 UI: 16 inventory, 5 hud, 5 pause, 6 title, 2 levelIntro, 2 ui.toast, 5 settings) | M3-1; M2 leftover 9 |
+| 2026-11-24 | `pixel.l1.heal` | "Tap the heart to heal." / „Tipp auf das Herz zum Heilen." → "Tap the heal pack or apple below to heal!" / „Tipp unten auf Heilpaket oder Apfel zum Heilen!" | The HUD heart can't be tapped; healing is a quick slot (ART_BIBLE §14.1). L1 start gift puts a heal pack in Q1 and apples in Q2, so both words match what the kid sees |
+| 2026-11-24 | `pixel.l1.button` | "A button! Go close and tap the hand." / „… tipp die Hand." → "A button! Walk to it, then tap the glow on the right." / „Ein Knopf! Geh hin und tipp rechts aufs Leuchten." | Same mistake class: the interact icon is not specified as a hand; the yellow pulse ring on the right is (ART_BIBLE §13.3) |

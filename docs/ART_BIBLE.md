@@ -451,3 +451,173 @@ Code-side loot rules (readability, all themes):
 ### 13.9 Open questions for the coder
 - Reveal radius (3 cells), hold-time ring, and stagger timings above should go to `rules.json -> minimap / puzzle / door` next to the designer's numbers; if the designer's values differ, JSON wins.
 - Generated radial glow texture: 128 px, white center to transparent edge, `pow(1 - r, 2)` falloff; create once at launch and share (no art file needed).
+
+## 14. Systems UI and Pixel (M3)
+All values are for swift-coder (M3-5/M3-6). Reference screen 1194 x 834 pt. Fonts SF Rounded, white with the 2 pt #2B2140 stroke (section 7). Colors are from section 2. Everything is code-drawn from `ui_quickslot`, `ui_quickslot_sel`, `ui_invslot`, `ui_invslot_sel` plus item sprites from `items.atlas`, so no new art is needed except the optional gear (14.10). Nothing here uses red except the existing off-state lights.
+
+### 14.1 Quick-slot bar (4 slots, bottom centre, section 7: 72 pt, gap 12)
+Each slot = `ui_quickslot` 72 pt with the item sprite 48 pt centred (touch only, no hotkeys).
+| State | Look |
+|---|---|
+| Empty | `ui_quickslot` at 45 % alpha, plus a dashed rounded-square outline (corner 14, 2 pt, #8FA3C8, dash 6 on / 5 off) drawn 6 pt inside the edge; a 20 pt faint "+" (#8FA3C8, 60 %) in the centre. Tapping an empty slot opens the inventory |
+| Filled | `ui_quickslot` at 100 %, item sprite 48 pt centred, 2 pt above centre; alpha of the whole bar is 85 % idle (section 7 uses 70 % for buttons; slots read as content so 85 %) and 100 % while pressed (scale 0.92, 0.06 s) |
+| Count badge | circle 24 pt at the slot's bottom-right corner offset (+4, -4 outside the corner), fill #2E2A55, 2 pt #2B2140 outline, 1 pt #FFFFFF inner hairline at 40 %; number SF Rounded Bold 15 pt white; hidden at count 1; "99" max. Badge pops 1.0 to 1.25 to 1.0 in 0.15 s when the count changes |
+| Selected / pressed feedback | `ui_quickslot_sel` overlay at 100 %, pulse alpha 0.7 to 1.0 over 0.8 s while the finger is down or for 0.25 s after a use. There is no persistent selected slot in M3 (quick slots are use-on-tap), so `_sel` only flashes |
+| Cooldown (0.5 s per item type, `ItemUse`) | dark sweep: #1E1B3D at 60 % pie that shrinks clockwise from 12 o'clock (full at t=0, gone at t=0.5), clipped to the slot's rounded square; item sprite at 60 % alpha meanwhile; taps are ignored and do not shake |
+| Used successfully | item sprite pops 1.0 to 1.2 to 1.0 in 0.15 s, heal sparkle (section 12 "Heal" particles) at the hero, count badge ticks down |
+| Zero count (link kept, item gone) | slot stays linked: item sprite as a silhouette (colorBlendFactor 1.0 with #8FA3C8, alpha 35 %), no badge, slot at 70 % alpha |
+| Disabled (cannot use now: heal at full HP, `alreadyFull`) | sprite at 60 % alpha and desaturated (blend #8FA3C8 at 0.5); on tap, "no" shake: x offsets +6, -6, +4, -4, 0 pt at 0.04 s each, and a Pixel line `pixel.generic.full_hp` (if the talk level allows). No red flash |
+| "Full" shake | same shake, used when ammo is already at `reserveMax` or HP is full |
+Hit test: 72 x 72 each, 12 gap, as section 7; row is 324 wide at bottom +16. The hit area never shrinks during animations.
+
+### 14.2 Inventory screen (modal over a dim world, pauses the game)
+Full-screen dim #1E1B3D at 70 %, fade 0.15 s. Everything sits on one panel centred on the screen (safe-area aware), fill #2E2A55 at 95 %, corner 20, 3 pt stroke #4A4585, soft shadow plum 30 %. Panel 900 x 500 at 1194 wide; on 1024 wide it scales to 0.9.
+| Zone | Position inside the panel (panel origin top-left) | Size | Content |
+|---|---|---|---|
+| Title bar | x 24, y 16 | 600 x 40 | localized "Bag" (SF Rounded Bold 28, left aligned) |
+| Quick-slot column | x 24, y 76 | 72 wide, 4 slots, gap 12 = 72 x 336 | 4 drop targets (`ui_quickslot`, vertical); a 14 pt number 1 to 4 (#8FA3C8) in each slot's top-left corner |
+| Grid | x 120, y 76 | 5 x 5 `ui_invslot` 64, gap 8 = 352 x 352 | 25 slots, row-major |
+| Info panel | x 496, y 76 | 260 x 352 | see below |
+| Button column | x 776, y 76 | 100 x 352 | Close (top), Tidy (below) |
+| Footer | x 24, y 440 | 852 x 44 | capacity text "12 / 25" (SF Rounded Bold 20, #FFFFFF; turns #FFD93D at 24 or 25) |
+Slot states:
+| State | Look |
+|---|---|
+| Empty | `ui_invslot` at 100 %, nothing else |
+| Filled | item sprite 44 pt centred, count badge 20 pt (same style as 14.1, number 13 pt) at bottom-right inside the slot (offset -2, +2), hidden at 1 |
+| Selected | `ui_invslot_sel` overlay + item scale 1.1; stays until another slot or empty space is tapped; info panel shows it |
+| Drag | after a 0.15 s hold (or 8 pt move) the item lifts: a copy at 56 pt, alpha 90 %, scale 1.15, shadow ellipse 30 x 10, follows the finger with 12 pt vertical offset above it; the origin slot shows the item at 30 %. Valid quick slot targets under the finger get `ui_quickslot_sel` and scale 1.08. Dropping on a valid slot: copy flies in 0.12 s, badge pops. Dropping elsewhere: flies back in 0.15 s (easeOut). Dropping on another grid slot swaps or merges stacks |
+| Quick link marker | an item linked to a quick slot shows a 18 pt circle badge at the top-left of its grid slot (#3DE3D0 fill, 2 pt plum outline, white number 1 to 4 in 11 pt bold) |
+| Non-usable item (puzzle) | normal look; its "Use" button is hidden |
+Info panel (fill #1E1B3D at 85 %, corner 14, 2 pt #4A4585, inner padding 14):
+| Row | Layout |
+|---|---|
+| Icon | 72 pt item sprite centred top, y +14, on a 88 pt round plate #2E2A55 with a 2 pt #4A4585 stroke |
+| Name | y +112, SF Rounded Bold 22, centred, 1 line, minimumScaleFactor 0.7 |
+| Count | y +142, "x 5" SF Rounded 16, #BFFFF7 |
+| Description | y +166, 14 pt SF Rounded regular, #C9D2EA, 4 lines max, 232 wide, line height 18 |
+| Effect chip (heal, ammo) | y +244, 232 x 28 rounded 14, fill #5FE08A at 25 %, 1.5 pt #5FE08A stroke, 14 pt white text such as "+25 HP" |
+| Buttons | Use at y +284 and Drop at y +284 (see below), side by side |
+| Nothing selected | the panel shows Pixel `pixel_idle_01` 72 pt and the localized hint "Tap an item" |
+Buttons (all at least 64 pt high; width 112 each in the info panel, gap 12 => 236):
+| Button | Look |
+|---|---|
+| Use | 112 x 64 rounded 20, fill #5FE08A, 2 pt #2B2140 outline, label white 20 pt bold; hidden for puzzle items; dimmed 40 % and not tappable for `alreadyFull` (HP full) |
+| Drop | 112 x 64 rounded 20, fill #FFB347 (UI accent, not red), 2 pt outline, label white; for stacks > 1 a tap drops one, a long press (0.5 s) drops the whole stack. Item appears at the hero's feet after closing |
+| Close | 64 x 64 round, `ui_btn_pause` style: fill #FFD93D with a plum "x" 4 pt strokes, outline 2 pt #2B2140; top right of the button column. Also tap on the dim area or swipe down |
+| Tidy | 64 x 64 round, fill #3D8BFF, white four-line "sort" icon; sits 12 pt below Close |
+Press feedback is the section 7 rule (scale 0.92, alpha 100 %).
+Open/close animation: panel scales 0.92 to 1.0 and fades in over 0.18 s (easeOut); close reverses in 0.12 s.
+
+### 14.3 Bag full
+| Part | Value |
+|---|---|
+| Footer in the inventory | "25 / 25" turns #FFD93D and a small yellow "!" badge (below) sits left of it |
+| HUD inventory button (`ui_btn_inventory`) | when the bag is full, a "!" badge 24 pt at its top-right corner: circle #FFD93D, 2 pt #2B2140 outline, plum "!" SF Rounded Heavy 16; bounce scale 1.0 to 1.2 to 1.0 every 1.4 s, no sound loop |
+| Pickup refused | the item stays on the floor; the hero and the item both play a "no" wiggle (item +-3 pt, 3 shakes, 0.12 s) and the inventory button badge pops once. One Pixel line (`pixel.generic.bag_full`), cooldown 20 s |
+| Floor "!" marker on a pickup that cannot be taken | a 22 pt "!" badge (same style as above) floats 22 pt above the item, bob 3 pt over 1.0 s, only while the hero is within 3 tiles (192 pt), fade in/out 0.15 s; z above the loot halo; the halo is dimmed to 12 % alpha so the item reads as "not takeable" |
+| Overflow ammo packs | if no slot is free, the ammo stays on the floor with the same "!" marker |
+
+### 14.4 Pixel follow and hover (PixelNode)
+Sprite `pixel_idle_01` at its M1 node scale, glow baked.
+| Part | Value |
+|---|---|
+| Rest position | 56 pt behind-left of the hero (module map), 30 pt above the hero's feet: facing east the offset is (-48, +30), facing west (+48, +30); the side switches with the facing hysteresis of section 12 |
+| Follow | critically damped lerp: `pos += (target - pos) * (1 - exp(-dt / 0.15))`, so about 0.15 s lag. Teleports (rescue, new level) snap with the teleport particles |
+| Max speed | 520 pt/s (hero 220 pt/s) so it never lags behind off-screen; leash: if farther than 240 pt from the hero it snaps to 120 pt |
+| Hover bob | on top of section 12 idle bob: amplitude 3 pt, period 1.8 s (as section 12), plus a slow side drift +-2 pt over 3.1 s so it feels alive; faces the hero's facing (xScale flip) with the 0.12 s ease |
+| Move lean | tilt 5 degrees toward the follow direction while it is catching up (speed > 60), max 8 degrees |
+| Talk wiggle | while a bubble is shown: zRotation +-6 degrees at 5 Hz, scale pulse 1.0 to 1.06 at 4 Hz; swap texture `pixel_talk_01..03` at 8 fps (loop) if present, else the key pose |
+| Shadow | none (it floats); a soft plum ellipse 20 x 7 at 18 % alpha 30 pt below the sprite, to anchor it on the floor |
+| Glow | additive cyan #3DE3D0 circle 56 pt at 25 % alpha, pulse 0.2 to 0.3 over 1.8 s |
+| z | above the hero, below the HUD, above floor loot |
+| Ignores | walls, physics, hits. Never blocks shots |
+| Scan beam (hint start and "scan" comments) | cone from Pixel toward the target for 0.8 s: triangle 20 pt wide at Pixel to 80 pt at 90 pt length, #BFFFF7 at 30 % alpha, additive, sweeps +-12 degrees once; 6 sparkles #3DE3D0 along it |
+
+### 14.5 Speech bubble (HUD top centre, per DECISIONS)
+| Part | Value |
+|---|---|
+| Position | centred horizontally, top +16 inside the safe area; never moves |
+| Size | width fits the text, min 200, max 420; height 64 for 1 line, 90 for 2 lines (max 2 lines, 60 characters, per `SpeechQueue`) |
+| Panel | corner 20, fill #FFFFFF at 95 %, 3 pt #2B2140 outline, 3 pt offset plum shadow (#2B2140 at 25 %); no tail (the avatar replaces it) |
+| Avatar | `ui_icon_pixel` at 40 pt (hi-res, 2x asset is 64 px), inside a 48 pt circle #3DE3D0 with a 2 pt plum outline, overlapping the left edge of the bubble by 16 pt (so the bubble is 416 total at max); bobs 2 pt over 0.6 s while talking |
+| Text | SF Rounded Semibold 18 pt, #2B2140, left aligned, padding 14, 2 lines max with line height 22, `minimumScaleFactor` 0.8; DE strings may be about 20 percent longer: the 60 character rule still holds |
+| Appear | 0.18 s: scale 0.85 to 1.05 to 1.0 (easeOut) and alpha 0 to 1, slides 12 pt down from top +4; a short blip is audio's job |
+| Hold | `base + perChar x length` from `rules.json` (section M3 SpeechQueue) |
+| Dismiss | tap anywhere on the bubble (hit area 64 pt high, full width), or timeout: fade and scale 1.0 to 0.92 in 0.15 s. When a next line is queued the swap is a 0.1 s cross-fade, no pop |
+| Story lines | same panel, but outline #FFD93D and the avatar plate #FFD93D so a story beat feels special; held 1.3x longer |
+| Hint lines | same panel with a small 16 pt arrow icon (white arrow on #5FE08A circle) at the right edge to say "I am pointing at something" |
+| Layout safety | on 1194 wide the bubble spans x 389-805; the minimap panel starts at about x 998, key chips end at x 56. No overlap |
+
+### 14.6 Hint arrow, flight and minimap ping
+Hint flight (`flyTo`): Pixel leaves the follow position and flies in an arc toward the target (0.6 to 0.9 s, easeInEaseOut, max speed 480 pt/s), stops 40 pt from the target (never on top, so the target stays visible), hovers 1.2 s with the scan beam at the target, then returns to follow with a 0.5 s ease (or sooner if the hero moves farther than 320 pt away from Pixel).
+| Part | Value |
+|---|---|
+| Dotted arrow (world, from the hero toward the target) | starts 48 pt from the hero, ends 64 pt before the target; round dots 8 pt diameter, spacing 18 pt, #FFD93D with 1.5 pt #2B2140 outline; arrowhead = chevron 22 pt wide, 5 pt strokes, same colors, at the tip |
+| Flow animation | dots travel along the line at 90 pt/s (dash phase), alpha 0.9; individual dot scale ramps 0.6 to 1.0 along the path so it reads as direction |
+| Lifetime | 6 s total: fade in 0.3 s, fade out 0.5 s; cancelled at once when the target element turns on or the hero gets within 128 pt of the target |
+| Off-screen target | the arrow is clamped to the screen edge: a 40 pt chevron plate #FFD93D with plum outline, inset 24 pt from the safe area, pointing toward the target, bobbing 4 pt over 0.8 s. Never covers the joystick zones: when the clamp would fall in the bottom 160 pt corners it slides along the edge upward |
+| Target highlight | ring 48 pt on the target element, 3 pt #FFD93D, pulse scale 1.0 to 1.2 over 0.8 s, 6 s |
+| World arrow vs bag hint | when the item is already in the bag there is no arrow, only a bubble (HintPlanner) and the quick-slot / inventory button gets a 2 pt #FFD93D glow ring pulse (alpha 0.4 to 1.0 over 0.7 s) for 4 s |
+Minimap ping (extends 13.1, display-only):
+| Part | Value |
+|---|---|
+| Marker | ring around the target element dot: starts 4 pt, grows to 14 pt diameter over 0.9 s while alpha 1.0 to 0, #FFD93D 2 pt stroke, repeating |
+| Rate | 2 Hz blink: every 0.5 s one ring (a second ring offset 0.25 s for the first 2 s so it is easy to find) |
+| Dot | the target dot itself blinks scale 1.0 to 1.5 to 1.0 per ping, fill stays its state color so on/off remains readable |
+| Duration | 6 s (same as the arrow), or until the target is solved |
+| Hero line | when the target is out of the revealed area, the ping is a 9 pt #FFD93D triangle on the panel edge toward it, blinking at 2 Hz |
+| Z | above elements, below the hero marker |
+
+### 14.7 Rescue beam sequence (at 0 HP, GDD §12; 0.3x slow-mo for 0.6 s then 0.8 s beam)
+Times are real seconds from the moment HP reaches 0. Slow-mo scales the game clock, not the UI.
+| t (s) | What happens |
+|---|---|
+| 0.00 | hero control off, hit flash white, `Hero` kneels: pose scale 1.0 to 0.9 (0.15 s), "dizzy" stars: 3 yellow stars #FFD93D (14 pt, outline) orbit the head, radius 18 pt, 1.2 rev/s. Slow-mo 0.3x starts. World tint: full-screen overlay #BFFFF7 at 0 to 18 % over 0.3 s, and saturation down is NOT used (no grey, no red). Enemy shots in flight keep flying |
+| 0.00 to 0.60 | Pixel (in real time, ignores slow-mo) dashes to the hero in 0.35 s (easeIn) and stops 36 pt above it; Pixel talk wiggle on. Bubble `pixel.rescue.*` appears at 0.2 s |
+| 0.60 | slow-mo ends (0.1 s ease back to 1.0x). Beam starts |
+| 0.60 to 0.80 | beam in: a vertical column centred on the hero, width 0 to 72 pt in 0.2 s, height from 220 pt above to 20 pt below the hero's feet; core #FFFFFF at 90 %, inner #BFFFF7 at 70 % (width 72 x 0.7), outer #3DE3D0 at 40 % (width 96), additive. Soft ground ring ellipse 88 x 32 pt #3DE3D0 at 60 % at the feet, scaling 0.6 to 1.0 |
+| 0.80 to 1.20 | hero lifts: y +0 to +40 pt, scale 1.0 to 0.2, alpha 1.0 to 0.0 (easeIn, 0.4 s) while 14 sparkles #BFFFF7 / #3DE3D0 / white rise along the beam (speed 120 to 220 up, size 8 to 0, life 0.5 s) and 4 tiny stars #FFD93D. Camera does not shake |
+| 1.20 | beam out (width to 0 in 0.15 s). Camera cuts (not pans) to the checkpoint: 0.15 s white-cyan fade (#FFFFFF 0 to 60 to 0 %) hides the jump. Pixel snaps next to the checkpoint with the teleport particles |
+| 1.35 to 1.55 | at the checkpoint pad the same beam appears, width 72 pt, 0.2 s, hero fades in from the top: scale 0.2 to 1.0, alpha 0 to 1, y +40 to 0 (easeOut, 0.4 s), 12 sparkles falling inward |
+| 1.55 to 1.95 | beam out (0.15 s), landing squash: yScale 0.9 to 1.0 in 0.12 s, ring burst (checkpoint touched style, 13.6) |
+| 1.95 | control back, full HP, invulnerability 2 s (alpha blink 1.0 / 0.4 every 0.08 s as in section 12), HP bar refills from 0 to 100 % in 0.4 s with the heart pulse (14.8) and the heal sparkle |
+| 2.0 | Pixel line `pixel.rescue.back`. The overlay tint is gone by now |
+Total control-off time about 1.95 s (rules.json owns the real timings; the slow-mo 0.6 s and beam 0.8 s match GDD §12 so beam out+in = 0.8 s plus fades). No text on screen besides Pixel's bubble. Never shows a "game over" word, red, or a death pose.
+
+### 14.8 Low-HP heart pulse
+Trigger: HP below `rules.json -> lowHp` threshold (design default 30 %). Never red-vignette (section 12 rule).
+| Part | Value |
+|---|---|
+| Heart icon (`ui_icon_heart`, 32 pt at the HP bar's left) | scale 1.0 to 1.25 to 1.0 in a "lub-dub": 0.12 s up, 0.10 s down, 0.10 s up to 1.15, 0.18 s down, then rest to 0.9 s period (about 1.1 Hz). Faster below 15 %: period 0.7 s. Stops at once when HP is back above threshold, easing back in 0.15 s |
+| Heart color | stays the asset color; add a white additive glow circle 44 pt behind it at 0 to 40 % alpha in step with the beat |
+| HP bar | fill colour is unchanged (the green to yellow mapping from the HUD stays); a soft #FFD93D 3 pt outline glow around `ui_hpbar_bg` pulses alpha 0.0 to 0.8 in step with the heart. Fill at the end of the bar blinks alpha 1.0 to 0.65 per beat |
+| Edge hint | optional soft screen-edge glow #FFD93D at 0 to 12 % alpha, 120 pt wide gradient on the 4 edges, in step with the beat. Max 12 % so it never reads as "danger red" |
+| Pixel | one comment, per-key cooldown 60 s (SpeechQueue); Pixel also gives a small cyan heart-shaped sparkle (6 particles, #3DE3D0) toward the hero once |
+| Reduce Motion | if the system setting is on, no scale pulse: the heart holds at 1.1 with the glow at 30 % fixed |
+
+### 14.9 Poof v2 (QA-009 fix: power-down on busy floors)
+Problem: the old poof (14 particles, ring alpha 0.6, 0.5 s) vanished on L1/L2 floors. v2 keeps the 0.4 s sprite scale-down (section 12) but makes the burst larger, more colorful and longer. All particles `blendMode = .add` only for sparkles; stars and chips use `.alpha` with a 1.5 pt plum outline texture (generate a star and a chip with plum rim so they separate from the floor, additive alone washes out on light floors L1/L3). Cap stays 120 live particles; one poof = 34 particles, so at most 3 poofs at once at full count; with 4 or more simultaneous poofs scale counts by 0.6.
+| Layer | Value |
+|---|---|
+| 0. Pre-flash | 0.08 s white flash on the sprite (as section 12) |
+| 1. Dark pop ring (floor contrast) | filled circle #2B2140 at 35 % alpha (an anti-glow, so the burst reads on light floors), diameter 24 to 92 pt in 0.25 s (easeOut), alpha to 0; on dark floors L4 and L5 use a white circle #FFFFFF at 30 % instead. The theme flag comes from the level |
+| 2. Shock ring | stroke circle 4 pt, #FFFFFF with 1.5 pt plum outside it, diameter 20 to 110 pt over 0.35 s, alpha 1 to 0, easeOut |
+| 3. Stars | 10 stars, 14 to 22 pt random, 1.5 pt plum outline; colors cycle #FFD93D, #FF8A3D, #FFFFFF, #B05CFF (not red). Speed 140 to 300 pt/s with drag 2.2 (decelerate), rotation +-8 rad/s, life 0.7 s, alpha 1 until 0.5 s then to 0, size scale 1.0 to 0.2 |
+| 4. Bolts / chips | 8 chips 10 to 14 pt: robots = bolt, nut and gear shapes #A9BCE0 / #C9D2EA with plum outline; slimes #6FE06A / #8CF07F blobs; spore #E36BD8 / #FFB3F2 petals. Speed 100 to 240, gravity -90 so they arc and drop, life 0.8 s, a small bounce 6 pt at 0.5 s, rotation +-10 rad/s |
+| 5. Sparkles | 12 sparkles `fx_sparkles_01`, 10 to 16 pt, #BFFFF7 / #FFFFFF / #FFD93D, additive, speed 60 to 200, life 0.6 s, twinkle (alpha 1 to 0.3 to 1) at 12 Hz |
+| 6. Center twinkle | a 4-point star 40 pt white, scale 0.4 to 1.3 to 0 in 0.3 s, additive, above the sprite; one-frame hold at the start |
+| 7. Loot reveal | loot pops out at t = 0.35 s (section 12) with a 0.2 s cyan ring so the player sees where it fell; the rest of the burst keeps playing to 0.8 s |
+| Duration | 0.8 s total (was 0.4 s sprite plus 0.5 s particles), sprite gone at 0.35 s |
+| Color family | robot: gold + silver + cyan; slime: gold + green + white; spore: gold + pink + white. Always some #FFD93D so it is recognised as "power down, good" |
+| Size | burst radius about 70 pt (about 1.1 tiles) vs about 45 pt before. Boss: counts x2, radius x1.8, 3 bursts as in section 12 |
+| Safety | no red, no dark splats, no particles that persist on the floor; the dark pop ring is a soft, round, short-lived shadow-like disc, not a stain |
+| Test | pass when, on each of L1 to L5 floors, the burst is visible in a screenshot at 50 % scale (compare `qa_m2_powerdown_a/_b.png`): the stars separate from the floor by outline alone. Coder checks L1 and L2 first (the weakest floors) |
+
+### 14.10 Gear icon for Settings and Pause menu
+Until art exists, use the SF Symbol `gearshape.fill` (white, 28 pt, on a 64 pt round #3D8BFF button with 2 pt plum outline, same style as 14.2 buttons). If the owner generates prompt #36 (Gemini sheet `ui_icon_gear`, one icon, 72 x 72 pt, slicer name `ui_btn_settings`), swap the sprite in at the same size and remove the SF Symbol; the touch target is 64 pt either way (button 72 pt in the pause menu).
+
+### 14.11 Notes for the coder
+- Every number here that is a gameplay timing (slow-mo, beam, lowHp threshold, hint durations, speech durations) is a default: `rules.json` wins if the designer set it differently.
+- All generated textures (star, chip, bolt, nut, gear, dashed outline, radial glow 13.9) are created once at launch and cached.
+- Reduce Motion (14.8) also disables the scan beam sweep, the lean and the side drift.

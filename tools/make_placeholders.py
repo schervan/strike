@@ -417,7 +417,7 @@ def draw_ui(cv, name):
     elif name == "joystick_knob":
         cv.ell(c, ch, W * .46, W * .46, hx("DDF7FF"), OUT, 3); cv.ell(c - 8, ch - 8, W * .12, W * .12, WHITE, alpha=0.8)
     elif name.startswith("btn_"):
-        col = {"fire": ORANGE, "reload": BLUE, "interact": GREEN, "swap": PURPLE, "pause": PANEL2, "inventory": YELLOW}[name[4:]]
+        col = {"fire": ORANGE, "reload": BLUE, "interact": GREEN, "swap": PURPLE, "pause": PANEL2, "inventory": YELLOW, "settings": BLUE}[name[4:]]
         cv.ell(c, ch, W * .47, W * .47, col, OUT, 3); cv.ell(c - W * .12, ch - W * .14, W * .16, W * .08, WHITE, alpha=0.45)
         k = name[4:]
         if k == "fire":
@@ -431,6 +431,11 @@ def draw_ui(cv, name):
             cv.ell(c + W * .22, ch - W * .1, W * .06, W * .06, WHITE); cv.ell(c - W * .22, ch + W * .1, W * .06, W * .06, WHITE)
         elif k == "pause":
             cv.rr(c - W * .1, ch, W * .06, W * .2, 2, WHITE); cv.rr(c + W * .1, ch, W * .06, W * .2, 2, WHITE)
+        elif k == "settings":
+            for a in range(6):
+                ang = a * math.pi / 3
+                cv.ell(c + math.cos(ang) * W * .24, ch + math.sin(ang) * W * .24, W * .07, W * .07, WHITE)
+            cv.ell(c, ch, W * .22, W * .22, WHITE); cv.ell(c, ch, W * .09, W * .09, col)
         elif k == "inventory":
             cv.rr(c, ch + 2, W * .2, W * .22, W * .08, WHITE, OUT, 2); cv.rr(c, ch + W * .1, W * .12, W * .08, 3, col, OUT, 2)
             cv.rr(c, ch - W * .24, W * .09, W * .04, 2, WHITE, OUT, 2)
@@ -477,21 +482,34 @@ def render(gr, idx):
     return cv
 
 def main():
-    ap = argparse.ArgumentParser()
+    ap = argparse.ArgumentParser(description="Write placeholder PNGs. Never overwrites existing files unless --overwrite.")
     ap.add_argument("--out", default=os.path.join(ROOT, "Strike", "Resources", "Atlases"))
     ap.add_argument("--only")
+    ap.add_argument("--overwrite", action="store_true", help="regenerate placeholders even where a PNG exists (destroys sliced art!)")
     a = ap.parse_args()
-    count = 0
+    # Phase 1: plan and render everything in memory. Any bad name/style raises here, before disk is touched.
+    plan = []
+    skipped = 0
     for gr in M.GROUPS:
         if a.only and a.only not in (gr.atlas, gr.key) and not gr.key.startswith(a.only):
             continue
         d = os.path.join(a.out, gr.atlas + ".atlas")
-        os.makedirs(d, exist_ok=True)
         for i, base in enumerate(gr.files()):
-            cv = render(gr, i)
-            cv.save(os.path.join(d, base + "@2x.png"))
-            count += 1
-    print("wrote %d PNGs to %s" % (count, a.out))
+            path = os.path.join(d, base + "@2x.png")
+            if os.path.exists(path) and not a.overwrite:
+                skipped += 1
+                continue
+            plan.append((d, path, render(gr, i)))
+    # Phase 2: write.
+    touched = set()
+    for d, path, cv in plan:
+        os.makedirs(d, exist_ok=True)
+        cv.save(path)
+        touched.add(d)
+    for d in touched:
+        os.utime(d, None)
+    print("wrote %d PNGs, skipped %d existing (atlases touched: %s)" % (
+        len(plan), skipped, ", ".join(sorted(os.path.basename(t) for t in touched)) or "none"))
 
 if __name__ == "__main__":
     main()

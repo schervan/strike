@@ -4,7 +4,7 @@ import XCTest
 final class StrikeSettingsUITests: XCTestCase {
     override func setUp() { continueAfterFailure = false }
 
-    private func percent(_ e: XCUIElement) -> Int {
+    @MainActor private func percent(_ e: XCUIElement) -> Int {
         Int((e.value as? String ?? "").filter(\.isNumber)) ?? -1
     }
 
@@ -12,6 +12,7 @@ final class StrikeSettingsUITests: XCTestCase {
     func testSettingsFromTitleMovesSlidersAndCloses() {
         XCUIDevice.shared.orientation = .landscapeLeft
         let app = XCUIApplication()
+        app.launchArguments += ["-StrikeFreshSave"]
         app.launchArguments += ["-StrikeResetSettings"]
         app.launch()
 
@@ -45,7 +46,7 @@ final class StrikeSettingsUITests: XCTestCase {
         XCTAssertGreaterThanOrEqual(done.frame.height, 64)
         done.tap()
         XCTAssertTrue(music.waitForNonExistence(timeout: 5))
-        XCTAssertTrue(app.buttons["startButton"].isHittable)
+        XCTAssertTrue(app.buttons["title.newGame"].isHittable)
 
         // Values persist while the app runs: reopen and check.
         gear.tap()
@@ -58,11 +59,14 @@ final class StrikeSettingsUITests: XCTestCase {
     func testSettingsFromPauseMenu() {
         XCUIDevice.shared.orientation = .landscapeLeft
         let app = XCUIApplication()
+        app.launchArguments += ["-StrikeFreshSave"]
         app.launchArguments += ["-StrikeResetSettings", "-StrikeLevel", "l1", "-StrikeSeed", "42"]
         app.launch()
-        let start = app.buttons["startButton"]
+        let start = app.buttons["title.newGame"]
         XCTAssertTrue(start.waitForExistence(timeout: 10))
         start.tap()
+        let intro = app.descendants(matching: .any)["levelIntro.view"]
+        if intro.waitForExistence(timeout: 5) { intro.tap() }
 
         let menu = app.buttons["menuButton"]
         XCTAssertTrue(menu.waitForExistence(timeout: 10))

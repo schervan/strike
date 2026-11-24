@@ -47,19 +47,24 @@ final class TwinStickController {
     func touchesBegan(_ touches: Set<UITouch>, view: UIView) {
         guard let layer else { return }
         for t in touches {
-            let p = t.location(in: layer)
-            switch zone(of: t.location(in: view), viewSize: view.bounds.size) {
-            case .move where moveTouch == nil:
-                moveTouch = t
-                move = makeStick(at: p, deadZone: controls.moveDeadZone)
-                moveVisual.show(move!, fadeSec: controls.fadeSec)
-            case .aim where aimTouch == nil:
-                aimTouch = t
-                aim = makeStick(at: p, deadZone: controls.aimDeadZone)
-                aimVisual.show(aim!, fadeSec: controls.fadeSec)
-            default:
-                break
-            }
+            begin(t, viewPoint: t.location(in: view), layerPoint: t.location(in: layer), viewSize: view.bounds.size)
+        }
+    }
+
+    /// Starts a stick for `touch` at a given start point (a held-back Pixel-tap candidate starts
+    /// from where it first touched down, GDD §13).
+    func begin(_ t: UITouch, viewPoint: CGPoint, layerPoint p: CGPoint, viewSize: CGSize) {
+        switch zone(of: viewPoint, viewSize: viewSize) {
+        case .move where moveTouch == nil:
+            moveTouch = t
+            move = makeStick(at: p, deadZone: controls.moveDeadZone)
+            moveVisual.show(move!, fadeSec: controls.fadeSec)
+        case .aim where aimTouch == nil:
+            aimTouch = t
+            aim = makeStick(at: p, deadZone: controls.aimDeadZone)
+            aimVisual.show(aim!, fadeSec: controls.fadeSec)
+        default:
+            break
         }
     }
 

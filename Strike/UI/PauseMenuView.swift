@@ -1,10 +1,11 @@
 import SwiftUI
 
-/// In-game pause menu (pause button): Resume, Settings, Main menu. The scene is frozen and the
-/// music paused while it is open.
+/// In-game pause menu (pause button): Resume, Inventory, Settings, Main menu (asks first). The
+/// scene is frozen and the music paused while it is open.
 struct PauseMenuView: View {
     @Environment(GameModel.self) private var model
     var audio: AudioManager = .shared
+    @State private var confirmQuit = false
 
     private static let panel = Color(red: 0x2E / 255, green: 0x2A / 255, blue: 0x55 / 255)
     private static let outline = Color(red: 0x2B / 255, green: 0x21 / 255, blue: 0x40 / 255)
@@ -24,19 +25,33 @@ struct PauseMenuView: View {
                     audio.play(.uiBack)
                     model.resume()
                 }
+                menuButton("pause.inventory", icon: "bag.fill", id: "pause.inventory", prominent: false) {
+                    audio.play(.uiTap)
+                    model.openInventory()
+                }
                 menuButton("settings.title", icon: "gearshape.fill", id: "pause.settings", prominent: false) {
                     audio.play(.uiTap)
                     model.openSettings()
                 }
                 menuButton("pause.toTitle", icon: "house.fill", id: "pause.toTitle", prominent: false) {
-                    audio.play(.uiBack)
-                    model.returnToTitle()
+                    audio.play(.uiTap)
+                    confirmQuit = true
                 }
             }
             .padding(40)
             .frame(width: 520)
             .background(RoundedRectangle(cornerRadius: 32).fill(Self.panel))
             .overlay(RoundedRectangle(cornerRadius: 32).stroke(Self.outline, lineWidth: 4))
+        }
+        .alert(Text("pause.quitConfirm.title"), isPresented: $confirmQuit) {
+            Button(role: .cancel) { } label: { Text("pause.quitConfirm.no") }
+            Button {
+                audio.play(.uiBack)
+                model.returnToTitle()
+            } label: { Text("pause.quitConfirm.yes") }
+            .accessibilityIdentifier("pause.quitConfirm.yes")
+        } message: {
+            Text("pause.quitConfirm.message")
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("pause.view")

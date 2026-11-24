@@ -18,6 +18,8 @@ struct DebugOverlay: View {
                 button("ALL ON", "debug.solveAll", .debugSolveAll)
                 button("EXIT", "debug.gotoExit", .debugGotoExit)
                 button("MAP", "debug.revealMap", .debugRevealMap)
+                button("CROWD", "debug.spawnCrowd", .debugSpawnCrowd)
+                button("DMG", "debug.damageHero", .debugDamageHero)
             }
         }
         .padding(6)

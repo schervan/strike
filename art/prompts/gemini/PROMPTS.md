@@ -1,4 +1,4 @@
-# Strike art prompts for Gemini (lite set, 35 images)
+# Strike art prompts for Gemini (lite set, 36 images)
 
 Owner guide. Each prompt below is complete: copy the text block, attach the files named under **Attach**, send, then save the image under the **Save as** name. No editing of the prompt needed.
 
@@ -59,6 +59,7 @@ Owner guide. Each prompt below is complete: copy the text block, attach the file
 - [ ] #33 `ui_icons_a`
 - [ ] #34 `ui_icons_b`
 - [ ] #35 `appicon`
+- [ ] #36 `ui_icon_gear`
 
 ---
 
@@ -1134,3 +1135,32 @@ Output file name: appicon.png (save and offer the image for download as appicon.
 - "Make the hero and Pixel larger and more centered, with a simpler background."
 
 ---
+
+## #36  Settings gear button
+
+**Save as:** `art/raw/ui_icon_gear.png`  
+**Attach:** the Round buttons image (art/raw/ui_icons_a.png)  
+**Image:** square, one image  
+**Slicer expects:** green background, 1 item(s)
+
+```text
+Use the attached image only as a style reference: copy its outline thickness, color saturation and shading style, but do not copy its subject.
+
+Cute anime cartoon game UI icon for a kids' shooter (ages 7 to 12). A round glossy button with a thick dark plum outline, a dark indigo (#2E2A55) rim and a bright simple pictogram inside, bright saturated candy colors, soft two-tone cel shading with light from the top-left, one small white highlight. Friendly and clear, flat 2D vector-like.
+
+Subject: one round SETTINGS button, a glossy teal-blue circle with a chunky white gear (cog with six rounded teeth) in the middle and a small round hole in the gear center. No text.
+
+Layout: exactly one round button icon, centered, filling about 70 percent of the image, with empty background all around.
+
+Background: Plain solid bright green background (pure chroma-key green), completely flat and uniform, with no shadows, no floor, no gradient, no vignette, no scenery, and no green anywhere in the subject itself.
+
+Do not include: text, letters, numbers, logos, watermarks, borders, frames, speech bubbles, blood, gore, wounds, scary or creepy faces, realistic weapons or real guns, knives, photo-realistic or 3D rendering, cast shadows on the background, extra items beyond the one listed.
+
+Square image (1:1).
+
+Output file name: ui_icon_gear.png (save and offer the image for download as ui_icon_gear.png).
+```
+
+**If it goes wrong** (send as a follow-up in the same chat):
+- "Make it one single round button with a white gear, no text, centered."
+- "Make the background one pure, flat, solid bright green with no shadow or gradient."

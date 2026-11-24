@@ -27,6 +27,11 @@ struct LevelCompleteView: View {
                 .foregroundStyle(.white.opacity(0.9))
                 .padding(24)
                 .background(RoundedRectangle(cornerRadius: 20).fill(Self.panel.opacity(0.85)))
+                if let level = model.data.levels[result.levelId] {
+                    StoryLinesView(keys: level.effectiveStory.outro)
+                        .frame(maxWidth: 680)
+                        .accessibilityIdentifier("levelComplete.outro")
+                }
                 HStack(spacing: 24) {
                     Button { AudioManager.shared.play(.uiBack); model.returnToTitle() } label: {
                         Text("levelComplete.toTitle")

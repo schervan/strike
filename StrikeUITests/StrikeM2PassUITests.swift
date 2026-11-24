@@ -6,13 +6,13 @@ final class StrikeM2PassUITests: XCTestCase {
 
     override func setUp() { continueAfterFailure = true }
 
-    private func shot(_ name: String) {
+    @MainActor private func shot(_ name: String) {
         let s = XCUIScreen.main.screenshot()
         let a = XCTAttachment(screenshot: s); a.name = name; a.lifetime = .keepAlways; add(a)
         try? s.pngRepresentation.write(to: URL(fileURLWithPath: "\(Self.dir)/qa_m2_\(name).png"))
     }
 
-    private func launch(_ level: String, seed: Int) -> XCUIApplication {
+    @MainActor private func launch(_ level: String, seed: Int) -> XCUIApplication {
         XCUIDevice.shared.orientation = .landscapeLeft
         let app = XCUIApplication()
         app.launchArguments += ["-StrikeAutoStart", "-StrikeLevel", level, "-StrikeSeed", String(seed)]
@@ -21,7 +21,7 @@ final class StrikeM2PassUITests: XCTestCase {
         return app
     }
 
-    private func el(_ app: XCUIApplication, _ id: String) -> XCUIElement { app.descendants(matching: .any)[id] }
+    @MainActor private func el(_ app: XCUIApplication, _ id: String) -> XCUIElement { app.descendants(matching: .any)[id] }
 
     @MainActor
     func testL1AndL3FlowToLevelComplete() {
@@ -72,12 +72,9 @@ final class StrikeM2PassUITests: XCTestCase {
         el(app, "debug.revealMap").tap()
         let a0 = app.coordinate(withNormalizedOffset: CGVector(dx: 0.75, dy: 0.6))
         let a1 = app.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5))
-        // Fire for a few seconds, shot taken on a second thread so the HUD node/fps text is captured mid-fight.
-        DispatchQueue.global().asyncAfter(deadline: .now() + 3.0) {
-            let s = XCUIScreen.main.screenshot()
-            try? s.pngRepresentation.write(to: URL(fileURLWithPath: "\(Self.dir)/qa_m2_l4_fight.png"))
-        }
-        a0.press(forDuration: 0.1, thenDragTo: a1, withVelocity: .slow, thenHoldForDuration: 5.0)
+        // Fire for a few seconds; the shot after the gesture still shows the debug node count and FPS.
+        a0.press(forDuration: 0.1, thenDragTo: a1, withVelocity: .slow, thenHoldForDuration: 4.0)
+        shot("l4_fight")
         shot("l4_after")
     }
 }
